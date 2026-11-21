@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    min-width: 320px;
+  }
+  :focus-visible {
+    outline: 3px solid rgb(var(--c-primary));
+    outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  /* Soft, slowly drifting colour field behind glass surfaces. */
+  .aurora {
+    background:
+      radial-gradient(60rem 30rem at 110% -10%, rgb(var(--c-primary-soft) / 0.9), transparent 60%),
+      radial-gradient(40rem 26rem at -10% 10%, rgb(var(--c-accent-soft) / 0.75), transparent 60%),
+      radial-gradient(50rem 30rem at 50% 120%, rgb(var(--c-canvas-deep)), transparent 60%),
+      rgb(var(--c-canvas));
+    background-attachment: fixed;
+  }
+  .glass {
+    @apply border border-white/70 bg-white/75 shadow-glass backdrop-blur-xl;
+  }
+  .glass-bar {
+    @apply border-b border-white/60 bg-canvas/80 backdrop-blur-xl;
+  }
+  .sidebar {
+    background:
+      radial-gradient(18rem 14rem at 0% 0%, rgb(var(--c-primary) / 0.45), transparent 70%),
+      linear-gradient(180deg, rgb(var(--c-ink)), rgb(var(--c-ink-soft)));
+  }
+  .skip-link {
+    @apply sr-only rounded-lg bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50;
+  }
+  .path-line {
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    animation: draw 2.4s ease-out 0.2s forwards;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .path-line {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

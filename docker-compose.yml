@@ -1,0 +1,24 @@
+# Local development database only. The credentials are fixed throwaway values on
+# purpose: a POSTGRES_PASSWORD set elsewhere on your machine must not leak in.
+# Production uses Neon.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: talentpath-db
+    environment:
+      POSTGRES_USER: talentpath
+      POSTGRES_PASSWORD: talentpath
+      POSTGRES_DB: talentpath
+    ports:
+      # 55432 on your machine, so it never clashes with a Postgres installed on Windows.
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - talentpath-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talentpath -d talentpath"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  talentpath-pg:

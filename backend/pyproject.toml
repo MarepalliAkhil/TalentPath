@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = [
+  "S101",  # assert is fine in tests
+  "S105",  # test passwords / constant names that look like secrets
+  "S106",
+  "S311",  # random is only used for synthetic demo data
+  "S308",  # mark_safe not used; false positives on escape()
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "core", "accounts", "org", "jobs", "files", "applications", "notifications", "seeding", "tests"]

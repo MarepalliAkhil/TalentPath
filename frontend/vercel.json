@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://REPLACE-WITH-RENDER-SERVICE.onrender.com/api/:path*" },
+    { "source": "/sitemap.xml", "destination": "https://REPLACE-WITH-RENDER-SERVICE.onrender.com/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "https://REPLACE-WITH-RENDER-SERVICE.onrender.com/robots.txt" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "same-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ]
+}

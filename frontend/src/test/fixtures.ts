@@ -1,0 +1,55 @@
+import type { PublicJob } from '@/lib/types';
+
+export const job: PublicJob = {
+  slug: 'backend-engineer-hyderabad',
+  title: 'Backend Engineer',
+  department: { name: 'Engineering', slug: 'engineering' },
+  location: { name: 'Hyderabad', slug: 'hyderabad', country: 'India' },
+  level: 'Senior',
+  work_mode: 'hybrid',
+  work_mode_label: 'Hybrid',
+  employment_type: 'full_time',
+  employment_type_label: 'Full-time',
+  openings: 2,
+  published_at: '2026-11-01T10:00:00Z',
+  required_skills: [
+    { id: '1', name: 'Python', slug: 'python' },
+    { id: '2', name: 'Django', slug: 'django' },
+  ],
+  nice_to_have_skills: [{ id: '3', name: 'Redis', slug: 'redis' }],
+  excerpt: 'Own the services behind job search.',
+  description: 'About the role\nOwn the services behind job search.\n\nWhat you will do\n- Build APIs\n- Review code',
+  seo: {
+    title: 'Backend Engineer · Engineering, Hyderabad | TalentPath',
+    description: 'Backend Engineer (Senior) in Engineering, Hyderabad. Apply in minutes.',
+    canonical: 'https://careers.test/jobs/backend-engineer-hyderabad',
+    json_ld: { '@context': 'https://schema.org', '@type': 'JobPosting', title: 'Backend Engineer' },
+  },
+};
+
+export const page = <T,>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
+
+export const publicApi = {
+  '/api/public/jobs/backend-engineer-hyderabad': job,
+  '/api/public/jobs': page([job]),
+  '/api/departments': [{ id: 'd1', name: 'Engineering', slug: 'engineering' }],
+  '/api/locations': [{ id: 'l1', name: 'Hyderabad', slug: 'hyderabad', country: 'India' }],
+  '/api/skills': [{ id: '1', name: 'Python', slug: 'python', kind: 'tech', category: 'Programming languages', synonyms: ['Py'] }],
+};
+
+export const signedInApi = {
+  ...publicApi,
+  '/api/notifications': { ...page([]), unread_count: 2 },
+  '/api/applications': page([]),
+  '/api/dashboard/summary': { role: 'recruiter', applications_total: 3, applications_by_status: { applied: 2 }, jobs_by_status: { open: 1 } },
+  '/api/jobs': page([]),
+  '/api/profile': {},
+};
+
+export const EXPECTED_NAV = {
+  candidate: ['My applications', 'Browse jobs', 'Notifications'],
+  recruiter: ['Overview', 'My jobs', 'Notifications'],
+  hiring_manager: ['Overview', 'Notifications'],
+  employee: ['Overview', 'Notifications'],
+  hr_admin: ['Overview', 'All jobs', 'People', 'Organisation', 'Audit log', 'Simulated emails', 'Notifications'],
+} as const;

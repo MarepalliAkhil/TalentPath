@@ -1,0 +1,28 @@
+{
+  "name": "TalentPath",
+  "tagline": "From first search to first day.",
+  "employerName": "Lumina Works",
+  "assistant": {
+    "name": "HIRA",
+    "fullName": "Hiring Intelligence & Recruiting Assistant",
+    "display": "HIRA · Hiring Intelligence & Recruiting Assistant"
+  },
+  "colors": {
+    "ink": "#0B1B2B",
+    "inkSoft": "#25384B",
+    "muted": "#4A5B6C",
+    "canvas": "#F3F7FA",
+    "canvasDeep": "#E2ECF3",
+    "primary": "#0B6E78",
+    "primaryStrong": "#084F57",
+    "primarySoft": "#D5EEF0",
+    "accent": "#B8400A",
+    "accentSoft": "#FFE6D5",
+    "success": "#1B6B41",
+    "successSoft": "#DAF3E4",
+    "danger": "#B42318",
+    "dangerSoft": "#FDE4E1",
+    "warning": "#7A4F00",
+    "warningSoft": "#FFF1CC"
+  }
+}

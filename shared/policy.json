@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "default": "deny",
+  "roles": ["candidate", "recruiter", "hiring_manager", "employee", "hr_admin"],
+  "tokens": {
+    "any": "Everyone, including anonymous visitors",
+    "authenticated": "Any signed-in role",
+    "anonymous": "Only visitors who are not signed in",
+    "internal": "Machine calls carrying the X-Internal-Secret header (cron)"
+  },
+  "dashboards": {
+    "candidate": "/candidate",
+    "recruiter": "/recruiter",
+    "hiring_manager": "/manager",
+    "employee": "/employee",
+    "hr_admin": "/admin"
+  },
+  "routes": {
+    "/candidate": ["candidate"],
+    "/recruiter": ["recruiter"],
+    "/recruiter/jobs": ["recruiter"],
+    "/recruiter/jobs/new": ["recruiter"],
+    "/recruiter/jobs/:id/edit": ["recruiter", "hr_admin"],
+    "/recruiter/jobs/:id/applications": ["recruiter", "hiring_manager", "hr_admin"],
+    "/manager": ["hiring_manager"],
+    "/employee": ["employee"],
+    "/admin": ["hr_admin"],
+    "/admin/jobs": ["hr_admin"],
+    "/admin/staff": ["hr_admin"],
+    "/admin/org": ["hr_admin"],
+    "/admin/audit": ["hr_admin"],
+    "/admin/outbox": ["hr_admin"],
+    "/profile": ["authenticated"],
+    "/notifications": ["authenticated"],
+    "/jobs": ["any"],
+    "/jobs/:slug/apply": ["candidate"]
+  },
+  "actions": {
+    "system.ping": {"roles": ["any"], "description": "Health check with zero database queries"},
+    "system.tick": {"roles": ["internal"], "description": "Frequent cron hook (cron-job.org)"},
+    "system.nightly": {"roles": ["internal"], "description": "Nightly cron hook (cron-job.org)"},
+    "seo.sitemap": {"roles": ["any"], "description": "sitemap.xml of the career site"},
+    "seo.robots": {"roles": ["any"], "description": "robots.txt"},
+
+    "auth.csrf": {"roles": ["any"], "description": "Issue the CSRF cookie"},
+    "auth.register": {"roles": ["anonymous"], "description": "Candidate self-registration"},
+    "auth.login": {"roles": ["any"], "description": "Sign in with email and password"},
+    "auth.logout": {"roles": ["any"], "description": "Sign out and revoke the refresh token"},
+    "auth.refresh": {"roles": ["any"], "description": "Rotate the refresh cookie"},
+    "auth.me": {"roles": ["authenticated"], "description": "Current user"},
+    "auth.password_reset": {"roles": ["any"], "description": "Request a password reset email"},
+    "auth.password_reset_confirm": {"roles": ["any"], "description": "Set a new password with a reset token"},
+
+    "profile.read": {"roles": ["authenticated"], "description": "Read own profile"},
+    "profile.update": {"roles": ["authenticated"], "description": "Update own profile"},
+
+    "users.list": {"roles": ["hr_admin"], "description": "List user accounts"},
+    "users.create": {"roles": ["hr_admin"], "description": "Create a staff account (invite by email)"},
+    "users.update": {"roles": ["hr_admin"], "description": "Change role, name or active flag of an account"},
+    "users.hiring_managers": {"roles": ["recruiter", "hr_admin"], "description": "Active hiring managers (id and name only) for job assignment"},
+
+    "org.read": {"roles": ["any"], "description": "Departments, locations, job levels and skills"},
+    "org.manage": {"roles": ["hr_admin"], "description": "Create, edit or delete organisation data"},
+
+    "careers.list": {"roles": ["any"], "description": "Public job search"},
+    "careers.detail": {"roles": ["any"], "description": "Public job detail page data"},
+
+    "jobs.list": {"roles": ["recruiter", "hiring_manager", "hr_admin"], "description": "Staff job list (scoped by role)"},
+    "jobs.read": {"roles": ["recruiter", "hiring_manager", "hr_admin"], "description": "Staff job detail (scoped by role)"},
+    "jobs.create": {"roles": ["recruiter"], "description": "Create a job"},
+    "jobs.update": {"roles": ["recruiter", "hr_admin"], "description": "Edit a job"},
+    "jobs.delete": {"roles": ["recruiter", "hr_admin"], "description": "Delete a draft job without applications"},
+    "jobs.status": {"roles": ["recruiter", "hr_admin"], "description": "Open, close or reopen a job"},
+    "jobs.applications": {"roles": ["recruiter", "hiring_manager", "hr_admin"], "description": "Applications for one job"},
+
+    "applications.create": {"roles": ["candidate"], "description": "Apply to an open job with a resume"},
+    "applications.list_mine": {"roles": ["candidate"], "description": "My applications"},
+    "applications.read": {"roles": ["candidate", "recruiter", "hiring_manager", "hr_admin"], "description": "Application detail (scoped)"},
+    "applications.withdraw": {"roles": ["candidate"], "description": "Withdraw own application"},
+    "applications.status": {"roles": ["recruiter", "hr_admin"], "description": "Move an application to another status"},
+    "applications.resume": {"roles": ["candidate", "recruiter", "hiring_manager", "hr_admin"], "description": "Download the original resume (scoped, audited)"},
+
+    "notifications.list": {"roles": ["authenticated"], "description": "My notifications"},
+    "notifications.read": {"roles": ["authenticated"], "description": "Mark one notification read"},
+    "notifications.read_all": {"roles": ["authenticated"], "description": "Mark all notifications read"},
+    "realtime.ticket": {"roles": ["authenticated"], "description": "Single-use WebSocket ticket"},
+    "dashboard.summary": {"roles": ["authenticated"], "description": "Role-specific dashboard numbers"},
+
+    "audit.list": {"roles": ["hr_admin"], "description": "Audit log of sensitive actions"},
+    "outbox.list": {"roles": ["hr_admin"], "description": "Simulated email outbox"},
+    "demo.inbox": {"roles": ["any"], "description": "Demo inbox for *.example addresses, only when DEMO_MODE is on"}
+  }
+}
