@@ -127,6 +127,7 @@ POLICY_PATH = SHARED_DIR / "policy.json"
 BRAND_PATH = SHARED_DIR / "brand.json"
 
 INSTALLED_APPS = [
+    "daphne",  # makes `runserver` serve WebSockets too (ASGI)
     "django.contrib.contenttypes",
     "django.contrib.auth",
     "rest_framework",
@@ -139,6 +140,11 @@ INSTALLED_APPS = [
     "files",
     "applications",
     "notifications",
+    "matching",
+    "hira",
+    "interviews",
+    "offers",
+    "hr",
     "seeding",
 ]
 
@@ -212,6 +218,8 @@ REST_FRAMEWORK = {
         "password_reset": env("THROTTLE_PASSWORD_RESET", "5/hour"),
         "upload": env("THROTTLE_UPLOAD", "20/hour"),
         "demo_inbox": "30/min",
+        "hira": env("THROTTLE_HIRA", "30/min"),
+        "schedule_link": env("THROTTLE_SCHEDULE_LINK", "30/min"),
     },
     "NUM_PROXIES": env_int("NUM_PROXIES", 0),
     "TEST_REQUEST_DEFAULT_FORMAT": "json",

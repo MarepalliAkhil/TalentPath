@@ -46,11 +46,9 @@ export function JobsManagePage({ scope }: { scope: 'mine' | 'all' }) {
         title={title}
         intro={scope === 'mine' ? 'Jobs you created. Publish when a hiring manager and skills are set.' : 'Every job in the organisation.'}
         actions={
-          scope === 'mine' ? (
-            <Link to="/recruiter/jobs/new" className={buttonClass('primary')}>
-              Post a job
-            </Link>
-          ) : undefined
+          <Link to="/recruiter/jobs/new" className={buttonClass('primary')}>
+            Post a job
+          </Link>
         }
       />
       <div role="group" aria-label="Filter by status" className="mb-4 flex flex-wrap gap-2">
@@ -89,7 +87,10 @@ export function JobsManagePage({ scope }: { scope: 'mine' | 'all' }) {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link to={`/recruiter/jobs/${job.id}/applications`} className={buttonClass('secondary')}>
-                  Applicants<span className="sr-only"> for {job.title}</span>
+                  Candidates<span className="sr-only"> for {job.title}</span>
+                </Link>
+                <Link to={`/recruiter/jobs/${job.id}/board`} className={buttonClass('secondary')}>
+                  Board<span className="sr-only"> for {job.title}</span>
                 </Link>
                 {job.status !== 'closed' && (
                   <Link to={`/recruiter/jobs/${job.id}/edit`} className={buttonClass('secondary')}>

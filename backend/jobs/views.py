@@ -56,6 +56,10 @@ class CareerJobDetailView(PolicyAPIView):
         return Response(public_job_dict(job, detail=True))
 
 
+# Editing any of these recomputes every fit score for the job.
+SCORING_FIELDS = {"required_skills", "nice_to_have_skills", "description", "level"}
+
+
 class StaffJobListView(PolicyAPIView):
     policy_actions = {"GET": "jobs.list", "POST": "jobs.create"}
 
@@ -92,7 +96,12 @@ class StaffJobDetailView(PolicyAPIView):
         serializer = JobWriteSerializer(job, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        audit(request, "jobs.update", target=job, fields=sorted(serializer.validated_data))
+        changed = set(serializer.validated_data)
+        if changed & SCORING_FIELDS:
+            from matching.services import rescore_job
+
+            rescore_job(job)
+        audit(request, "jobs.update", target=job, fields=sorted(changed))
         return Response(staff_job_dict(visible_jobs(request.user).get(pk=job.pk)))
 
     def delete(self, request, pk):

@@ -11,14 +11,23 @@ from .models import EmailOutbox, Notification
 log = logging.getLogger(__name__)
 
 
-def queue_email(*, to_email: str, subject: str, body: str, kind: str, user=None) -> EmailOutbox:
-    """Simulated delivery: the email is stored and marked sent immediately."""
+def queue_email(
+    *, to_email: str, subject: str, body: str, kind: str, user=None, attachment: tuple | None = None
+) -> EmailOutbox:
+    """Simulated delivery: the email is stored and marked sent immediately.
+
+    `attachment` is an optional (filename, content_type, text) tuple, e.g. an .ics invite.
+    """
+    name, ctype, content = attachment or ("", "", "")
     return EmailOutbox.objects.create(
         user=user,
         to_email=to_email,
         subject=subject[:200],
         body=body,
         kind=kind,
+        attachment_name=name[:120],
+        attachment_type=ctype[:60],
+        attachment=content,
         sent_at=timezone.now(),
     )
 
@@ -38,7 +47,22 @@ def push_realtime(user_id, payload: dict) -> None:
         log.debug("Realtime push failed", exc_info=True)
 
 
-def notify(user, *, kind: str, title: str, body: str = "", link: str = "", email: bool = True):
+def notify(
+    user,
+    *,
+    kind: str,
+    title: str,
+    body: str = "",
+    link: str = "",
+    email: bool = True,
+    email_link: str = "",
+    attachment: tuple | None = None,
+):
+    """Bell notification plus (by default) a simulated email.
+
+    `email_link` overrides the link in the email only (for example a single-use
+    scheduling link that must not be stored in the in-app notification).
+    """
     note = Notification.objects.create(user=user, kind=kind, title=title[:160], body=body, link=link[:200])
     if email:
         queue_email(
@@ -46,7 +70,8 @@ def notify(user, *, kind: str, title: str, body: str = "", link: str = "", email
             user=user,
             kind=kind,
             subject=title,
-            body=f"Hi {user.full_name},\n\n{body}\n\n{settings.SITE_URL}{link}",
+            body=f"Hi {user.full_name},\n\n{body}\n\n{settings.SITE_URL}{email_link or link}",
+            attachment=attachment,
         )
     push_realtime(user.pk, {"id": str(note.id), "title": note.title, "kind": kind})
     return note

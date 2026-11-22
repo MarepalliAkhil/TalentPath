@@ -13,5 +13,11 @@ ignore = [
   "S308",  # mark_safe not used; false positives on escape()
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Plain data (evaluation sets, FAQ text): long string lines are clearer unwrapped.
+"*/eval_data.py" = ["E501"]
+"hira/knowledge.py" = ["E501"]
+"hr/defaults.py" = ["E501"]
+
 [tool.ruff.lint.isort]
-known-first-party = ["config", "core", "accounts", "org", "jobs", "files", "applications", "notifications", "seeding", "tests"]
+known-first-party = ["config", "core", "accounts", "org", "jobs", "files", "applications", "notifications", "matching", "hira", "interviews", "offers", "hr", "seeding", "tests"]

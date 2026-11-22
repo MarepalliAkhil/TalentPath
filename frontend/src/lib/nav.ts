@@ -1,6 +1,23 @@
 import { canVisit, type Role } from './policy';
 
-export type IconName = 'home' | 'briefcase' | 'search' | 'bell' | 'users' | 'building' | 'shield' | 'mail' | 'layers';
+export type IconName =
+  | 'home'
+  | 'briefcase'
+  | 'search'
+  | 'bell'
+  | 'users'
+  | 'building'
+  | 'shield'
+  | 'mail'
+  | 'layers'
+  | 'scale'
+  | 'calendar'
+  | 'sparkle'
+  | 'document'
+  | 'sun'
+  | 'clock'
+  | 'check'
+  | 'clipboard';
 
 export interface NavItem {
   to: string;
@@ -21,10 +38,21 @@ export const NAV: NavItem[] = [
   { to: '/employee', label: 'Overview', route: '/employee', icon: 'home' },
   { to: '/admin', label: 'Overview', route: '/admin', icon: 'home' },
   { to: '/admin/jobs', label: 'All jobs', route: '/admin/jobs', icon: 'briefcase' },
+  { to: '/offers', label: 'Offers', route: '/offers', icon: 'document' },
+  { to: '/hira', label: 'HIRA activity', route: '/hira', icon: 'sparkle' },
+  { to: '/interviews', label: 'My interviews', route: '/interviews', icon: 'calendar' },
+  { to: '/leave', label: 'Leave', route: '/leave', icon: 'sun' },
+  { to: '/leave/approvals', label: 'Approvals', route: '/leave/approvals', icon: 'check' },
+  { to: '/team-calendar', label: 'Team calendar', route: '/team-calendar', icon: 'calendar' },
+  { to: '/attendance', label: 'Attendance', route: '/attendance', icon: 'clock' },
+  { to: '/onboarding', label: 'Onboarding', route: '/onboarding', icon: 'clipboard' },
+  { to: '/hr/policies', label: 'Policies and holidays', route: '/hr/policies', icon: 'document' },
   { to: '/admin/staff', label: 'People', route: '/admin/staff', icon: 'users' },
   { to: '/admin/org', label: 'Organisation', route: '/admin/org', icon: 'building' },
   { to: '/admin/audit', label: 'Audit log', route: '/admin/audit', icon: 'shield' },
   { to: '/admin/outbox', label: 'Simulated emails', route: '/admin/outbox', icon: 'mail' },
+  { to: '/admin/fairness', label: 'Fairness check', route: '/admin/fairness', icon: 'scale' },
+  { to: '/admin/hr-settings', label: 'HR settings', route: '/admin/hr-settings', icon: 'building' },
   { to: '/notifications', label: 'Notifications', route: '/notifications', icon: 'bell' },
 ];
 

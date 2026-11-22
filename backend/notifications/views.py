@@ -31,6 +31,11 @@ def email_dict(e: EmailOutbox) -> dict:
         "kind": e.kind,
         "subject": e.subject,
         "body": e.body,
+        "attachment": (
+            {"name": e.attachment_name, "content_type": e.attachment_type, "content": e.attachment}
+            if e.attachment_name
+            else None
+        ),
         "created_at": e.created_at.isoformat(),
     }
 

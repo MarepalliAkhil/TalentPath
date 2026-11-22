@@ -15,6 +15,8 @@ urlpatterns = [
         views.ApplicationStatusView.as_view(),
         name="application-status",
     ),
+    path("applications/<uuid:pk>/reveal", views.RevealView.as_view(), name="application-reveal"),
+    path("applications/<uuid:pk>/notes", views.NotesView.as_view(), name="application-notes"),
     path(
         "applications/<uuid:pk>/resume",
         views.ResumeDownloadView.as_view(),

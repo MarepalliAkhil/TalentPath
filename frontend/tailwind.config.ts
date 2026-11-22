@@ -28,6 +28,7 @@ export default {
         lift: '0 18px 50px -20px rgb(11 27 43 / 0.35)',
       },
       borderRadius: { xl2: '1.25rem' },
+      keyframes: { sheet: { from: { transform: 'translateY(16px)', opacity: '0' }, to: { transform: 'none', opacity: '1' } } },
     },
   },
   plugins: [plugin(({ addBase }) => addBase({ ':root': cssVars }))],

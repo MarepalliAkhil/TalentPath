@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { firstName, formatDate } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/hooks';
 import type { CandidateApplication, Paginated } from '@/lib/types';
+import { MyInterviews, MyOffers } from './CandidateHiring';
 
 const STEPS = ['applied', 'screening', 'interview', 'offer', 'hired'];
 
@@ -101,6 +102,8 @@ export function CandidateDashboard() {
         }
       />
       {flash && <div className="mb-4"><SuccessNote>{flash}</SuccessNote></div>}
+      <MyOffers />
+      <MyInterviews />
       {apps.isPending && <PageLoader />}
       {apps.isError && <ErrorNote>We could not load your applications.</ErrorNote>}
       {apps.data && apps.data.results.length === 0 && (

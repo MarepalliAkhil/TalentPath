@@ -46,7 +46,47 @@ STAFF = [
     ("employee2", "suresh.babu", "Suresh Babu", "employee"),
     ("employee3", "lakshmi.varma", "Lakshmi Varma", "employee"),
     ("admin", "admin", "Kavya Rao", "hr_admin"),
+    # Week 3A: more interviewers (employees tagged with skills).
+    ("int_arjun", "arjun.reddy", "Arjun Reddy", "employee"),
+    ("int_ananya", "ananya.krishnan", "Ananya Krishnan", "employee"),
+    ("int_imran", "imran.sheikh", "Imran Sheikh", "employee"),
+    ("int_meghana", "meghana.rao", "Meghana Rao", "employee"),
+    ("int_naveen", "naveen.kumar", "Naveen Kumar", "employee"),
+    ("int_zoya", "zoya.siddiqui", "Zoya Siddiqui", "employee"),
 ]
+
+# Week 3A interviewers: staff key -> (departments whose skills they interview for, weekly hours IST).
+# Hours are per ISO weekday (1 = Monday). Hiring managers interview for their own departments.
+_WEEKDAYS = ("1", "2", "3", "4", "5")
+INTERVIEWERS = {
+    "employee": (["Engineering", "Platform & Security"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "employee2": (["Data & AI", "Engineering"], {d: ["09:30", "17:30"] for d in _WEEKDAYS}),
+    "employee3": (["Product", "Design"], {d: ["11:00", "19:00"] for d in ("1", "2", "3", "4")}),
+    "int_arjun": (["Engineering"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "int_ananya": (["Data & AI", "Platform & Security"], {d: ["13:00", "20:00"] for d in _WEEKDAYS}),
+    "int_imran": (["Sales", "Marketing", "Customer Success"], {d: ["10:00", "17:00"] for d in _WEEKDAYS}),
+    "int_meghana": (
+        ["People & HR", "Finance", "Customer Success"],
+        {d: ["09:00", "16:00"] for d in _WEEKDAYS},
+    ),
+    "int_naveen": (["Engineering", "Data & AI"], {d: ["10:00", "18:00"] for d in ("1", "2", "3", "4")}),
+    "int_zoya": (["Design", "Product", "Marketing"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "manager": (["Engineering"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "hm_data": (["Data & AI", "Platform & Security"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "hm_product": (["Product", "Design"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "hm_gtm": (["Sales", "Marketing", "Customer Success"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "hm_people": (["People & HR", "Finance"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "admin": ([], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+}
+# Offer pay bands by job level (INR per year, fixed).
+LEVEL_PAY = {
+    "Intern": 360000,
+    "Associate": 700000,
+    "Mid-level": 1400000,
+    "Senior": 2400000,
+    "Lead": 3300000,
+    "Manager": 3600000,
+}
 DEPARTMENT_MANAGER = {
     "Engineering": "manager",
     "Data & AI": "hm_data",
@@ -677,3 +717,22 @@ COMPANIES = [
     "Tamarind Media Works",
 ]
 CITIES = ["Hyderabad", "Bengaluru", "Pune", "Chennai", "Vijayawada", "Visakhapatnam", "Kochi", "Mumbai"]
+
+# Week 2: fictional institutions (for blind-screening redaction demos) and
+# the pronoun a synthetic person uses in their own summary.
+COLLEGES = [
+    "Lakeview University",
+    "Northfield College of Engineering",
+    "Sunrise Institute of Technology",
+    "Riverbend University",
+    "Coastal Institute of Management",
+    "Hillcrest College of Commerce",
+]
+PRONOUNS = ["she", "he", "they"]
+PROJECT_IDEAS = [
+    "Built {a} dashboard with {b} for a student club",
+    "Open-source contribution: improved {a} support in a {b} library",
+    "Hackathon project using {a} and {b} (team of four)",
+    "Personal project: {a} app backed by {b}",
+]
+CERTIFICATIONS = ["Online course: {a} fundamentals", "Certificate: {a} for beginners"]

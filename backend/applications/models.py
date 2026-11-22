@@ -16,6 +16,16 @@ class ApplicationStatus(models.TextChoices):
     WITHDRAWN = "withdrawn", "Withdrawn"
 
 
+class RejectionReason(models.TextChoices):
+    SKILLS_GAP = "skills_gap", "Required skills not shown"
+    EXPERIENCE_GAP = "experience_gap", "Experience below what the role needs"
+    STRONGER_FIT = "stronger_fit", "Other candidates were a closer fit"
+    ROLE_FILLED = "role_filled", "Role filled or closed"
+    INTERVIEW_OUTCOME = "interview_outcome", "Interview outcome"
+    NO_RESPONSE = "no_response", "Candidate did not respond"
+    OTHER = "other", "Other"
+
+
 class Application(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     job = models.ForeignKey("jobs.Job", on_delete=models.PROTECT, related_name="applications")
@@ -34,6 +44,18 @@ class Application(models.Model):
     )
     resume_filename = models.CharField(max_length=120, blank=True, default="")
     resume_text = EncryptedTextField(blank=True, default="")
+    # Blind screening: set when identity is revealed (automatically at the job's
+    # reveal stage, or early by hr_admin with a reason).
+    identity_revealed_at = models.DateTimeField(null=True, blank=True)
+    revealed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    reveal_reason = models.CharField(max_length=300, blank=True, default="")
+    # Internal only, never shown to the candidate.
+    rejection_reason = models.CharField(
+        max_length=20, choices=RejectionReason.choices, blank=True, default=""
+    )
+    rejection_note = EncryptedTextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -46,6 +68,11 @@ class Application(models.Model):
     def __str__(self) -> str:
         return f"{self.candidate_id} -> {self.job_id}"
 
+    @property
+    def candidate_code(self) -> str:
+        """Stable pseudonym shown while blind, e.g. "Candidate #7F3A"."""
+        return f"Candidate #{self.id.hex[:4].upper()}"
+
 
 class ApplicationEvent(models.Model):
     """Status history, shown to the candidate and to staff."""
@@ -54,9 +81,37 @@ class ApplicationEvent(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="events")
     from_status = models.CharField(max_length=20, blank=True, default="")
     to_status = models.CharField(max_length=20)
+    reason = models.CharField(max_length=20, blank=True, default="")
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+
+class NoteKind(models.TextChoices):
+    NOTE = "note", "Note"
+    VOTE = "vote", "Vote"
+    CANDIDATE_MESSAGE = "candidate_message", "Message from candidate"
+
+
+class ApplicationNote(models.Model):
+    """Staff notes, hiring-manager thumbs up/down, and messages candidates send via Ask HIRA.
+
+    Never returned to candidates.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="notes")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    kind = models.CharField(max_length=20, choices=NoteKind.choices, default=NoteKind.NOTE)
+    vote = models.CharField(max_length=4, blank=True, default="")  # "up" | "down" | ""
+    stage = models.CharField(max_length=20, blank=True, default="")
+    body = EncryptedTextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

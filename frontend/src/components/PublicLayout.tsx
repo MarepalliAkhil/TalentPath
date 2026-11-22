@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import { brand } from '@/lib/brand';
+import { AskHira } from './AskHira';
 import { BrandMark } from './BrandMark';
 import { buttonClass } from './ui';
 
@@ -53,6 +54,7 @@ export function PublicLayout() {
           <p>All people, companies and jobs here are fictional demo data.</p>
         </div>
       </footer>
+      {(!user || user.role === 'candidate') && <AskHira />}
     </div>
   );
 }

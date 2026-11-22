@@ -2,7 +2,13 @@
 
 Creates clearly fictional demo data: organisation basics, staff for every role,
 25 open jobs (+1 draft, +1 closed), 60 synthetic candidates with generated
-PDF/DOCX resumes, and applications in various statuses. Safe to run twice.
+PDF/DOCX resumes, and applications in various statuses. Week 2 adds: every
+open job topped up to 5-15 applications across all stages with varied fit,
+blind and revealed jobs, rejections with reasons, hiring-manager notes and
+Ask HIRA knowledge entries. Week 3A adds interviews, scorecards and offers;
+week 3B adds 30 employees, leave policies, holiday calendars, leave history,
+attendance, people mid-onboarding and one accepted offer to hire. Safe to run
+twice.
 """
 
 import os
@@ -17,18 +23,30 @@ from django.utils import timezone
 
 from accounts.models import Profile, Role, User
 from accounts.services import set_phone
-from applications.models import Application
+from applications.models import Application, ApplicationNote, NoteKind
 from applications.models import ApplicationStatus as S
-from applications.services import apply_to_job, move_application, withdraw_application
+from applications.services import (
+    add_candidate_message,
+    add_note,
+    apply_to_job,
+    move_application,
+    withdraw_application,
+)
 from core.brand import get_brand
 from files.models import StoredFile
+from files.storage import read_file
+from hira.knowledge import ENTRIES
+from hira.models import KnowledgeEntry
 from jobs.models import Job, JobStatus
 from jobs.services import unique_job_slug
 from notifications.models import EmailOutbox, Notification
 from org.models import Department, JobLevel, Location, Skill
 from org.taxonomy_data import SKILLS, skill_slug
 from seeding import demo_data as D
+from seeding import hiring
 from seeding.docgen import make_docx, make_pdf
+from seeding.people import seed_people
+from seeding.resumes import resume_lines
 
 DEFAULT_DEMO_PASSWORD = "Demo@Pass2026"
 PATHS = {
@@ -38,6 +56,31 @@ PATHS = {
     S.OFFER: [S.SCREENING, S.INTERVIEW, S.OFFER],
     S.REJECTED: [S.SCREENING, S.REJECTED],
 }
+# Week 2 top-up: the stage each extra application ends in, cycling per job.
+STAGE_CYCLE = [
+    S.APPLIED,
+    S.SCREENING,
+    S.REJECTED,
+    S.INTERVIEW,
+    S.APPLIED,
+    S.SCREENING,
+    S.OFFER,
+    S.WITHDRAWN,
+    S.APPLIED,
+    S.REJECTED,
+    S.SCREENING,
+    S.INTERVIEW,
+    S.APPLIED,
+    S.SCREENING,
+    S.APPLIED,
+]
+REJECT_REASONS = ["skills_gap", "experience_gap", "stronger_fit", "interview_outcome", "no_response"]
+HM_NOTES = [
+    ("up", "Strong evidence on the core skills. Happy to meet."),
+    ("down", "Core skills are listed but not shown in work or projects yet."),
+    ("up", "Projects line up well with what the team builds."),
+    ("", "Would like to probe system design depth in the interview."),
+]
 
 
 class Command(BaseCommand):
@@ -55,7 +98,17 @@ class Command(BaseCommand):
             self.seed_org()
             staff = self.seed_staff()
             jobs = self.seed_jobs(staff)
+            # Week 3A: interviewers and plans first, so HIRA can schedule as candidates move.
+            hiring.seed_interviewers(staff)
+            hiring.seed_plans()
         created = self.seed_candidates(jobs)
+        created += self.seed_pipeline(jobs)
+        self.seed_notes(jobs)
+        self.seed_knowledge()
+        interviews = hiring.seed_interviews(staff)
+        offers = hiring.seed_offers(staff)
+        history = hiring.seed_hira_history()
+        people = seed_people(staff, self.password_hash)
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seed complete: {Job.objects.open().count()} open jobs, "
@@ -63,12 +116,26 @@ class Command(BaseCommand):
                 f"{Application.objects.count()} applications ({created} new)."
             )
         )
+        if not interviews.get("skipped"):
+            self.stdout.write(f"Interviews: {interviews}. Offers: {offers}. HIRA history rows: {history}.")
+        leave = people["leave"]
+        self.stdout.write(
+            f"People: {people['employees']} employees, {people['onboarding']} new checklists, "
+            f"leave {leave}, attendance {people['attendance']}."
+        )
+        demo = people["hire_demo"]
+        if not demo.get("skipped"):
+            self.stdout.write(
+                f"One-click hire demo: {demo['joiner']} ({demo['email']}) accepted the {demo['job']} offer; "
+                f"joining {demo['joining']}."
+            )
 
     # ------------------------------------------------------------------ reset
     def reset(self):
         """Remove only demo data: *.example users, their jobs and related records."""
         demo_users = User.objects.filter(email__endswith=".example")
         demo_jobs = Job.objects.filter(created_by__in=demo_users)
+        hiring.reset_hiring(demo_users, demo_jobs)
         Application.objects.filter(Q(job__in=demo_jobs) | Q(candidate__in=demo_users)).delete()
         demo_jobs.delete()
         StoredFile.objects.filter(owner__in=demo_users).delete()
@@ -167,54 +234,19 @@ class Command(BaseCommand):
         jobs = []
         for i, spec in enumerate(D.JOBS):
             manager = staff[D.DEPARTMENT_MANAGER[spec[1]]]
-            jobs.append(self._create_job(spec, recruiters[i % 3], manager, JobStatus.OPEN, i + 1))
+            job = self._create_job(spec, recruiters[i % 3], manager, JobStatus.OPEN, i + 1)
+            # Most jobs screen blind; every fifth does not, and a few reveal only at Offer.
+            Job.objects.filter(pk=job.pk).update(
+                blind_screening=(i % 5 != 4), reveal_stage="offer" if i % 7 == 3 else "interview"
+            )
+            job.refresh_from_db()
+            jobs.append(job)
         for spec in D.EXTRA_JOBS:
             manager = staff[D.DEPARTMENT_MANAGER[spec[1]]]
             self._create_job(spec, staff["recruiter"], manager, spec[9], 40)
         return jobs
 
     # ------------------------------------------------------------- candidates
-    def _resume_lines(self, name, email, phone, city, track, skills):
-        headline = D.TRACKS[track][0]
-        years = self.rng.randint(0, 9) if track != "intern" else 0
-        companies = self.rng.sample(D.COMPANIES, 2)
-        lines = [
-            name,
-            f"{headline} | {city}",
-            f"Email: {email} | Phone: {phone}",
-            "",
-            "SUMMARY",
-            f"{headline} with {years or 'less than one'} year(s) of hands-on experience. "
-            f"Enjoys solving real problems with {skills[0]} and {skills[1]}.",
-            "",
-            "SKILLS",
-            ", ".join(skills),
-            "",
-            "EXPERIENCE",
-        ]
-        if track == "intern":
-            lines += [
-                "Student Developer - Campus Coding Club (2024-present)",
-                f"- Built a timetable app using {skills[0]} and {skills[1]}.",
-                "- Ran weekly peer-learning sessions for 40 students.",
-            ]
-        else:
-            lines += [
-                f"{headline} - {companies[0]} ({2026 - max(years, 1)}-present)",
-                f"- Delivered features using {skills[0]}, {skills[1]} and {skills[2]}.",
-                "- Reduced turnaround time for a key workflow by about 30 percent.",
-                f"Junior {headline} - {companies[1]} ({2026 - years - 2}-{2026 - max(years, 1)})",
-                f"- Supported the team with {skills[-1]} and documentation.",
-            ]
-        lines += [
-            "",
-            "EDUCATION",
-            "Bachelor's degree - details withheld in this synthetic profile",
-            "",
-            "Synthetic resume generated for a demo. This person does not exist.",
-        ]
-        return lines
-
     def seed_candidates(self, jobs):
         tracks = list(D.TRACKS)
         combos = [(f, last) for f in D.FIRST_NAMES for last in D.LAST_NAMES]
@@ -242,7 +274,17 @@ class Command(BaseCommand):
             profile.address = f"{n + 1} Sample Street, Demo Nagar, {city}"
             set_phone(profile, phone)
             profile.save()
-            lines = self._resume_lines(user.full_name, email, phone, city, track, skills)
+            lines = resume_lines(
+                rng,
+                name=user.full_name,
+                email=email,
+                phone=phone,
+                city=city,
+                track=track,
+                skills=skills,
+                college=D.COLLEGES[n % len(D.COLLEGES)],
+                pronoun=D.PRONOUNS[n % len(D.PRONOUNS)],
+            )
             as_pdf = n % 2 == 0
             data = make_pdf(lines) if as_pdf else make_docx(lines)
             filename = f"{first}_{last}_resume.{'pdf' if as_pdf else 'docx'}"
@@ -281,9 +323,83 @@ class Command(BaseCommand):
             return S.REJECTED
         return S.WITHDRAWN
 
-    def _advance(self, application, target, actor, silent):
+    def _advance(self, application, target, actor, silent, reason="skills_gap"):
         if target == S.WITHDRAWN:
             withdraw_application(application, application.candidate)
             return
         for step in PATHS[target]:
-            move_application(application, step, actor, silent=silent)
+            move_application(
+                application, step, actor, silent=silent, reason=reason if step == S.REJECTED else ""
+            )
+
+    # ------------------------------------------------------------- week 2
+    def seed_pipeline(self, jobs):
+        """Top every open job up to 5-15 applications with a mix of fits and stages."""
+        candidates = list(
+            User.objects.filter(role=Role.CANDIDATE, email__endswith=D.CANDIDATE_DOMAIN)
+            .select_related("profile")
+            .order_by("email")
+        )
+        resumes = {}
+        for app in (
+            Application.objects.filter(candidate__in=candidates)
+            .select_related("resume_file")
+            .order_by("created_at")
+        ):
+            if app.resume_file_id:
+                resumes.setdefault(app.candidate_id, (app.resume_filename, app.resume_file))
+        added = 0
+        for i, job in enumerate(jobs):
+            target = 5 + (i * 7) % 11
+            existing = job.applications.count()
+            if existing >= target:
+                continue
+            applied = set(job.applications.values_list("candidate_id", flat=True))
+            headline = D.TRACKS[D.JOBS[i][9]][0]
+            rng = random.Random(5000 + i)
+            same = [c for c in candidates if c.profile.headline == headline]
+            others = [c for c in candidates if c.profile.headline != headline]
+            rng.shuffle(same)
+            rng.shuffle(others)
+            pool = []
+            for a, b in zip(
+                same + [None] * len(others), others + [None] * len(same), strict=True
+            ):  # mix fits
+                pool += [c for c in (a, b) if c is not None]
+            pool = [c for c in pool if c.id not in applied and c.id in resumes]
+            for k, cand in enumerate(pool[: target - existing]):
+                name, stored = resumes[cand.id]
+                app = apply_to_job(
+                    candidate=cand, job=job, filename=name, data=read_file(stored), silent=True
+                )
+                stage = STAGE_CYCLE[(existing + k) % len(STAGE_CYCLE)]
+                self._advance(
+                    app, stage, job.created_by, silent=True, reason=REJECT_REASONS[k % len(REJECT_REASONS)]
+                )
+                added += 1
+        return added
+
+    def seed_notes(self, jobs):
+        """Hiring-manager notes and votes at Screening and Interview; one candidate message."""
+        for job in jobs:
+            manager = job.hiring_manager
+            if manager is None:
+                continue
+            apps = job.applications.filter(status__in=[S.SCREENING, S.INTERVIEW]).order_by("created_at")
+            for k, app in enumerate(apps[:4]):
+                if app.notes.filter(author=manager).exists():
+                    continue
+                vote, body = HM_NOTES[k % len(HM_NOTES)]
+                add_note(app, manager, body=body, vote=vote)
+        demo = User.objects.filter(email=f"candidate@{D.DEMO_DOMAIN}").first()
+        if demo:
+            app = demo.applications.filter(status__in=[S.APPLIED, S.SCREENING]).first()
+            if app and not app.notes.filter(kind=NoteKind.CANDIDATE_MESSAGE).exists():
+                add_candidate_message(app, demo, "Hello! I am available for a call any weekday after 4 pm.")
+        return ApplicationNote.objects.count()
+
+    def seed_knowledge(self):
+        for entry in ENTRIES:
+            KnowledgeEntry.objects.update_or_create(
+                key=entry["key"], defaults={k: v for k, v in entry.items() if k != "key"}
+            )

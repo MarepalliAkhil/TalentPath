@@ -34,6 +34,8 @@ export default defineConfig({
       '/api': { target: backend, changeOrigin: false },
       '/sitemap.xml': { target: backend, changeOrigin: false },
       '/robots.txt': { target: backend, changeOrigin: false },
+      // Live board and bell updates (runserver serves WebSockets via daphne).
+      '/ws': { target: backend.replace(/^http/, 'ws'), ws: true, changeOrigin: false },
     },
   },
   test: {

@@ -21,6 +21,8 @@ type Values = {
   description: string;
   required_skills: string[];
   nice_to_have_skills: string[];
+  blind_screening: boolean;
+  reveal_stage: 'interview' | 'offer';
 };
 
 const EMPTY: Values = {
@@ -35,6 +37,8 @@ const EMPTY: Values = {
   description: '',
   required_skills: [],
   nice_to_have_skills: [],
+  blind_screening: true,
+  reveal_stage: 'interview',
 };
 
 export function JobFormPage() {
@@ -78,6 +82,8 @@ export function JobFormPage() {
       description: job.description,
       required_skills: job.required_skills.map((s) => s.id),
       nice_to_have_skills: job.nice_to_have_skills.map((s) => s.id),
+      blind_screening: job.blind_screening,
+      reveal_stage: job.reveal_stage,
     });
   }, [existing.data]);
 
@@ -195,6 +201,29 @@ export function JobFormPage() {
             error={errors.nice_to_have_skills}
             onChange={(ids) => set('nice_to_have_skills', ids)}
           />
+          <fieldset className="rounded-xl border border-ink/15 p-4 md:col-span-2">
+            <legend className="px-1 text-sm font-semibold text-ink">Blind screening</legend>
+            <label className="flex min-h-11 items-center gap-3 text-sm text-ink">
+              <input
+                type="checkbox"
+                className="h-5 w-5 accent-primary"
+                checked={values.blind_screening}
+                onChange={(e) => set('blind_screening', e.target.checked)}
+              />
+              Hide name, contact details, address and college while screening
+            </label>
+            <div className="mt-2 max-w-xs">
+              <SelectField
+                label="Reveal identity at"
+                value={values.reveal_stage}
+                disabled={!values.blind_screening}
+                onChange={(e) => set('reveal_stage', e.target.value as Values['reveal_stage'])}
+              >
+                <option value="interview">Interview</option>
+                <option value="offer">Offer</option>
+              </SelectField>
+            </div>
+          </fieldset>
           <div className="flex gap-2 md:col-span-2">
             <Button type="submit" disabled={busy}>
               {busy ? 'Saving…' : editing ? 'Save changes' : 'Save draft'}

@@ -24,7 +24,7 @@ def test_seed_creates_fictional_demo_data_and_is_idempotent():
         Application.objects.count(),
     )
     assert counts[0] == 25
-    assert counts[1] == 60
+    assert counts[1] == 61  # 60 synthetic candidates + the week 3B joiner ready to hire
     assert counts[2] >= 60
     for email, role in DEMO_LOGINS.items():
         user = authenticate(username=email, password="Demo@Pass2026")
@@ -47,4 +47,111 @@ def test_seed_reset_rebuilds():
     call_command("seed")
     call_command("seed", "--reset")
     assert Job.objects.open().count() == 25
-    assert User.objects.filter(role=Role.CANDIDATE).count() == 60
+    assert User.objects.filter(role=Role.CANDIDATE).count() == 61
+
+
+@pytest.mark.django_db
+def test_seed_week2_pipeline_spread():
+    from collections import Counter
+
+    from applications.models import ApplicationNote
+    from hira.models import KnowledgeEntry
+    from matching.models import FitScore
+
+    call_command("seed")
+    counts = [job.applications.count() for job in Job.objects.open()]
+    assert min(counts) >= 5 and max(counts) <= 15
+    statuses = Counter(Application.objects.values_list("status", flat=True))
+    assert {"applied", "screening", "interview", "offer", "rejected", "withdrawn"} <= set(statuses)
+    assert (
+        Application.objects.filter(status="rejected").exclude(rejection_reason="").count()
+        == statuses["rejected"]
+    )
+    bands = set(FitScore.objects.values_list("band", flat=True))
+    assert {"strong", "partial", "low"} <= bands
+    assert FitScore.objects.count() == Application.objects.count()
+    assert Job.objects.open().filter(blind_screening=False).exists()
+    assert Application.objects.filter(job__blind_screening=True, identity_revealed_at__isnull=True).exists()
+    assert ApplicationNote.objects.filter(kind="vote").exists()
+    assert KnowledgeEntry.objects.count() >= 15
+
+
+@pytest.mark.django_db
+def test_seed_week3_interviews_offers_and_hira_history():
+    from collections import Counter
+
+    from hira import activity
+    from hira.models import HiraActivity
+    from interviews.coordinator import final_round_passed
+    from interviews.models import Interview, InterviewerProfile, InterviewPlan, Scorecard
+    from offers.models import Offer
+
+    call_command("seed")
+    assert InterviewPlan.objects.count() == Job.objects.count()
+    assert all(plan.rounds.count() == 4 for plan in InterviewPlan.objects.all())
+    assert InterviewerProfile.objects.filter(skills__isnull=False).distinct().count() >= 10
+    statuses = Counter(Interview.objects.values_list("status", flat=True))
+    assert statuses["completed"] and statuses["scheduled"] and statuses["pending"]
+    assert Scorecard.objects.exists()
+    owed = [
+        i
+        for i in Interview.objects.filter(status="completed")
+        if i.assignments.count() > i.scorecards.count()
+    ]
+    assert owed, "some scorecards are still missing (overdue)"
+    offers = set(Offer.objects.values_list("status", flat=True))
+    assert {"draft", "pending_approval", "approved", "sent", "accepted", "declined", "expired"} <= offers
+    recruiter = User.objects.get(email="recruiter@demo.example")
+    briefing = activity.briefing(recruiter)
+    assert briefing["counts"]["interview_scheduled"] > 0 and briefing["needs_you_count"] > 0
+    assert HiraActivity.objects.filter(reason_code="seed_history").exists()
+    demo = User.objects.get(email="candidate@demo.example")
+    assert [final_round_passed(a) for a in demo.applications.filter(status="interview")] == [True]
+    employee = User.objects.get(email="employee@demo.example")
+    assert (
+        Interview.objects.filter(assignments__interviewer=employee, status="completed")
+        .exclude(scorecards__interviewer=employee)
+        .exists()
+    ), "the walkthrough needs a scorecard for employee@demo.example to fill in"
+
+
+@pytest.mark.django_db
+def test_seed_week3b_people_leave_attendance_and_hire_demo():
+    from collections import Counter
+
+    from hr.models import (
+        AttendanceRecord,
+        Employee,
+        EmployeeStatus,
+        Holiday,
+        LeaveRequest,
+        OnboardingTask,
+        Regularisation,
+    )
+    from offers.models import Offer, OfferStatus
+
+    call_command("seed")
+    assert Employee.objects.count() == 30
+    assert Employee.objects.filter(manager__isnull=False).count() >= 25
+    assert Employee.objects.filter(buddy__isnull=False).exists()
+    statuses = Counter(LeaveRequest.objects.values_list("status", flat=True))
+    assert {"pending", "approved", "rejected", "cancelled"} <= set(statuses)
+    assert LeaveRequest.objects.filter(escalated=True).exists()
+    assert AttendanceRecord.objects.filter(missing_checkout=True).exists()
+    assert AttendanceRecord.objects.values("date").distinct().count() >= 15
+    assert Regularisation.objects.exists()
+    onboarding = Employee.objects.filter(status=EmployeeStatus.ONBOARDING)
+    assert onboarding.count() >= 2
+    assert OnboardingTask.objects.filter(employee__in=onboarding, done_at__isnull=False).exists()
+    telangana = Holiday.objects.filter(location__name="Hyderabad", regional=True)
+    assert telangana.filter(name__icontains="Telangana").exists()
+    assert all("verify" in h.note for h in Holiday.objects.all())
+    demo = Offer.objects.get(application__candidate__email="joiner@demo.example")
+    assert demo.status == OfferStatus.ACCEPTED and demo.application.status == "offer"
+    # Idempotent: a second run adds no people, leave or attendance.
+    def counts():
+        return (Employee.objects.count(), LeaveRequest.objects.count(), AttendanceRecord.objects.count())
+
+    before = counts()
+    call_command("seed")
+    assert counts() == before

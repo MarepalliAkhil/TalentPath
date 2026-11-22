@@ -1,6 +1,9 @@
 import type { IconName } from '@/lib/nav';
 
-const PATHS: Record<IconName | 'menu' | 'close' | 'pin' | 'clock' | 'arrow' | 'check' | 'logout' | 'user', string> = {
+const PATHS: Record<
+  IconName | 'menu' | 'close' | 'pin' | 'clock' | 'arrow' | 'check' | 'logout' | 'user' | 'chat' | 'lock' | 'grip' | 'thumbUp' | 'thumbDown' | 'send' | 'columns' | 'play' | 'volumeOff' | 'volume' | 'download',
+  string
+> = {
   home: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
   briefcase: 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-12 3h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 0a2 2 0 0 1 2-3h14a2 2 0 0 1 2 3M3 13h18',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16-4.2-4.2',
@@ -18,6 +21,23 @@ const PATHS: Record<IconName | 'menu' | 'close' | 'pin' | 'clock' | 'arrow' | 'c
   check: 'm5 12 4.5 4.5L19 7',
   logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4m-4 4h12',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0',
+  scale: 'M12 3v18m-7 0h14M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zm14 0-3 7a3 3 0 0 0 6 0z',
+  chat: 'M4 5h16v11H9l-5 4zM8 9h8M8 12h5',
+  lock: 'M6 11h12v9H6zm2 0V8a4 4 0 0 1 8 0v3',
+  grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+  thumbUp: 'M7 11v9H4v-9zm0 0 4-7a2 2 0 0 1 2 2v3h5a2 2 0 0 1 2 2l-1.5 7a2 2 0 0 1-2 1.6H7',
+  thumbDown: 'M17 13V4h3v9zm0 0-4 7a2 2 0 0 1-2-2v-3H6a2 2 0 0 1-2-2l1.5-7A2 2 0 0 1 7.5 4H17',
+  send: 'm4 12 16-8-6 16-2-7z',
+  columns: 'M4 5h4v14H4zm6 0h4v14h-4zm6 0h4v14h-4z',
+  calendar: 'M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm3 7h2m4 0h2m-8 4h2',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
+  document: 'M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm7 0v5h5M9 13h6m-6 4h6',
+  play: 'M7 5v14l11-7z',
+  volumeOff: 'M4 9h4l5-4v14l-5-4H4zm12 0 5 6m0-6-5 6',
+  volume: 'M4 9h4l5-4v14l-5-4H4zm12-1a5 5 0 0 1 0 8m2-11a9 9 0 0 1 0 14',
+  download: 'M12 4v11m-5-5 5 5 5-5M5 20h14',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0-5v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4',
+  clipboard: 'M9 4h6v3H9zM8 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2M9 13l2 2 4-4',
 };
 
 export type AnyIcon = keyof typeof PATHS;

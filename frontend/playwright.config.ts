@@ -6,7 +6,11 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  // The local dev server runs Django's sync views one at a time, so pages can be slow while
+  // several browsers sign in at once: two workers, roomier timeouts.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+  workers: 2,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {

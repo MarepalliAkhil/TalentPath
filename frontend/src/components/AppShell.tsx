@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import { useMediaQuery } from '@/lib/hooks';
+import { useLiveInvalidation } from '@/lib/live';
+import { AskHira } from './AskHira';
+import { HiraBriefing } from './HiraBriefing';
 import { navFor } from '@/lib/nav';
 import type { User } from '@/lib/types';
 import { BrandMark } from './BrandMark';
@@ -55,6 +58,7 @@ function Sidebar({ user }: { user: User }) {
 /** One layout for every signed-in role: left sidebar, top bar with bell and profile menu. */
 export function AppShell() {
   const { user, loading, signedOut } = useAuth();
+  useLiveInvalidation(Boolean(user));
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -133,10 +137,13 @@ export function AppShell() {
             <ProfileMenu />
           </div>
         </header>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 py-6 focus:outline-none sm:px-6 lg:px-10 lg:py-10">
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-24 lg:pt-10">
           <Outlet />
         </main>
       </div>
+      {/* Candidates ask about jobs and applications; staff also get HR answers (week 3B). */}
+      <AskHira />
+      {(user.role === 'recruiter' || user.role === 'hr_admin') && <HiraBriefing />}
     </div>
   );
 }

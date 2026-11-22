@@ -23,6 +23,11 @@ class JobStatus(models.TextChoices):
     CLOSED = "closed", "Closed"
 
 
+class RevealStage(models.TextChoices):
+    INTERVIEW = "interview", "Interview"
+    OFFER = "offer", "Offer"
+
+
 class JobQuerySet(models.QuerySet):
     def open(self):
         return self.filter(status=JobStatus.OPEN)
@@ -43,6 +48,9 @@ class Job(models.Model):
     required_skills = models.ManyToManyField("org.Skill", related_name="jobs_required", blank=True)
     nice_to_have_skills = models.ManyToManyField("org.Skill", related_name="jobs_nice", blank=True)
     openings = models.PositiveSmallIntegerField(default=1)
+    # Blind screening: hide identity from staff until the reveal stage.
+    blind_screening = models.BooleanField(default=True)
+    reveal_stage = models.CharField(max_length=10, choices=RevealStage.choices, default=RevealStage.INTERVIEW)
     status = models.CharField(
         max_length=10, choices=JobStatus.choices, default=JobStatus.DRAFT, db_index=True
     )

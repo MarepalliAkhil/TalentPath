@@ -82,9 +82,14 @@ export function StaffOverview({ role }: { role: keyof typeof TITLES }) {
               </div>
               <div className="flex flex-col items-end gap-2">
                 <StatusBadge status={job.status} label={job.status_label} />
-                <Link to={`/recruiter/jobs/${job.id}/applications`} className="text-sm font-semibold text-primary-strong hover:underline">
-                  Applicants<span className="sr-only"> for {job.title}</span>
-                </Link>
+                <span className="flex gap-3">
+                  <Link to={`/recruiter/jobs/${job.id}/applications`} className="text-sm font-semibold text-primary-strong hover:underline">
+                    Candidates<span className="sr-only"> for {job.title}</span>
+                  </Link>
+                  <Link to={`/recruiter/jobs/${job.id}/board`} className="text-sm font-semibold text-primary-strong hover:underline">
+                    Board<span className="sr-only"> for {job.title}</span>
+                  </Link>
+                </span>
               </div>
             </li>
           ))}

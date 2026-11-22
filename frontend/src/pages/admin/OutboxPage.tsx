@@ -22,6 +22,14 @@ export function OutboxPage() {
             </div>
             <p className="text-sm text-muted">To {m.to_email}</p>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm text-ink-soft">{m.body}</p>
+            {m.attachment && (
+              <details className="mt-2 text-sm">
+                <summary className="cursor-pointer font-semibold text-primary-strong">Attachment: {m.attachment.name}</summary>
+                <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-canvas p-2 text-xs text-ink-soft">
+                  {m.attachment.content}
+                </pre>
+              </details>
+            )}
           </Card>
         ))}
       </ul>

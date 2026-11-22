@@ -35,6 +35,8 @@ class JobWriteSerializer(serializers.ModelSerializer):
             "nice_to_have_skills",
             "openings",
             "hiring_manager",
+            "blind_screening",
+            "reveal_stage",
         ]
 
     def validate_title(self, value):
@@ -90,6 +92,8 @@ def staff_job_dict(job: Job) -> dict:
         "required_skills": skill_list(job.required_skills.all()),
         "nice_to_have_skills": skill_list(job.nice_to_have_skills.all()),
         "openings": job.openings,
+        "blind_screening": job.blind_screening,
+        "reveal_stage": job.reveal_stage,
         "status": job.status,
         "status_label": job.get_status_display(),
         "created_by": {"id": str(job.created_by_id), "name": job.created_by.full_name},

@@ -35,6 +35,10 @@ class EmailOutbox(models.Model):
     kind = models.CharField(max_length=40)
     subject = models.CharField(max_length=200)
     body = models.TextField()
+    # Optional single text attachment (for example an .ics calendar invite).
+    attachment_name = models.CharField(max_length=120, blank=True, default="")
+    attachment_type = models.CharField(max_length=60, blank=True, default="")
+    attachment = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 

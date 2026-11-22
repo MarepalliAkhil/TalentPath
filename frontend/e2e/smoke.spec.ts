@@ -23,8 +23,22 @@ async function signIn(page: Page, email: string) {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: false }).first().fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page, 'sign-in should leave the login page').not.toHaveURL(/\/login/);
+  await expect(page, 'sign-in should leave the login page').not.toHaveURL(/\/login/, { timeout: 15_000 });
+  if (/^(recruiter|admin)@/.test(email)) await dismissHiraBriefing(page);
 }
+
+/** Recruiters and HR admins get HIRA's briefing once per session; close it so it does not cover the page. */
+async function dismissHiraBriefing(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'HIRA briefing' });
+  try {
+    await dialog.waitFor({ state: 'visible', timeout: 8_000 });
+  } catch {
+    return; // already seen in this session
+  }
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toBeHidden();
+}
+
 
 for (const path of ['/', '/jobs', '/login', '/register', '/this-page-does-not-exist']) {
   test(`public page ${path} is accessible and fits the screen`, async ({ page }) => {
@@ -37,7 +51,8 @@ for (const path of ['/', '/jobs', '/login', '/register', '/this-page-does-not-ex
 test('job detail has SEO tags and JSON-LD', async ({ page }) => {
   await page.goto('/jobs');
   await page.locator('article h2 a').first().click();
-  await expect(page.locator('h1')).toBeVisible();
+  // The dev server is shared by 4 workers, so the job can take a few seconds to load.
+  await expect(page.locator('h1')).toBeVisible({ timeout: 15_000 });
   const ld = JSON.parse((await page.locator('#jobposting-ld').textContent()) ?? '{}');
   expect(ld['@type']).toBe('JobPosting');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.{50,}/);

@@ -1,123 +1,150 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthContext';
-import { Button, EmptyState, ErrorNote, PageHeader, PageLoader, Pager, StatusBadge } from '@/components/ui';
-import { api, ApiError, qs } from '@/lib/api';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ApplicationDrawer } from '@/components/ApplicationDrawer';
+import { CandidateName, FitBadge, ReasonChips } from '@/components/fit';
+import { Icon } from '@/components/Icon';
+import { STAGE_LABELS } from '@/lib/pipeline';
+import { Button, EmptyState, ErrorNote, PageHeader, PageLoader, Pager, SelectField, StatusBadge, TextField, buttonClass } from '@/components/ui';
+import { api, qs } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/hooks';
-import type { Paginated, StaffApplication } from '@/lib/types';
+import type { BoardJob, Paginated, StaffApplication } from '@/lib/types';
 
-const LABELS: Record<string, string> = {
-  screening: 'Move to screening',
-  interview: 'Move to interview',
-  offer: 'Move to offer',
-  rejected: 'Not selected',
-};
+type Ranked = Paginated<StaffApplication> & { job: BoardJob };
 
-function Detail({ id }: { id: string }) {
-  const detail = useQuery({ queryKey: ['application', id], queryFn: () => api<StaffApplication>(`/applications/${id}`) });
-  if (detail.isPending) return <PageLoader label="Loading resume" />;
-  if (!detail.data) return <ErrorNote>Could not load this application.</ErrorNote>;
-  const d = detail.data;
+export function JobViewTabs({ jobId, current }: { jobId: string; current: 'list' | 'board' | 'plan' }) {
+  const tab = (active: boolean) =>
+    `inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${active ? 'bg-ink text-white' : 'bg-white/70 text-ink-soft hover:text-ink'}`;
   return (
-    <div className="mt-4 grid gap-4 border-t border-ink/10 pt-4 lg:grid-cols-[1fr_16rem]">
-      <div>
-        <h3 className="text-sm font-semibold text-ink">Resume text (extracted on the server)</h3>
-        <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-canvas p-3 font-sans text-sm text-ink-soft" tabIndex={0}>
-          {d.resume_text || 'No readable text in this file.'}
-        </pre>
-      </div>
-      <div className="space-y-3 text-sm">
-        {d.cover_note && (
-          <div>
-            <h3 className="font-semibold text-ink">Note from the candidate</h3>
-            <p className="mt-1 text-ink-soft">{d.cover_note}</p>
-          </div>
-        )}
-        <a href={`/api/applications/${d.id}/resume`} className="inline-flex font-semibold text-primary-strong underline" download>
-          Download original ({d.resume_filename})
-        </a>
-        <ol className="space-y-1 text-muted" aria-label="Status history">
-          {d.events?.map((e) => (
-            <li key={e.at}>
-              {e.label} · {formatDate(e.at)}
-            </li>
-          ))}
-        </ol>
-      </div>
-    </div>
+    <nav aria-label="Job views" className="mb-4 flex flex-wrap gap-2">
+      <Link to={`/recruiter/jobs/${jobId}/applications`} className={tab(current === 'list')} aria-current={current === 'list' ? 'page' : undefined}>
+        <Icon name="layers" className="h-4 w-4" /> Ranked list
+      </Link>
+      <Link to={`/recruiter/jobs/${jobId}/board`} className={tab(current === 'board')} aria-current={current === 'board' ? 'page' : undefined}>
+        <Icon name="columns" className="h-4 w-4" /> Pipeline board
+      </Link>
+      <Link to={`/recruiter/jobs/${jobId}/interview-plan`} className={tab(current === 'plan')} aria-current={current === 'plan' ? 'page' : undefined}>
+        <Icon name="calendar" className="h-4 w-4" /> Interview plan
+      </Link>
+    </nav>
   );
 }
 
 export function JobApplicationsPage() {
   const { id = '' } = useParams();
-  const { user } = useAuth();
-  const canMove = user?.role === 'recruiter' || user?.role === 'hr_admin';
-  const client = useQueryClient();
   const [page, setPage] = useState(1);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [filters, setFilters] = useState({ band: '', skill: '', status: '' });
+  const [draftSkill, setDraftSkill] = useState('');
+  const [params] = useSearchParams();
+  // HIRA's links open a candidate's drawer directly: ?open=<application id>.
+  const [openId, setOpenId] = useState<string | null>(() => params.get('open'));
   const apps = useQuery({
-    queryKey: ['job-applications', id, page],
-    queryFn: () => api<Paginated<StaffApplication> & { job: { id: string; title: string; status: string } }>(`/jobs/${id}/applications${qs({ page })}`),
+    queryKey: ['job-applications', id, page, filters],
+    queryFn: () => api<Ranked>(`/jobs/${id}/applications${qs({ page, ...filters })}`),
+    placeholderData: keepPreviousData,
+    refetchInterval: 30_000,
   });
-  useDocumentTitle(apps.data ? `Applicants · ${apps.data.job.title}` : 'Applicants');
-  const move = useMutation({
-    mutationFn: ({ appId, status }: { appId: string; status: string }) =>
-      api(`/applications/${appId}/status`, { method: 'POST', body: { status } }),
-    onSuccess: () => {
-      setError('');
-      void client.invalidateQueries({ queryKey: ['job-applications', id] });
-    },
-    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not update the application.'),
-  });
+  useDocumentTitle(apps.data ? `Candidates · ${apps.data.job.title}` : 'Candidates');
+  const set = (key: keyof typeof filters, value: string) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  };
 
   if (apps.isPending) return <PageLoader />;
-  if (apps.isError || !apps.data) return <ErrorNote>We could not load applicants for this job.</ErrorNote>;
+  if (apps.isError || !apps.data) return <ErrorNote>We could not load candidates for this job.</ErrorNote>;
+  const { job } = apps.data;
+  const offset = (page - 1) * 20;
 
   return (
     <>
-      <PageHeader title={`Applicants · ${apps.data.job.title}`} intro={`${apps.data.count} ${apps.data.count === 1 ? "application" : "applications"}. Open one to read the extracted resume.`} />
-      {error && <ErrorNote>{error}</ErrorNote>}
-      {apps.data.results.length === 0 && <EmptyState title="No applications yet" />}
-      <ul className="flex flex-col gap-3">
-        {apps.data.results.map((app) => (
+      <PageHeader
+        title={`Candidates · ${job.title}`}
+        intro={
+          job.blind_screening
+            ? `Ranked by fit score. Blind screening is on: identities appear at the ${job.reveal_stage === 'offer' ? 'Offer' : 'Interview'} stage.`
+            : 'Ranked by fit score. Blind screening is off for this job.'
+        }
+      />
+      <JobViewTabs jobId={id} current="list" />
+      <form
+        aria-label="Candidate filters"
+        className="glass mb-4 grid gap-3 rounded-xl2 p-4 sm:grid-cols-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          set('skill', draftSkill.trim());
+        }}
+      >
+        <SelectField label="Fit band" value={filters.band} onChange={(e) => set('band', e.target.value)}>
+          <option value="">All bands</option>
+          <option value="strong">Strong (80+)</option>
+          <option value="good">Good (60-79)</option>
+          <option value="partial">Partial (40-59)</option>
+          <option value="low">Low (below 40)</option>
+        </SelectField>
+        <SelectField label="Stage" value={filters.status} onChange={(e) => set('status', e.target.value)}>
+          <option value="">All stages</option>
+          {Object.entries(STAGE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </SelectField>
+        <TextField label="Has skill" placeholder="e.g. Python or JS" value={draftSkill} onChange={(e) => setDraftSkill(e.target.value)} />
+        <div className="flex items-end gap-2">
+          <Button type="submit">Filter</Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setDraftSkill('');
+              setFilters({ band: '', skill: '', status: '' });
+            }}
+          >
+            Clear
+          </Button>
+        </div>
+      </form>
+      <p className="mb-3 text-sm font-medium text-ink-soft" role="status" aria-live="polite">
+        {apps.data.count} {apps.data.count === 1 ? 'candidate' : 'candidates'}
+      </p>
+      {apps.data.results.length === 0 && <EmptyState title="No candidates match these filters" />}
+      <ol className="flex flex-col gap-3">
+        {apps.data.results.map((app, index) => (
           <li key={app.id} className="glass rounded-xl2 p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center">
-              <div className="flex-1">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start">
+              <span className="font-display text-2xl font-semibold text-ink/30 tabular-nums" aria-hidden="true">
+                {offset + index + 1}
+              </span>
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold text-ink">{app.candidate.full_name}</h2>
+                  <h2 className="font-semibold text-ink">
+                    <span className="sr-only">Rank {offset + index + 1}: </span>
+                    <CandidateName app={app} />
+                  </h2>
+                  <FitBadge fit={app.fit} size="sm" />
                   <StatusBadge status={app.status} label={app.status_label} />
                 </div>
-                <p className="text-sm text-muted">
-                  {app.candidate.headline || 'Candidate'} · {app.candidate.location || 'Location not shared'} · Applied {formatDate(app.created_at)}
-                </p>
+                <p className="mt-0.5 text-xs text-muted">Applied {formatDate(app.created_at)}</p>
+                {app.fit && (
+                  <div className="mt-2">
+                    <ReasonChips chips={app.fit.explanation.chips} limit={4} />
+                  </div>
+                )}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" aria-expanded={openId === app.id} onClick={() => setOpenId(openId === app.id ? null : app.id)}>
-                  {openId === app.id ? 'Hide' : 'View'}
-                  <span className="sr-only"> application from {app.candidate.full_name}</span>
-                </Button>
-                {canMove &&
-                  app.allowed_transitions.map((status) => (
-                    <Button
-                      key={status}
-                      variant={status === 'rejected' ? 'ghost' : 'primary'}
-                      disabled={move.isPending}
-                      onClick={() => move.mutate({ appId: app.id, status })}
-                    >
-                      {LABELS[status] ?? status}
-                      <span className="sr-only"> for {app.candidate.full_name}</span>
-                    </Button>
-                  ))}
-              </div>
+              <Button variant="secondary" onClick={() => setOpenId(app.id)}>
+                Explain<span className="sr-only"> score for {app.blind ? app.candidate.code : app.candidate.full_name}</span>
+              </Button>
             </div>
-            {openId === app.id && <Detail id={app.id} />}
           </li>
         ))}
-      </ul>
+      </ol>
       <Pager page={page} hasNext={Boolean(apps.data.next)} hasPrevious={Boolean(apps.data.previous)} onChange={setPage} />
+      {openId && <ApplicationDrawer id={openId} jobId={id} onClose={() => setOpenId(null)} />}
+      <p className="mt-6 text-sm">
+        <Link to={`/recruiter/jobs/${id}/board`} className={buttonClass('ghost', 'px-0 underline')}>
+          Open the pipeline board
+        </Link>
+      </p>
     </>
   );
 }

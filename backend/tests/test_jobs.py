@@ -112,3 +112,21 @@ def test_patch_updates_skills(client_for, make_job, skills):
     )
     assert resp.status_code == 200
     assert [s["name"] for s in resp.data["required_skills"]] == ["React"]
+
+
+def test_hr_admin_can_create_jobs_and_recruiters_stay_scoped(client_for, payload, users):
+    created = client_for("hr_admin").post("/api/jobs", payload, format="json")
+    assert created.status_code == 201
+    job_id = created.data["id"]
+    assert client_for("recruiter").get(f"/api/jobs/{job_id}").status_code == 404  # not the recruiter's job
+    assert client_for("hr_admin").get(f"/api/jobs/{job_id}").status_code == 200
+
+
+def test_blind_settings_are_editable(client_for, payload):
+    created = client_for("recruiter").post(
+        "/api/jobs", {**payload, "blind_screening": False, "reveal_stage": "offer"}, format="json"
+    )
+    assert created.status_code == 201
+    assert created.data["blind_screening"] is False and created.data["reveal_stage"] == "offer"
+    default = client_for("recruiter").post("/api/jobs", {**payload, "title": "Second Role"}, format="json")
+    assert default.data["blind_screening"] is True and default.data["reveal_stage"] == "interview"
