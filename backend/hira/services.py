@@ -81,7 +81,7 @@ def _sign_in(u: Understanding, user, what: str) -> dict:
 
 def _search_jobs(u: Understanding, limit: int = 5):
     qs = (
-        Job.objects.open()
+        Job.objects.public()
         .select_related("department", "location", "level")
         .prefetch_related("required_skills", "nice_to_have_skills")
     )
@@ -191,7 +191,7 @@ def answer(message: str, user, ctx: Context | None = None) -> dict:
         applied = Application.objects.filter(candidate=user).values("job_id")
         ranked = []
         for job in (
-            Job.objects.open()
+            Job.objects.public()
             .exclude(pk__in=applied)
             .select_related("department", "location", "level")
             .prefetch_related("required_skills", "nice_to_have_skills")

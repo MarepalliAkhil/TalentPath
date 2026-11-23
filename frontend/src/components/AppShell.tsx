@@ -4,6 +4,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { useMediaQuery } from '@/lib/hooks';
 import { useLiveInvalidation } from '@/lib/live';
 import { AskHira } from './AskHira';
+import { DemoBanner } from './growth';
 import { HiraBriefing } from './HiraBriefing';
 import { navFor } from '@/lib/nav';
 import type { User } from '@/lib/types';
@@ -113,6 +114,7 @@ export function AppShell() {
         </div>
       )}
       <div className={isDesktop ? 'pl-64' : ''}>
+        <DemoBanner />
         <header className="glass-bar sticky top-0 z-20 flex items-center gap-2 px-3 py-2 sm:px-6">
           {!isDesktop && (
             <>

@@ -359,7 +359,7 @@ def test_exclusion_constraint_rejects_overlapping_claims(plan_job, application, 
 
 
 @postgres_only
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db(transaction=True, serialized_rollback=True)
 def test_concurrent_bookings_for_the_same_interviewer_only_one_wins(
     plan_job, interviewers, make_user, apply_as
 ):

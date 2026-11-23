@@ -5,6 +5,7 @@ import { Button, ErrorNote, TextField } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useDocumentTitle } from '@/lib/hooks';
 import { loginSchema, validate, type Errors } from '@/lib/schemas';
+import { DemoButtons } from '@/components/growth';
 import { AuthCard } from './AuthCard';
 
 function safeNext(next: string | null): string | null {
@@ -61,6 +62,9 @@ export function LoginPage() {
           Forgot your password?
         </Link>
       </form>
+      <div className="mt-6 border-t border-ink/10 pt-4">
+        <DemoButtons />
+      </div>
     </AuthCard>
   );
 }

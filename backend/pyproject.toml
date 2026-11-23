@@ -20,4 +20,4 @@ ignore = [
 "hr/defaults.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "core", "accounts", "org", "jobs", "files", "applications", "notifications", "matching", "hira", "interviews", "offers", "hr", "seeding", "tests"]
+known-first-party = ["config", "core", "accounts", "org", "jobs", "files", "applications", "notifications", "matching", "hira", "interviews", "offers", "hr", "growth", "analytics", "seeding", "tests"]

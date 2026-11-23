@@ -45,6 +45,7 @@ from org.taxonomy_data import SKILLS, skill_slug
 from seeding import demo_data as D
 from seeding import hiring
 from seeding.docgen import make_docx, make_pdf
+from seeding.growth import seed_growth
 from seeding.people import seed_people
 from seeding.resumes import resume_lines
 
@@ -109,6 +110,7 @@ class Command(BaseCommand):
         offers = hiring.seed_offers(staff)
         history = hiring.seed_hira_history()
         people = seed_people(staff, self.password_hash)
+        growth = seed_growth(staff)
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seed complete: {Job.objects.open().count()} open jobs, "
@@ -123,6 +125,7 @@ class Command(BaseCommand):
             f"People: {people['employees']} employees, {people['onboarding']} new checklists, "
             f"leave {leave}, attendance {people['attendance']}."
         )
+        self.stdout.write(f"Career and mobility: {growth}.")
         demo = people["hire_demo"]
         if not demo.get("skipped"):
             self.stdout.write(

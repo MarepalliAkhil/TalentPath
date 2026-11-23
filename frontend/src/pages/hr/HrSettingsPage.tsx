@@ -111,6 +111,7 @@ function WorkPolicyForm({ wp }: { wp: WorkPolicy }) {
     hr_approval_over_days: String(wp.hr_approval_over_days),
     min_team_available_pct: String(wp.min_team_available_pct),
     escalate_after_hours: String(wp.escalate_after_hours),
+    internal_manager_notice: wp.internal_manager_notice ?? 'interview',
     weekly_off: wp.weekly_off,
   });
   const save = useMutation({
@@ -147,6 +148,16 @@ function WorkPolicyForm({ wp }: { wp: WorkPolicy }) {
       <TextField label="HR approval above (days)" type="number" step="0.5" min="0" value={form.hr_approval_over_days} onChange={(e) => set('hr_approval_over_days', e.target.value)} error={fields.hr_approval_over_days} />
       <TextField label="Warn below team availability (%)" type="number" min="0" max="100" value={form.min_team_available_pct} onChange={(e) => set('min_team_available_pct', e.target.value)} error={fields.min_team_available_pct} />
       <TextField label="Escalate after (hours)" type="number" min="1" value={form.escalate_after_hours} onChange={(e) => set('escalate_after_hours', e.target.value)} error={fields.escalate_after_hours} />
+      <SelectField
+        label="Tell the manager about an internal application at"
+        value={form.internal_manager_notice}
+        onChange={(e) => set('internal_manager_notice', e.target.value)}
+        error={fields.internal_manager_notice}
+        hint="Never at application time."
+      >
+        <option value="interview">Interview</option>
+        <option value="offer">Offer</option>
+      </SelectField>
       <fieldset className="sm:col-span-3">
         <legend className="text-sm font-medium text-ink">Weekly off</legend>
         <div className="flex flex-wrap gap-x-4">

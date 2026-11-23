@@ -75,6 +75,8 @@ export interface StaffJob {
   hiring_manager: Ref | null;
   blind_screening: boolean;
   reveal_stage: 'interview' | 'offer';
+  audience?: 'both' | 'external' | 'internal';
+  audience_label?: string;
   application_count: number | null;
   created_at: string;
   updated_at: string;

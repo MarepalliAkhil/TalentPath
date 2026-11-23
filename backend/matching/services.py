@@ -82,11 +82,17 @@ def requirements_hash(req: JobRequirements) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def facts_to_input(skills: list, years) -> ScoringInput:
+    """The structural fairness gate: only skills, sections and years pass through.
+    Used for applications and for the career map, so both get the same score."""
+    return ScoringInput(
+        skills=tuple(sorted((s["slug"], s["section"]) for s in skills)),
+        experience_years=None if years is None else float(years),
+    )
+
+
 def scoring_input(profile: ParsedProfile) -> ScoringInput:
-    """The structural fairness gate: only skills, sections and years pass through."""
-    years = None if profile.experience_years is None else float(profile.experience_years)
-    skills = tuple(sorted((s["slug"], s["section"]) for s in profile.skills))
-    return ScoringInput(skills=skills, experience_years=years)
+    return facts_to_input(profile.skills, profile.experience_years)
 
 
 def score_application(application, req: JobRequirements | None = None) -> FitScore:

@@ -26,6 +26,15 @@ class RejectionReason(models.TextChoices):
     OTHER = "other", "Other"
 
 
+class Source(models.TextChoices):
+    """Where an application came from (week 4A analytics)."""
+
+    CAREER_SITE = "career_site", "Career site"
+    INTERNAL = "internal", "Internal"
+    REFERRAL = "referral", "Referral"
+    JOB_BOARD = "job_board", "Job board"
+
+
 class Application(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     job = models.ForeignKey("jobs.Job", on_delete=models.PROTECT, related_name="applications")
@@ -39,6 +48,9 @@ class Application(models.Model):
         db_index=True,
     )
     cover_note = models.TextField(blank=True, default="")
+    source = models.CharField(
+        max_length=12, choices=Source.choices, default=Source.CAREER_SITE, db_index=True
+    )
     resume_file = models.ForeignKey(
         "files.StoredFile", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )

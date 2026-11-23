@@ -5,9 +5,12 @@ import { api, ApiError } from '@/lib/api';
 import { useDocumentTitle } from '@/lib/hooks';
 import { profileSchema, validate, type Errors } from '@/lib/schemas';
 import type { ProfileData } from '@/lib/types';
+import { useAuth } from '@/auth/AuthContext';
+import { ResumeCard } from '@/components/growth';
 
 export function ProfilePage() {
   useDocumentTitle('Your profile');
+  const { user } = useAuth();
   const client = useQueryClient();
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api<ProfileData>('/profile') });
   const [values, setValues] = useState({ full_name: '', headline: '', location_text: '', phone: '', address: '' });
@@ -80,6 +83,11 @@ export function ProfilePage() {
           </div>
         </form>
       </Card>
+      {(user?.role === 'candidate' || user?.role === 'employee') && (
+        <div className="mt-6">
+          <ResumeCard />
+        </div>
+      )}
     </>
   );
 }

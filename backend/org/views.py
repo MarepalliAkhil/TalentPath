@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from core.audit import audit
+from core.demo import deny_demo
 from core.views import PolicyAPIView
 
 
@@ -47,6 +48,7 @@ class OrgDetailView(PolicyAPIView):
         return Response(serializer.data)
 
     def delete(self, request, pk):
+        deny_demo(request.user, "delete organisation data")
         obj = get_object_or_404(self.model, pk=pk)
         try:
             obj.delete()

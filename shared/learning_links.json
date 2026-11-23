@@ -1,0 +1,249 @@
+{
+  "_about": "Curated learning links: official documentation homepages only, reviewed by a person. Skills without an entry show text only. Never add tutorials, courses or affiliate links.",
+  "links": {
+    "angular": {
+      "title": "Angular documentation",
+      "url": "https://angular.dev/"
+    },
+    "ansible": {
+      "title": "Ansible documentation",
+      "url": "https://docs.ansible.com/"
+    },
+    "apache-airflow": {
+      "title": "Apache Airflow documentation",
+      "url": "https://airflow.apache.org/docs/"
+    },
+    "apache-kafka": {
+      "title": "Apache Kafka documentation",
+      "url": "https://kafka.apache.org/documentation/"
+    },
+    "apache-spark": {
+      "title": "Apache Spark documentation",
+      "url": "https://spark.apache.org/docs/latest/"
+    },
+    "aws": {
+      "title": "AWS documentation",
+      "url": "https://docs.aws.amazon.com/"
+    },
+    "bash": {
+      "title": "GNU Bash manual",
+      "url": "https://www.gnu.org/software/bash/manual/"
+    },
+    "css": {
+      "title": "MDN: CSS",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS"
+    },
+    "cypress": {
+      "title": "Cypress documentation",
+      "url": "https://docs.cypress.io/"
+    },
+    "dbt": {
+      "title": "dbt documentation",
+      "url": "https://docs.getdbt.com/"
+    },
+    "django": {
+      "title": "Django documentation",
+      "url": "https://docs.djangoproject.com/"
+    },
+    "django-rest-framework": {
+      "title": "Django REST framework",
+      "url": "https://www.django-rest-framework.org/"
+    },
+    "docker": {
+      "title": "Docker documentation",
+      "url": "https://docs.docker.com/"
+    },
+    "express": {
+      "title": "Express documentation",
+      "url": "https://expressjs.com/"
+    },
+    "fastapi": {
+      "title": "FastAPI documentation",
+      "url": "https://fastapi.tiangolo.com/"
+    },
+    "flask": {
+      "title": "Flask documentation",
+      "url": "https://flask.palletsprojects.com/"
+    },
+    "git": {
+      "title": "Git documentation",
+      "url": "https://git-scm.com/doc"
+    },
+    "github-actions": {
+      "title": "GitHub Actions documentation",
+      "url": "https://docs.github.com/en/actions"
+    },
+    "go": {
+      "title": "Go documentation",
+      "url": "https://go.dev/doc/"
+    },
+    "google-cloud": {
+      "title": "Google Cloud documentation",
+      "url": "https://cloud.google.com/docs"
+    },
+    "grafana": {
+      "title": "Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/"
+    },
+    "graphql": {
+      "title": "GraphQL: Learn",
+      "url": "https://graphql.org/learn/"
+    },
+    "helm": {
+      "title": "Helm documentation",
+      "url": "https://helm.sh/docs/"
+    },
+    "html": {
+      "title": "MDN: HTML",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTML"
+    },
+    "java": {
+      "title": "Dev.java (Oracle)",
+      "url": "https://dev.java/learn/"
+    },
+    "javascript": {
+      "title": "MDN: JavaScript",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+    },
+    "jenkins": {
+      "title": "Jenkins documentation",
+      "url": "https://www.jenkins.io/doc/"
+    },
+    "jest": {
+      "title": "Jest documentation",
+      "url": "https://jestjs.io/docs/getting-started"
+    },
+    "kotlin": {
+      "title": "Kotlin documentation",
+      "url": "https://kotlinlang.org/docs/home.html"
+    },
+    "kubernetes": {
+      "title": "Kubernetes documentation",
+      "url": "https://kubernetes.io/docs/home/"
+    },
+    "microsoft-azure": {
+      "title": "Azure documentation",
+      "url": "https://learn.microsoft.com/en-us/azure/"
+    },
+    "mongodb": {
+      "title": "MongoDB documentation",
+      "url": "https://www.mongodb.com/docs/"
+    },
+    "mysql": {
+      "title": "MySQL documentation",
+      "url": "https://dev.mysql.com/doc/"
+    },
+    "nestjs": {
+      "title": "NestJS documentation",
+      "url": "https://docs.nestjs.com/"
+    },
+    "nextjs": {
+      "title": "Next.js documentation",
+      "url": "https://nextjs.org/docs"
+    },
+    "nginx": {
+      "title": "nginx documentation",
+      "url": "https://nginx.org/en/docs/"
+    },
+    "nodejs": {
+      "title": "Node.js documentation",
+      "url": "https://nodejs.org/en/docs"
+    },
+    "numpy": {
+      "title": "NumPy documentation",
+      "url": "https://numpy.org/doc/stable/"
+    },
+    "pandas": {
+      "title": "pandas documentation",
+      "url": "https://pandas.pydata.org/docs/"
+    },
+    "playwright": {
+      "title": "Playwright documentation",
+      "url": "https://playwright.dev/docs/intro"
+    },
+    "postgresql": {
+      "title": "PostgreSQL documentation",
+      "url": "https://www.postgresql.org/docs/"
+    },
+    "power-bi": {
+      "title": "Power BI documentation",
+      "url": "https://learn.microsoft.com/en-us/power-bi/"
+    },
+    "prometheus": {
+      "title": "Prometheus documentation",
+      "url": "https://prometheus.io/docs/introduction/overview/"
+    },
+    "pytest": {
+      "title": "pytest documentation",
+      "url": "https://docs.pytest.org/"
+    },
+    "python": {
+      "title": "Python documentation",
+      "url": "https://docs.python.org/3/"
+    },
+    "pytorch": {
+      "title": "PyTorch documentation",
+      "url": "https://pytorch.org/docs/stable/index.html"
+    },
+    "react": {
+      "title": "React documentation",
+      "url": "https://react.dev/"
+    },
+    "redis": {
+      "title": "Redis documentation",
+      "url": "https://redis.io/docs/"
+    },
+    "redux": {
+      "title": "Redux documentation",
+      "url": "https://redux.js.org/"
+    },
+    "rust": {
+      "title": "Rust documentation",
+      "url": "https://doc.rust-lang.org/"
+    },
+    "scikit-learn": {
+      "title": "scikit-learn documentation",
+      "url": "https://scikit-learn.org/stable/"
+    },
+    "selenium": {
+      "title": "Selenium documentation",
+      "url": "https://www.selenium.dev/documentation/"
+    },
+    "spring-boot": {
+      "title": "Spring Boot documentation",
+      "url": "https://docs.spring.io/spring-boot/"
+    },
+    "sqlite": {
+      "title": "SQLite documentation",
+      "url": "https://www.sqlite.org/docs.html"
+    },
+    "svelte": {
+      "title": "Svelte documentation",
+      "url": "https://svelte.dev/docs"
+    },
+    "tailwind-css": {
+      "title": "Tailwind CSS documentation",
+      "url": "https://tailwindcss.com/docs"
+    },
+    "tensorflow": {
+      "title": "TensorFlow: Learn",
+      "url": "https://www.tensorflow.org/learn"
+    },
+    "terraform": {
+      "title": "Terraform documentation",
+      "url": "https://developer.hashicorp.com/terraform/docs"
+    },
+    "typescript": {
+      "title": "TypeScript documentation",
+      "url": "https://www.typescriptlang.org/docs/"
+    },
+    "vuejs": {
+      "title": "Vue.js documentation",
+      "url": "https://vuejs.org/"
+    },
+    "web-accessibility": {
+      "title": "W3C: WCAG overview",
+      "url": "https://www.w3.org/WAI/standards-guidelines/wcag/"
+    }
+  }
+}

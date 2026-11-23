@@ -11,6 +11,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from accounts.models import Role
 from core.audit import audit
+from core.demo import check_demo_upload, deny_demo
 from core.views import PolicyAPIView
 from files.storage import read_file
 from interviews.timeutil import fmt, today_ist
@@ -45,6 +46,7 @@ def read_document(request, field="document"):
     if upload.size > MAX_DOC_BYTES:
         raise ValidationError({field: "Keep documents under 5 MB."})
     raw = upload.read(MAX_DOC_BYTES + 1)
+    check_demo_upload(request.user, len(raw), field)
     content_type = next((ct for magic, ct in DOC_TYPES.items() if raw.startswith(magic)), None)
     if content_type is None:
         raise ValidationError({field: "Upload a PDF, PNG or JPEG file."})
@@ -560,6 +562,7 @@ def work_policy_dict(p) -> dict:
         "hr_approval_over_days": float(p.hr_approval_over_days),
         "min_team_available_pct": p.min_team_available_pct,
         "escalate_after_hours": p.escalate_after_hours,
+        "internal_manager_notice": p.internal_manager_notice,
     }
 
 
@@ -737,6 +740,7 @@ class ConfigHolidayView(PolicyAPIView):
     policy_action = "hr.config"
 
     def delete(self, request, pk):
+        deny_demo(request.user, "delete holidays")
         h = get_object_or_404(Holiday, pk=pk)
         audit(request, "hr.holiday_deleted", target=h, date=h.date.isoformat())
         h.delete()
@@ -782,6 +786,11 @@ class ConfigWorkPolicyView(PolicyAPIView):
                 )
             except (InvalidOperation, ValueError):
                 errors["hr_approval_over_days"] = "Enter a number of days."
+        if "internal_manager_notice" in request.data:
+            if request.data["internal_manager_notice"] not in ("interview", "offer"):
+                errors["internal_manager_notice"] = "Choose interview or offer."
+            else:
+                p.internal_manager_notice = request.data["internal_manager_notice"]
         if "weekly_off" in request.data:
             value = request.data["weekly_off"]
             if (

@@ -28,9 +28,25 @@ class RevealStage(models.TextChoices):
     OFFER = "offer", "Offer"
 
 
+class Audience(models.TextChoices):
+    """Week 4A: who may see and apply. Internal jobs are for employees only."""
+
+    BOTH = "both", "Internal and external"
+    EXTERNAL = "external", "External (career site)"
+    INTERNAL = "internal", "Internal only"
+
+
 class JobQuerySet(models.QuerySet):
     def open(self):
         return self.filter(status=JobStatus.OPEN)
+
+    def public(self):
+        """Open jobs on the public career site (not internal-only)."""
+        return self.open().exclude(audience=Audience.INTERNAL)
+
+    def internal(self):
+        """Open jobs employees may apply to."""
+        return self.open().exclude(audience=Audience.EXTERNAL)
 
 
 class Job(models.Model):
@@ -51,6 +67,7 @@ class Job(models.Model):
     # Blind screening: hide identity from staff until the reveal stage.
     blind_screening = models.BooleanField(default=True)
     reveal_stage = models.CharField(max_length=10, choices=RevealStage.choices, default=RevealStage.INTERVIEW)
+    audience = models.CharField(max_length=10, choices=Audience.choices, default=Audience.BOTH)
     status = models.CharField(
         max_length=10, choices=JobStatus.choices, default=JobStatus.DRAFT, db_index=True
     )

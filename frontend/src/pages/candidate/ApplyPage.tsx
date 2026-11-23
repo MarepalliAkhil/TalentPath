@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, ErrorNote, PageLoader, TextAreaField, buttonClass } from '@/components/ui';
+import { Button, Card, ErrorNote, PageLoader, SelectField, TextAreaField, buttonClass } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useDocumentTitle } from '@/lib/hooks';
 import { applySchema, validate, type Errors } from '@/lib/schemas';
@@ -18,6 +18,7 @@ export function ApplyForm({ job, onDone }: { job: PublicJob; onDone: () => void 
   const fileInput = useRef<HTMLInputElement>(null);
   const fileError = errors.resume;
 
+  const [source, setSource] = useState('career_site');
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError('');
@@ -30,6 +31,7 @@ export function ApplyForm({ job, onDone }: { job: PublicJob; onDone: () => void 
     const form = new FormData();
     form.append('job', job.slug);
     form.append('cover_note', data.cover_note);
+    form.append('source', source);
     form.append('resume', data.resume);
     setBusy(true);
     try {
@@ -84,6 +86,11 @@ export function ApplyForm({ job, onDone }: { job: PublicJob; onDone: () => void 
           </p>
         )}
       </div>
+      <SelectField label="How did you find this job?" value={source} onChange={(e) => setSource(e.target.value)}>
+        <option value="career_site">Our career site</option>
+        <option value="job_board">A job board</option>
+        <option value="referral">Someone referred me</option>
+      </SelectField>
       <TextAreaField
         label="Note to the hiring team (optional)"
         value={note}

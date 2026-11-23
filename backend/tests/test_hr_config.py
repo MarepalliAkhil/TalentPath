@@ -157,3 +157,13 @@ def test_hr_adjusts_comp_off(team, users):
         ).status_code
         == 400
     )
+
+
+@pytest.mark.django_db
+def test_internal_manager_notice_rule_is_configurable(team, users, org):
+    admin = as_user(users["hr_admin"])
+    url = f"/api/hr/config/work-policy/{org['location'].id}"
+    changed = admin.patch(url, {"internal_manager_notice": "offer"}, format="json")
+    assert changed.data["internal_manager_notice"] == "offer"
+    assert WorkPolicy.objects.get(location=org["location"]).internal_manager_notice == "offer"
+    assert admin.patch(url, {"internal_manager_notice": "apply"}, format="json").status_code == 400

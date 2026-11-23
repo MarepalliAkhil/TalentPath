@@ -17,7 +17,9 @@ export type IconName =
   | 'sun'
   | 'clock'
   | 'check'
-  | 'clipboard';
+  | 'clipboard'
+  | 'compass'
+  | 'chart';
 
 export interface NavItem {
   to: string;
@@ -38,9 +40,12 @@ export const NAV: NavItem[] = [
   { to: '/employee', label: 'Overview', route: '/employee', icon: 'home' },
   { to: '/admin', label: 'Overview', route: '/admin', icon: 'home' },
   { to: '/admin/jobs', label: 'All jobs', route: '/admin/jobs', icon: 'briefcase' },
+  { to: '/career', label: 'Career map', route: '/career', icon: 'compass' },
   { to: '/offers', label: 'Offers', route: '/offers', icon: 'document' },
   { to: '/hira', label: 'HIRA activity', route: '/hira', icon: 'sparkle' },
+  { to: '/analytics', label: 'Analytics', route: '/analytics', icon: 'chart' },
   { to: '/interviews', label: 'My interviews', route: '/interviews', icon: 'calendar' },
+  { to: '/internal-jobs', label: 'Internal jobs', route: '/internal-jobs', icon: 'briefcase' },
   { to: '/leave', label: 'Leave', route: '/leave', icon: 'sun' },
   { to: '/leave/approvals', label: 'Approvals', route: '/leave/approvals', icon: 'check' },
   { to: '/team-calendar', label: 'Team calendar', route: '/team-calendar', icon: 'calendar' },

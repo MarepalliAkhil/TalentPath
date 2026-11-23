@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from core.audit import audit
+from core.demo import deny_demo
 from core.utils import paginate
 from core.views import PolicyAPIView
 from org.taxonomy import resolve_skill
@@ -15,7 +16,7 @@ from .services import change_status, editable_jobs, unique_job_slug, visible_job
 
 def _public_qs():
     return (
-        Job.objects.open()
+        Job.objects.public()
         .select_related("department", "location", "level")
         .prefetch_related("required_skills", "nice_to_have_skills")
         .order_by("-published_at", "-created_at")
@@ -105,6 +106,7 @@ class StaffJobDetailView(PolicyAPIView):
         return Response(staff_job_dict(visible_jobs(request.user).get(pk=job.pk)))
 
     def delete(self, request, pk):
+        deny_demo(request.user, "delete jobs")
         job = get_object_or_404(editable_jobs(request.user), pk=pk)
         if job.status != JobStatus.DRAFT or job.applications.exists():
             return Response(

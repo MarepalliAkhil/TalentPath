@@ -23,6 +23,7 @@ type Values = {
   nice_to_have_skills: string[];
   blind_screening: boolean;
   reveal_stage: 'interview' | 'offer';
+  audience: 'both' | 'external' | 'internal';
 };
 
 const EMPTY: Values = {
@@ -39,6 +40,7 @@ const EMPTY: Values = {
   nice_to_have_skills: [],
   blind_screening: true,
   reveal_stage: 'interview',
+  audience: 'both',
 };
 
 export function JobFormPage() {
@@ -84,6 +86,7 @@ export function JobFormPage() {
       nice_to_have_skills: job.nice_to_have_skills.map((s) => s.id),
       blind_screening: job.blind_screening,
       reveal_stage: job.reveal_stage,
+      audience: job.audience ?? 'both',
     });
   }, [existing.data]);
 
@@ -224,6 +227,18 @@ export function JobFormPage() {
               </SelectField>
             </div>
           </fieldset>
+          <div className="max-w-xs">
+            <SelectField
+              label="Who can apply"
+              value={values.audience}
+              hint="Internal jobs are shown only to employees, on Internal jobs."
+              onChange={(e) => set('audience', e.target.value as Values['audience'])}
+            >
+              <option value="both">Internal and external</option>
+              <option value="external">External only (career site)</option>
+              <option value="internal">Internal only (employees)</option>
+            </SelectField>
+          </div>
           <div className="flex gap-2 md:col-span-2">
             <Button type="submit" disabled={busy}>
               {busy ? 'Saving…' : editing ? 'Save changes' : 'Save draft'}

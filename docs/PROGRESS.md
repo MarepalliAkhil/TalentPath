@@ -67,11 +67,22 @@ Deployment groundwork already in place: `/api/ping` with zero queries, `POST /ap
 | F. Seed: 30 employees with managers and buddies, two locations with holiday calendars (demo data to verify), leave in every state incl. delegated and escalated, 30 days of attendance, three people mid-onboarding, one accepted offer ready to hire | ✅ |
 | Tests: hire atomicity and rules, every leave rule, approvals, delegation, escalation, privacy, clash thresholds, attendance, assistant intents and confirmation card, HR settings, allowed and denied for every new endpoint; Vitest and Playwright specs for the new screens | ✅ backend · 🧪 frontend |
 
-## Week 4: growth, analytics, launch
+## Week 4A: skill-gap career map, internal mobility, analytics, For recruiters page, demo mode
+
+> Built 2026-11-23. In the build sandbox (SQLite, Python 3.10) the backend suite passed in batches (the two PostgreSQL-only tests are skipped there), ruff, TypeScript and ESLint were clean. Vitest, the Vite build and Playwright could not run in the sandbox, so frontend items stay 🧪 until they pass on your machine. See `docs/ANALYTICS.md`.
 
 | Item | Status |
 | --- | --- |
-| Skill-gap career map and internal mobility | ⬜ |
-| Hiring analytics | ⬜ |
-| "For Phenom, TurboHire, Darwinbox and Keka" page | ⬜ |
+| A. Skill graph as data (`shared/skill_graph.json`: 126 skills with prerequisites, related skills and an effort label); "Jobs you're closest to" from the same week 2 scorer; per-job map (have with evidence, required missing, nice-to-have missing) and a learning path that respects prerequisites; links only from `shared/learning_links.json` (61 official documentation homepages), text only otherwise; "Your next role" for employees; profile resume upload (parsed, encrypted, replaceable, deletable) | ✅ backend · 🧪 UI |
+| B. Internal mobility: jobs marked internal, external or both; internal jobs with the employee's match and one-click apply from the profile resume; the manager is told at Interview (configurable per location: Interview or Offer, never at application) and the rule is shown before applying; same pipeline, blind screening, HIRA and scorecards; internal hire updates department, designation, level and manager on the same record (audited, no new account) | ✅ backend · 🧪 UI |
+| C. Analytics: time to hire and time in stage (median, 80th percentile), funnel conversion, source effectiveness (new application source field, seeded), offers and decline reasons, interviewer load and scorecard timeliness, HIRA automation, match band versus outcome (labelled synthetic); people: leave utilisation, absenteeism and late trends, onboarding completion, mobility; summary + table + chart, date and department filters, CSV export; role scoping | ✅ backend · 🧪 UI |
+| D. Public `/for-recruiters` page: intro, Try it in 60 seconds, one plain-text section per company (no logos, no brand colours), How it is built with numbers read from the repository at build time, Honest limits, About me; linked in the career site header and footer | 🧪 |
+| E. Demo mode (off by default): Try-as buttons, "Demo data, resets nightly" banner, demo accounts cannot change password or email, invite or edit staff, move or delete in bulk; upload limits; nightly reset of demo data only, audited | ✅ backend · 🧪 UI |
+| Tests: learning path and curated links, same score as the recruiter view, profile resume limits and deletion, internal visibility, manager notice at Interview, internal hire without a new account, analytics on known fixtures (medians, percentiles, conversion, offers, timeliness, HIRA, utilisation, absenteeism, late), scoping, CSV, demo mode; allowed and denied for every new endpoint; Vitest and Playwright specs | ✅ backend · 🧪 frontend |
+
+## Week 4B: launch
+
+| Item | Status |
+| --- | --- |
+| UI polish pass (separate task) | ⬜ |
 | Deployment: Vercel, Render (Docker), Neon, cron-job.org; fill in `frontend/vercel.json` rewrites | ⬜ |

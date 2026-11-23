@@ -49,6 +49,7 @@ export const jobSchema = z.object({
   nice_to_have_skills: z.array(z.string()).max(15, 'Use at most 15 skills.'),
   blind_screening: z.boolean(),
   reveal_stage: z.enum(['interview', 'offer']),
+  audience: z.enum(['both', 'external', 'internal']),
 });
 
 export const staffSchema = z.object({

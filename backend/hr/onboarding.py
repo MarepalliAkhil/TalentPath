@@ -202,8 +202,9 @@ def hire(offer, actor, request=None, now=None) -> Employee:
             raise ValidationError(
                 {"status": "This candidate has already been hired or is no longer at Offer."}
             )
-        if Employee.objects.filter(user=candidate).exists():
-            raise ValidationError({"status": "This person already has an employee record."})
+        existing = (
+            Employee.objects.select_related("department", "manager__user").filter(user=candidate).first()
+        )
         terms = offer.data
         try:
             joining = date.fromisoformat(terms.get("joining_date", ""))
@@ -222,6 +223,21 @@ def hire(offer, actor, request=None, now=None) -> Employee:
             location=location,
             designation=manager_user.get_role_display(),
         )
+        if existing is not None:
+            return _internal_move(
+                existing,
+                offer,
+                application,
+                job,
+                actor,
+                department=department,
+                location=location,
+                manager=manager,
+                designation=terms.get("designation") or job.title,
+                joining=joining,
+                request=request,
+                now=now,
+            )
 
         # 1. Application -> Hired.
         application.status = S.HIRED
@@ -239,6 +255,7 @@ def hire(offer, actor, request=None, now=None) -> Employee:
             location=location,
             manager=manager,
             joined_on=joining,
+            level=job.level,
             status=EmployeeStatus.ONBOARDING,
             hired_from=offer,
         )
@@ -294,6 +311,98 @@ def hire(offer, actor, request=None, now=None) -> Employee:
         transaction.on_commit(lambda: broadcast_board(application))
         transaction.on_commit(lambda: _welcome_messages(employee.pk))
     return employee
+
+
+def _internal_move(
+    employee,
+    offer,
+    application,
+    job,
+    actor,
+    *,
+    department,
+    location,
+    manager,
+    designation,
+    joining,
+    request,
+    now,
+) -> Employee:
+    """Internal hire (week 4A): the same employee record changes department, designation, manager
+    and level. No new account, no role change; leave balances stay. Audited and recorded."""
+    from .models import InternalMove
+
+    if manager.id == employee.id:  # nobody reports to themselves
+        manager = employee.manager
+    before = {
+        "department": employee.department.name,
+        "designation": employee.designation,
+        "manager": employee.manager.name if employee.manager else "",
+    }
+    application.status = S.HIRED
+    application.save(update_fields=["status", "updated_at"])
+    ApplicationEvent.objects.create(
+        application=application, from_status=S.OFFER, to_status=S.HIRED, actor=actor
+    )
+    employee.department, employee.location, employee.designation = department, location, designation
+    employee.manager, employee.level, employee.hired_from = manager, job.level, offer
+    employee.save(update_fields=["department", "location", "designation", "manager", "level", "hired_from"])
+    move = InternalMove.objects.create(
+        employee=employee,
+        application=application,
+        from_department=before["department"],
+        to_department=department.name,
+        from_designation=before["designation"],
+        to_designation=designation,
+        from_manager=before["manager"],
+        to_manager=manager.name if manager else "",
+        moved_on=joining,
+    )
+    withdrawn = _withdraw_others(application, actor)
+    job.openings = max(0, job.openings - 1)
+    fields = ["openings", "updated_at"]
+    if job.openings == 0 and job.status == JobStatus.OPEN:
+        job.status, job.closed_at = JobStatus.CLOSED, now
+        fields += ["status", "closed_at"]
+    job.save(update_fields=fields)
+    from applications.services import _coordinate, broadcast_board
+
+    _coordinate(application, S.OFFER, S.HIRED, actor, True)
+    audit(
+        request,
+        "onboarding.internal_move",
+        actor=actor,
+        target=employee,
+        offer=str(offer.id),
+        move=str(move.id),
+        from_department=before["department"],
+        to_department=department.name,
+        withdrawn=withdrawn,
+    )
+    transaction.on_commit(lambda: broadcast_board(application))
+    transaction.on_commit(lambda: _move_messages(employee.pk))
+    return employee
+
+
+def _move_messages(employee_id) -> None:
+    employee = Employee.objects.select_related("user", "manager__user", "department").get(pk=employee_id)
+    notify(
+        employee.user,
+        kind="internal_move",
+        title=f"Congratulations on your new role: {employee.designation}",
+        body=f"You move to {employee.department.name}"
+        + (f", reporting to {employee.manager.name}." if employee.manager else "."),
+        link="/career",
+    )
+    if employee.manager:
+        notify(
+            employee.manager.user,
+            kind="new_joiner",
+            title=f"{employee.name} joins your team through an internal move",
+            body=f"{employee.name} moves into the role of {employee.designation}.",
+            link="/team-calendar",
+            email=False,
+        )
 
 
 def _welcome_messages(employee_id) -> None:

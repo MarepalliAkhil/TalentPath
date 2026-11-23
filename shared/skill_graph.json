@@ -1,0 +1,1111 @@
+{
+  "_about": "TalentPath skill graph (data, reviewable). effort is a rough label only: small, medium or large. prerequisites must be learned first; related skills are neighbours. Every slug must exist in the skills taxonomy (checked by tests).",
+  "skills": {
+    "ab-testing": {
+      "effort": "medium",
+      "prerequisites": [
+        "statistics"
+      ],
+      "related": [
+        "data-analysis"
+      ]
+    },
+    "agile": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "scrum",
+        "kanban"
+      ]
+    },
+    "android-development": {
+      "effort": "large",
+      "prerequisites": [
+        "kotlin"
+      ],
+      "related": [
+        "ios-development"
+      ]
+    },
+    "angular": {
+      "effort": "large",
+      "prerequisites": [
+        "typescript",
+        "html",
+        "css"
+      ],
+      "related": [
+        "react",
+        "vuejs"
+      ]
+    },
+    "ansible": {
+      "effort": "medium",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": [
+        "terraform"
+      ]
+    },
+    "apache-airflow": {
+      "effort": "medium",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "dbt"
+      ]
+    },
+    "apache-kafka": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "apache-spark"
+      ]
+    },
+    "apache-spark": {
+      "effort": "medium",
+      "prerequisites": [
+        "python",
+        "sql"
+      ],
+      "related": [
+        "apache-kafka"
+      ]
+    },
+    "api-testing": {
+      "effort": "small",
+      "prerequisites": [
+        "rest-api-design"
+      ],
+      "related": [
+        "test-automation"
+      ]
+    },
+    "application-security": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "cloud-security"
+      ]
+    },
+    "aws": {
+      "effort": "large",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": [
+        "microsoft-azure",
+        "google-cloud"
+      ]
+    },
+    "bash": {
+      "effort": "small",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": [
+        "powershell"
+      ]
+    },
+    "bigquery": {
+      "effort": "small",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "snowflake"
+      ]
+    },
+    "cicd": {
+      "effort": "medium",
+      "prerequisites": [
+        "git"
+      ],
+      "related": [
+        "github-actions",
+        "jenkins"
+      ]
+    },
+    "computer-networking": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "linux"
+      ]
+    },
+    "computer-vision": {
+      "effort": "large",
+      "prerequisites": [
+        "deep-learning"
+      ],
+      "related": []
+    },
+    "crm": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "salesforce",
+        "hubspot"
+      ]
+    },
+    "csharp": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "java"
+      ]
+    },
+    "css": {
+      "effort": "small",
+      "prerequisites": [
+        "html"
+      ],
+      "related": [
+        "sass",
+        "tailwind-css"
+      ]
+    },
+    "cypress": {
+      "effort": "small",
+      "prerequisites": [
+        "javascript"
+      ],
+      "related": [
+        "playwright"
+      ]
+    },
+    "dart": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "flutter"
+      ]
+    },
+    "data-analysis": {
+      "effort": "medium",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "data-visualization"
+      ]
+    },
+    "data-engineering": {
+      "effort": "large",
+      "prerequisites": [
+        "sql",
+        "python"
+      ],
+      "related": [
+        "apache-spark",
+        "apache-airflow"
+      ]
+    },
+    "data-visualization": {
+      "effort": "small",
+      "prerequisites": [
+        "data-analysis"
+      ],
+      "related": [
+        "power-bi",
+        "tableau"
+      ]
+    },
+    "dbt": {
+      "effort": "small",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "apache-airflow"
+      ]
+    },
+    "deep-learning": {
+      "effort": "large",
+      "prerequisites": [
+        "machine-learning"
+      ],
+      "related": [
+        "pytorch",
+        "tensorflow"
+      ]
+    },
+    "design-systems": {
+      "effort": "large",
+      "prerequisites": [
+        "ui-design"
+      ],
+      "related": [
+        "web-accessibility"
+      ]
+    },
+    "django": {
+      "effort": "medium",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "flask",
+        "fastapi"
+      ]
+    },
+    "django-rest-framework": {
+      "effort": "small",
+      "prerequisites": [
+        "django"
+      ],
+      "related": [
+        "rest-api-design"
+      ]
+    },
+    "docker": {
+      "effort": "medium",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": [
+        "kubernetes"
+      ]
+    },
+    "dotnet": {
+      "effort": "large",
+      "prerequisites": [
+        "csharp"
+      ],
+      "related": [
+        "spring-boot"
+      ]
+    },
+    "elasticsearch": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": []
+    },
+    "excel": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "data-analysis"
+      ]
+    },
+    "express": {
+      "effort": "small",
+      "prerequisites": [
+        "nodejs"
+      ],
+      "related": [
+        "nestjs"
+      ]
+    },
+    "fastapi": {
+      "effort": "small",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "flask",
+        "django"
+      ]
+    },
+    "figma": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "prototyping"
+      ]
+    },
+    "flask": {
+      "effort": "small",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "django",
+        "fastapi"
+      ]
+    },
+    "flutter": {
+      "effort": "medium",
+      "prerequisites": [
+        "dart"
+      ],
+      "related": [
+        "react-native"
+      ]
+    },
+    "git": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "github-actions"
+      ]
+    },
+    "github-actions": {
+      "effort": "small",
+      "prerequisites": [
+        "git",
+        "cicd"
+      ],
+      "related": [
+        "jenkins"
+      ]
+    },
+    "go": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "rust",
+        "python"
+      ]
+    },
+    "google-cloud": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "aws",
+        "microsoft-azure"
+      ]
+    },
+    "grafana": {
+      "effort": "small",
+      "prerequisites": [
+        "prometheus"
+      ],
+      "related": [
+        "prometheus"
+      ]
+    },
+    "graphql": {
+      "effort": "medium",
+      "prerequisites": [
+        "rest-api-design"
+      ],
+      "related": [
+        "rest-api-design"
+      ]
+    },
+    "grpc": {
+      "effort": "medium",
+      "prerequisites": [
+        "rest-api-design"
+      ],
+      "related": [
+        "graphql"
+      ]
+    },
+    "helm": {
+      "effort": "small",
+      "prerequisites": [
+        "kubernetes"
+      ],
+      "related": [
+        "kubernetes"
+      ]
+    },
+    "hr-analytics": {
+      "effort": "medium",
+      "prerequisites": [
+        "excel"
+      ],
+      "related": [
+        "hris"
+      ]
+    },
+    "html": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "css"
+      ]
+    },
+    "hubspot": {
+      "effort": "small",
+      "prerequisites": [
+        "crm"
+      ],
+      "related": [
+        "salesforce"
+      ]
+    },
+    "interaction-design": {
+      "effort": "medium",
+      "prerequisites": [
+        "ui-design"
+      ],
+      "related": [
+        "ux-research"
+      ]
+    },
+    "java": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "kotlin",
+        "csharp"
+      ]
+    },
+    "javascript": {
+      "effort": "medium",
+      "prerequisites": [
+        "html"
+      ],
+      "related": [
+        "typescript"
+      ]
+    },
+    "jenkins": {
+      "effort": "medium",
+      "prerequisites": [
+        "cicd"
+      ],
+      "related": [
+        "github-actions"
+      ]
+    },
+    "jest": {
+      "effort": "small",
+      "prerequisites": [
+        "javascript"
+      ],
+      "related": [
+        "pytest"
+      ]
+    },
+    "junit": {
+      "effort": "small",
+      "prerequisites": [
+        "java"
+      ],
+      "related": [
+        "pytest"
+      ]
+    },
+    "kanban": {
+      "effort": "small",
+      "prerequisites": [
+        "agile"
+      ],
+      "related": [
+        "scrum"
+      ]
+    },
+    "kotlin": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "java"
+      ]
+    },
+    "kubernetes": {
+      "effort": "large",
+      "prerequisites": [
+        "docker",
+        "linux"
+      ],
+      "related": [
+        "helm"
+      ]
+    },
+    "laravel": {
+      "effort": "medium",
+      "prerequisites": [
+        "php"
+      ],
+      "related": [
+        "django"
+      ]
+    },
+    "large-language-models": {
+      "effort": "large",
+      "prerequisites": [
+        "deep-learning"
+      ],
+      "related": [
+        "prompt-engineering"
+      ]
+    },
+    "linux": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "bash"
+      ]
+    },
+    "machine-learning": {
+      "effort": "large",
+      "prerequisites": [
+        "python",
+        "statistics"
+      ],
+      "related": [
+        "deep-learning"
+      ]
+    },
+    "manual-testing": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "test-automation"
+      ]
+    },
+    "marketing-analytics": {
+      "effort": "medium",
+      "prerequisites": [
+        "excel"
+      ],
+      "related": [
+        "digital-marketing"
+      ]
+    },
+    "microservices": {
+      "effort": "large",
+      "prerequisites": [
+        "rest-api-design",
+        "docker"
+      ],
+      "related": [
+        "system-design"
+      ]
+    },
+    "microsoft-azure": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "aws",
+        "google-cloud"
+      ]
+    },
+    "mlops": {
+      "effort": "large",
+      "prerequisites": [
+        "machine-learning",
+        "docker"
+      ],
+      "related": [
+        "data-engineering"
+      ]
+    },
+    "mongodb": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "dynamodb",
+        "cassandra"
+      ]
+    },
+    "mysql": {
+      "effort": "medium",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "postgresql"
+      ]
+    },
+    "natural-language-processing": {
+      "effort": "large",
+      "prerequisites": [
+        "machine-learning"
+      ],
+      "related": [
+        "large-language-models"
+      ]
+    },
+    "nestjs": {
+      "effort": "medium",
+      "prerequisites": [
+        "nodejs",
+        "typescript"
+      ],
+      "related": [
+        "express"
+      ]
+    },
+    "nextjs": {
+      "effort": "medium",
+      "prerequisites": [
+        "react"
+      ],
+      "related": [
+        "react"
+      ]
+    },
+    "nginx": {
+      "effort": "small",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": []
+    },
+    "nodejs": {
+      "effort": "medium",
+      "prerequisites": [
+        "javascript"
+      ],
+      "related": [
+        "express"
+      ]
+    },
+    "numpy": {
+      "effort": "small",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "pandas"
+      ]
+    },
+    "observability": {
+      "effort": "medium",
+      "prerequisites": [
+        "prometheus"
+      ],
+      "related": [
+        "site-reliability-engineering"
+      ]
+    },
+    "pandas": {
+      "effort": "small",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "numpy"
+      ]
+    },
+    "penetration-testing": {
+      "effort": "large",
+      "prerequisites": [
+        "computer-networking",
+        "linux"
+      ],
+      "related": [
+        "application-security"
+      ]
+    },
+    "php": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": []
+    },
+    "playwright": {
+      "effort": "small",
+      "prerequisites": [
+        "javascript"
+      ],
+      "related": [
+        "cypress",
+        "selenium"
+      ]
+    },
+    "postgresql": {
+      "effort": "medium",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "mysql"
+      ]
+    },
+    "power-bi": {
+      "effort": "small",
+      "prerequisites": [
+        "data-analysis"
+      ],
+      "related": [
+        "tableau"
+      ]
+    },
+    "product-management": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "product-strategy"
+      ]
+    },
+    "product-strategy": {
+      "effort": "large",
+      "prerequisites": [
+        "product-management"
+      ],
+      "related": [
+        "product-management"
+      ]
+    },
+    "program-management": {
+      "effort": "large",
+      "prerequisites": [
+        "project-management"
+      ],
+      "related": [
+        "project-management"
+      ]
+    },
+    "project-management": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "program-management"
+      ]
+    },
+    "prometheus": {
+      "effort": "medium",
+      "prerequisites": [
+        "linux"
+      ],
+      "related": [
+        "grafana"
+      ]
+    },
+    "prompt-engineering": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "large-language-models"
+      ]
+    },
+    "prototyping": {
+      "effort": "small",
+      "prerequisites": [
+        "figma"
+      ],
+      "related": [
+        "ui-design"
+      ]
+    },
+    "pytest": {
+      "effort": "small",
+      "prerequisites": [
+        "python"
+      ],
+      "related": [
+        "jest"
+      ]
+    },
+    "python": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "java",
+        "go"
+      ]
+    },
+    "pytorch": {
+      "effort": "medium",
+      "prerequisites": [
+        "python",
+        "numpy"
+      ],
+      "related": [
+        "tensorflow"
+      ]
+    },
+    "react": {
+      "effort": "medium",
+      "prerequisites": [
+        "javascript",
+        "html",
+        "css"
+      ],
+      "related": [
+        "vuejs",
+        "angular",
+        "svelte"
+      ]
+    },
+    "react-native": {
+      "effort": "medium",
+      "prerequisites": [
+        "react"
+      ],
+      "related": [
+        "flutter"
+      ]
+    },
+    "redis": {
+      "effort": "small",
+      "prerequisites": [],
+      "related": [
+        "mongodb"
+      ]
+    },
+    "redux": {
+      "effort": "small",
+      "prerequisites": [
+        "react"
+      ],
+      "related": [
+        "react"
+      ]
+    },
+    "rest-api-design": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "graphql",
+        "grpc"
+      ]
+    },
+    "ruby": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "python"
+      ]
+    },
+    "ruby-on-rails": {
+      "effort": "medium",
+      "prerequisites": [
+        "ruby"
+      ],
+      "related": [
+        "django"
+      ]
+    },
+    "rust": {
+      "effort": "large",
+      "prerequisites": [],
+      "related": [
+        "go",
+        "cpp"
+      ]
+    },
+    "sales-forecasting": {
+      "effort": "medium",
+      "prerequisites": [
+        "excel"
+      ],
+      "related": [
+        "b2b-sales"
+      ]
+    },
+    "salesforce": {
+      "effort": "medium",
+      "prerequisites": [
+        "crm"
+      ],
+      "related": [
+        "hubspot"
+      ]
+    },
+    "sass": {
+      "effort": "small",
+      "prerequisites": [
+        "css"
+      ],
+      "related": [
+        "tailwind-css"
+      ]
+    },
+    "scikit-learn": {
+      "effort": "medium",
+      "prerequisites": [
+        "python",
+        "numpy",
+        "pandas"
+      ],
+      "related": [
+        "machine-learning"
+      ]
+    },
+    "scrum": {
+      "effort": "small",
+      "prerequisites": [
+        "agile"
+      ],
+      "related": [
+        "kanban"
+      ]
+    },
+    "selenium": {
+      "effort": "medium",
+      "prerequisites": [
+        "test-automation"
+      ],
+      "related": [
+        "playwright",
+        "cypress"
+      ]
+    },
+    "sem": {
+      "effort": "small",
+      "prerequisites": [
+        "digital-marketing"
+      ],
+      "related": [
+        "seo"
+      ]
+    },
+    "seo": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "sem"
+      ]
+    },
+    "site-reliability-engineering": {
+      "effort": "large",
+      "prerequisites": [
+        "linux",
+        "observability"
+      ],
+      "related": [
+        "observability"
+      ]
+    },
+    "snowflake": {
+      "effort": "small",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "bigquery"
+      ]
+    },
+    "spring-boot": {
+      "effort": "large",
+      "prerequisites": [
+        "java"
+      ],
+      "related": [
+        "dotnet"
+      ]
+    },
+    "sql": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "postgresql",
+        "mysql"
+      ]
+    },
+    "sqlite": {
+      "effort": "small",
+      "prerequisites": [
+        "sql"
+      ],
+      "related": [
+        "postgresql"
+      ]
+    },
+    "statistics": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "data-analysis"
+      ]
+    },
+    "svelte": {
+      "effort": "small",
+      "prerequisites": [
+        "javascript",
+        "html",
+        "css"
+      ],
+      "related": [
+        "react",
+        "vuejs"
+      ]
+    },
+    "system-design": {
+      "effort": "large",
+      "prerequisites": [
+        "rest-api-design"
+      ],
+      "related": [
+        "microservices"
+      ]
+    },
+    "tableau": {
+      "effort": "small",
+      "prerequisites": [
+        "data-analysis"
+      ],
+      "related": [
+        "power-bi"
+      ]
+    },
+    "tailwind-css": {
+      "effort": "small",
+      "prerequisites": [
+        "css"
+      ],
+      "related": [
+        "sass"
+      ]
+    },
+    "tensorflow": {
+      "effort": "medium",
+      "prerequisites": [
+        "python",
+        "numpy"
+      ],
+      "related": [
+        "pytorch"
+      ]
+    },
+    "terraform": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "ansible"
+      ]
+    },
+    "test-automation": {
+      "effort": "medium",
+      "prerequisites": [
+        "manual-testing"
+      ],
+      "related": [
+        "selenium",
+        "playwright"
+      ]
+    },
+    "typescript": {
+      "effort": "small",
+      "prerequisites": [
+        "javascript"
+      ],
+      "related": [
+        "javascript"
+      ]
+    },
+    "ui-design": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "interaction-design"
+      ]
+    },
+    "ux-research": {
+      "effort": "medium",
+      "prerequisites": [],
+      "related": [
+        "interaction-design"
+      ]
+    },
+    "vuejs": {
+      "effort": "medium",
+      "prerequisites": [
+        "javascript",
+        "html",
+        "css"
+      ],
+      "related": [
+        "react",
+        "angular"
+      ]
+    },
+    "web-accessibility": {
+      "effort": "medium",
+      "prerequisites": [
+        "html"
+      ],
+      "related": [
+        "ui-design"
+      ]
+    }
+  }
+}

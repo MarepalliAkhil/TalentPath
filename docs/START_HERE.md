@@ -146,6 +146,22 @@ Run `python manage.py seed --reset` first (it takes a little longer now). Times 
 
 See `docs/HR.md` for every rule and number, and the assistant's measured accuracy.
 
+### Week 4A walkthrough (career map, internal mobility, analytics, For recruiters, demo mode)
+
+Run `python manage.py seed --reset` first.
+
+1. **Candidate sees the skill-gap map.** Sign in as `candidate@demo.example` → **Career map**. "Jobs you're closest to" lists jobs with the same score a recruiter sees. Open one: **Skills you have** (with evidence from the resume), **Required skills missing**, **Nice to have, missing** and a **learning path** in prerequisite order (for example Docker and Linux before Kubernetes). Links go only to official documentation from `shared/learning_links.json`; skills without a curated link show text only. To try another resume, upload it on the same page (PDF or DOCX; you can delete it).
+2. **Employee applies internally.** Sign in as `employee@demo.example` → **Internal jobs**. Each job shows your match. Read the rule ("Your reporting manager is told only if your application reaches the Interview stage"), choose **Apply** → **Send application**. It goes through the same pipeline and blind screening. On **Career map**, **Your next role** shows higher levels in your department and the skills between you and them.
+3. **The manager hears at Interview, not before.** As the job's recruiter (open the job's board as `admin@demo.example`), move the internal application to Screening, then Interview: only now does the employee's manager get a notification. HR can change the stage on **HR settings → Work policy** (Interview or Offer).
+4. **hr_admin analytics.** Sign in as `admin@demo.example` → **Analytics**. **Hiring**: time to hire, time in stage, funnel, sources, offers, interviewer load, HIRA automation and score versus outcome (labelled synthetic). **People**: leave utilisation, absenteeism and late trends, onboarding and mobility. Each section has a one-line summary, **Chart / Table** and a **CSV** download; try the date and department filters. Recruiters and hiring managers see only their own jobs; employees do not see Analytics.
+5. **For recruiters and demo mode.** Open `http://localhost:5173/for-recruiters` (also linked in the career site header and footer). With `DEMO_MODE=true` in `backend/.env`, the page and the login page show **Try as candidate / recruiter / hiring manager / employee / HR admin**, and every page shows "Demo data, resets nightly". Choose **Try as HR admin**: you are signed in straight away. Demo accounts cannot change their password, invite staff or move applications in bulk.
+
+Metric definitions: `docs/ANALYTICS.md`.
+
+#### Demo mode
+
+`DEMO_MODE` is **off by default** in `config/settings.py`; the local `backend/.env.example` turns it on for development. Restart the backend after changing it. When it is on, the nightly hook (`POST /api/internal/nightly`) also rebuilds the demo data (`seed --reset`), which removes only `*.example` accounts, their jobs and records attached to them, then reseeds. Keep it off for any real data.
+
 ## 8. Useful commands
 
 | Task | Command (in `backend` with the venv active) |
@@ -155,6 +171,7 @@ See `docs/HR.md` for every rule and number, and the assistant's measured accurac
 | Call the cron hooks locally | `curl -X POST -H "X-Internal-Secret: <INTERNAL_TICK_SECRET>" http://localhost:8000/api/internal/tick` |
 | Nightly hook (leave accrual, carry-forward, missing check-outs) | same command with `/api/internal/nightly` |
 | Measure the HR assistant | `python manage.py evaluate_hr --split tune` and `--split holdout` (add `--show-misses`) |
+| Reset the demo by hand (same as the nightly job in demo mode) | `python manage.py seed --reset` |
 | Stop the database | `docker compose down` (add `-v` to delete its data) |
 | Re-parse resumes after an extractor change | `python manage.py reparse_profiles` (`--all` for everything) |
 | Re-score after changing `matching/weights.py` | `python manage.py rescore` |

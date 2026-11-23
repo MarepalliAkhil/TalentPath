@@ -3,6 +3,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { brand } from '@/lib/brand';
 import { AskHira } from './AskHira';
 import { BrandMark } from './BrandMark';
+import { DemoBanner } from './growth';
 import { buttonClass } from './ui';
 
 export function PublicLayout() {
@@ -12,12 +13,13 @@ export function PublicLayout() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
+      <DemoBanner />
       <header className="glass-bar sticky top-0 z-20">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2 sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 sm:px-6">
           <Link to="/" className="rounded-lg" aria-label={`${brand.name} home`}>
             <BrandMark />
           </Link>
-          <nav aria-label="Site" className="ml-auto flex items-center gap-1 sm:gap-2">
+          <nav aria-label="Site" className="ml-auto flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             <NavLink
               to="/jobs"
               className={({ isActive }) =>
@@ -25,6 +27,14 @@ export function PublicLayout() {
               }
             >
               Jobs
+            </NavLink>
+            <NavLink
+              to="/for-recruiters"
+              className={({ isActive }) =>
+                `whitespace-nowrap rounded-xl px-2 py-2 text-sm font-semibold sm:px-3 ${isActive ? 'text-primary-strong' : 'text-ink-soft hover:text-ink'}`
+              }
+            >
+              For recruiters
             </NavLink>
             {user ? (
               <Link to={user.dashboard} className={buttonClass('primary', 'px-3')}>
@@ -51,7 +61,12 @@ export function PublicLayout() {
           <p>
             {brand.name} · {brand.tagline}
           </p>
-          <p>All people, companies and jobs here are fictional demo data.</p>
+          <p>
+            All people, companies and jobs here are fictional demo data.{' '}
+            <Link to="/for-recruiters" className="font-semibold text-primary-strong underline">
+              For recruiters
+            </Link>
+          </p>
         </div>
       </footer>
       {(!user || user.role === 'candidate') && <AskHira />}

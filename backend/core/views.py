@@ -64,7 +64,7 @@ class SitemapView(PolicyAPIView):
 
         site = settings.SITE_URL
         rows = [f"<url><loc>{escape(site)}/</loc></url>", f"<url><loc>{escape(site)}/jobs</loc></url>"]
-        for slug, updated in Job.objects.open().values_list("slug", "updated_at"):
+        for slug, updated in Job.objects.public().values_list("slug", "updated_at"):
             rows.append(
                 f"<url><loc>{escape(site)}/jobs/{escape(slug)}</loc>"
                 f"<lastmod>{updated.date().isoformat()}</lastmod></url>"

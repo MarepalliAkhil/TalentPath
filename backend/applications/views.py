@@ -10,6 +10,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from accounts.models import Role, User
 from core.audit import audit
+from core.demo import check_demo_upload, deny_demo
 from core.utils import IgnoreClientContentNegotiation, paginate
 from core.views import PolicyAPIView
 from files.storage import read_file
@@ -124,6 +125,8 @@ def staff_application_dict(app: Application, viewer: User, detail: bool = False)
         "id": str(app.id),
         "status": app.status,
         "status_label": app.get_status_display(),
+        "source": app.source,
+        "source_label": app.get_source_display(),
         "created_at": app.created_at.isoformat(),
         "updated_at": app.updated_at.isoformat(),
         "resume_filename": None if blind else app.resume_filename,
@@ -222,14 +225,19 @@ class ApplicationListCreateView(PolicyAPIView):
             errors["cover_note"] = ["Keep the note under 2000 characters."]
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-        job = get_object_or_404(Job, slug=slug, status=JobStatus.OPEN)
+        job = get_object_or_404(Job.objects.public(), slug=slug)
+        source = str(request.data.get("source") or "career_site")
+        if source not in ("career_site", "referral", "job_board"):
+            return Response({"source": ["Choose career site, referral or job board."]}, status=400)
         data = upload.read(settings.RESUME_MAX_BYTES + 1)
+        check_demo_upload(request.user, len(data))
         application = apply_to_job(
             candidate=request.user,
             job=job,
             filename=upload.name,
             data=data,
             cover_note=cover_note,
+            source=source,
         )
         audit(request, "applications.create", target=application, job=str(job.id))
         return Response(candidate_application_dict(application, detail=True), status=201)
@@ -283,6 +291,7 @@ class BulkStatusView(PolicyAPIView):
     policy_action = "applications.bulk_status"
 
     def post(self, request, pk):
+        deny_demo(request.user, "move applications in bulk")
         job = get_object_or_404(visible_jobs(request.user, with_counts=False), pk=pk)
         ids = request.data.get("ids") or []
         if not isinstance(ids, list) or not ids or len(ids) > 100:

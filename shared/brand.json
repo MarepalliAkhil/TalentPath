@@ -7,6 +7,12 @@
     "fullName": "Hiring Intelligence & Recruiting Assistant",
     "display": "HIRA · Hiring Intelligence & Recruiting Assistant"
   },
+  "author": {
+    "name": "Akhil Marepalli",
+    "education": "B.Tech Computer Science and Engineering, KL University",
+    "github": "https://github.com/MarepalliAkhil",
+    "linkedin": "https://www.linkedin.com/in/akhil-marepalli-56694532b"
+  },
   "colors": {
     "ink": "#0B1B2B",
     "inkSoft": "#25384B",

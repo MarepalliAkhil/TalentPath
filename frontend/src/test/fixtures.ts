@@ -47,15 +47,16 @@ export const signedInApi = {
 };
 
 export const EXPECTED_NAV = {
-  candidate: ['My applications', 'Browse jobs', 'Notifications'],
-  recruiter: ['Overview', 'My jobs', 'Offers', 'HIRA activity', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
-  hiring_manager: ['Overview', 'Offers', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
-  employee: ['Overview', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
+  candidate: ['My applications', 'Browse jobs', 'Career map', 'Notifications'],
+  recruiter: ['Overview', 'My jobs', 'Offers', 'HIRA activity', 'Analytics', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
+  hiring_manager: ['Overview', 'Offers', 'Analytics', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
+  employee: ['Overview', 'Career map', 'My interviews', 'Internal jobs', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
   hr_admin: [
     'Overview',
     'All jobs',
     'Offers',
     'HIRA activity',
+    'Analytics',
     'My interviews',
     'Leave',
     'Approvals',

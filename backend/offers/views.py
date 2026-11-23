@@ -15,6 +15,9 @@ from . import services
 from .letter import rupees
 from .models import ApprovalStep, OfferStatus
 
+# Who sees an offer as the person it is made to: candidates, and employees on internal offers.
+APPLICANT_ROLES = (Role.CANDIDATE, Role.EMPLOYEE)
+
 
 def _candidate(offer) -> dict:
     application = offer.application
@@ -193,7 +196,7 @@ class OfferDetailView(PolicyAPIView):
 
     def get(self, request, pk):
         offer = get_object_or_404(services.visible_offers(request.user), pk=pk)
-        if request.user.role == Role.CANDIDATE:
+        if request.user.role in APPLICANT_ROLES:
             return Response(candidate_offer_dict(offer))
         return Response(staff_offer_dict(offer, request.user))
 
@@ -253,7 +256,7 @@ class OfferLetterView(PolicyAPIView):
         offer = get_object_or_404(services.visible_offers(request.user), pk=pk)
         if offer.letter_id:
             pdf = read_file(offer.letter)
-        elif request.user.role != Role.CANDIDATE:
+        elif request.user.role not in APPLICANT_ROLES:
             pdf = services.letter_bytes(offer)  # staff preview before sending; not stored
         else:
             return Response({"detail": "No letter yet."}, status=status.HTTP_404_NOT_FOUND)

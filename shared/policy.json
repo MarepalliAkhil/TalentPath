@@ -39,7 +39,12 @@
     "/interviews/:id/scorecard": ["recruiter", "hiring_manager", "employee", "hr_admin"],
     "/offers": ["recruiter", "hiring_manager", "hr_admin"],
     "/offers/:id": ["recruiter", "hiring_manager", "hr_admin"],
-    "/candidate/offers/:id": ["candidate"],
+    "/candidate/offers/:id": ["candidate", "employee"],
+    "/career": ["candidate", "employee"],
+    "/career/jobs/:id": ["candidate", "employee"],
+    "/internal-jobs": ["employee"],
+    "/analytics": ["recruiter", "hiring_manager", "hr_admin"],
+    "/for-recruiters": ["any"],
     "/schedule/:token": ["any"],
     "/welcome": ["recruiter", "hiring_manager", "employee", "hr_admin"],
     "/onboarding": ["recruiter", "hiring_manager", "employee", "hr_admin"],
@@ -138,17 +143,17 @@
 
     "offers.list": {"roles": ["recruiter", "hiring_manager", "hr_admin"], "description": "Offers on jobs I can see"},
     "offers.create": {"roles": ["recruiter", "hr_admin"], "description": "Draft an offer for a candidate who passed the final round"},
-    "offers.read": {"roles": ["candidate", "recruiter", "hiring_manager", "hr_admin"], "description": "Offer detail (candidates: own sent offers only)"},
+    "offers.read": {"roles": ["candidate", "recruiter", "hiring_manager", "employee", "hr_admin"], "description": "Offer detail (candidates, and employees on internal offers: own sent offers only)"},
     "offers.update": {"roles": ["recruiter", "hr_admin"], "description": "Edit a draft offer or one with changes requested"},
     "offers.submit": {"roles": ["recruiter", "hr_admin"], "description": "Send a draft offer for approval"},
     "offers.approve": {"roles": ["hiring_manager", "hr_admin"], "description": "Approve an offer (hiring manager first, then hr_admin)"},
     "offers.reject": {"roles": ["hiring_manager", "hr_admin"], "description": "Reject an offer at your approval step, with a reason"},
     "offers.send": {"roles": ["recruiter", "hr_admin"], "description": "Send an approved offer and its PDF letter to the candidate"},
     "offers.revoke": {"roles": ["recruiter", "hr_admin"], "description": "Revoke an offer with a reason"},
-    "offers.accept": {"roles": ["candidate"], "description": "Accept own offer by typing one's full name (not a legal e-signature)"},
-    "offers.decline": {"roles": ["candidate"], "description": "Decline own offer with an optional reason"},
-    "offers.letter": {"roles": ["candidate", "recruiter", "hiring_manager", "hr_admin"], "description": "Offer letter PDF (candidates once sent; staff can preview)"},
-    "offers.mine": {"roles": ["candidate"], "description": "My offers"},
+    "offers.accept": {"roles": ["candidate", "employee"], "description": "Accept own offer by typing one's full name (not a legal e-signature)"},
+    "offers.decline": {"roles": ["candidate", "employee"], "description": "Decline own offer with an optional reason"},
+    "offers.letter": {"roles": ["candidate", "recruiter", "hiring_manager", "employee", "hr_admin"], "description": "Offer letter PDF (candidates once sent; staff can preview)"},
+    "offers.mine": {"roles": ["candidate", "employee"], "description": "My offers (employees: internal offers)"},
 
     "onboarding.hire": {"roles": ["recruiter", "hr_admin"], "description": "One-click hire from an accepted offer: employee record, role change, leave, checklist, buddy, first week (one transaction)"},
     "onboarding.mine": {"roles": ["recruiter", "hiring_manager", "employee", "hr_admin"], "description": "My welcome page: checklist, buddy, manager and first-week plan"},
@@ -170,6 +175,14 @@
 
     "audit.list": {"roles": ["hr_admin"], "description": "Audit log of sensitive actions"},
     "outbox.list": {"roles": ["hr_admin"], "description": "Simulated email outbox"},
-    "demo.inbox": {"roles": ["any"], "description": "Demo inbox for *.example addresses, only when DEMO_MODE is on"}
+    "demo.inbox": {"roles": ["any"], "description": "Demo inbox for *.example addresses, only when DEMO_MODE is on"},
+    "demo.config": {"roles": ["any"], "description": "Whether demo mode is on, the banner and the Try-as buttons"},
+    "auth.demo_login": {"roles": ["anonymous"], "description": "Sign in to a seeded demo account by role (only when DEMO_MODE is on)"},
+    "career.profile": {"roles": ["candidate", "employee"], "description": "My resume for the career map: read, upload or replace, delete"},
+    "career.map": {"roles": ["candidate", "employee"], "description": "Jobs I'm closest to and the skill-gap map for one job (same scorer as recruiters)"},
+    "career.next_role": {"roles": ["employee"], "description": "Higher levels in my department and the skills to reach them"},
+    "internal.jobs": {"roles": ["employee"], "description": "Internal jobs with my match, my internal applications and the manager-notice rule"},
+    "internal.apply": {"roles": ["employee"], "description": "Apply to an internal job in one click with my profile resume"},
+    "analytics.read": {"roles": ["recruiter", "hiring_manager", "hr_admin"], "description": "Hiring analytics for jobs in my scope (people analytics: hr_admin) and CSV export"}
   }
 }

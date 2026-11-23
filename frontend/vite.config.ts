@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import brand from '../shared/brand.json';
+import { collectRepoFacts } from './build/repoFacts';
 
 /** Fills %BRAND_*% placeholders in index.html from shared/brand.json. */
 function brandHtml(): Plugin {
@@ -17,10 +18,26 @@ function brandHtml(): Plugin {
   };
 }
 
+/** `virtual:repo-facts`: test counts, permissions and measured evaluation results read from the repo. */
+function repoFacts(): Plugin {
+  const id = 'virtual:repo-facts';
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  return {
+    name: 'repo-facts',
+    resolveId(source) {
+      return source === id ? `\0${id}` : null;
+    },
+    load(resolved) {
+      if (resolved !== `\0${id}`) return null;
+      return `export default ${JSON.stringify(collectRepoFacts(root))};`;
+    },
+  };
+}
+
 const backend = process.env.VITE_API_PROXY ?? 'http://localhost:8000';
 
 export default defineConfig({
-  plugins: [react(), brandHtml()],
+  plugins: [react(), brandHtml(), repoFacts()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

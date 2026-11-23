@@ -11,6 +11,10 @@ import { StaffAdminPage } from '@/pages/admin/StaffAdminPage';
 import { ApplyPage } from '@/pages/candidate/ApplyPage';
 import { CandidateDashboard } from '@/pages/candidate/CandidateDashboard';
 import { CandidateOfferPage } from '@/pages/candidate/CandidateOfferPage';
+import { AnalyticsPage } from '@/pages/growth/AnalyticsPage';
+import { CareerJobPage } from '@/pages/growth/CareerJobPage';
+import { CareerPage } from '@/pages/growth/CareerPage';
+import { InternalJobsPage } from '@/pages/growth/InternalJobsPage';
 import { HiraActivityPage } from '@/pages/hira/HiraActivityPage';
 import { ApprovalsPage } from '@/pages/hr/ApprovalsPage';
 import { AttendancePage } from '@/pages/hr/AttendancePage';
@@ -27,6 +31,7 @@ import { ScorecardPage } from '@/pages/interviews/ScorecardPage';
 import { OfferDetailPage } from '@/pages/offers/OfferDetailPage';
 import { OffersPage } from '@/pages/offers/OffersPage';
 import { DemoInboxPage } from '@/pages/public/DemoInboxPage';
+import { ForRecruitersPage } from '@/pages/public/ForRecruitersPage';
 import { ForgotPasswordPage } from '@/pages/public/ForgotPasswordPage';
 import { HomePage } from '@/pages/public/HomePage';
 import { JobDetailPage } from '@/pages/public/JobDetailPage';
@@ -63,6 +68,7 @@ export function AppRoutes() {
         <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="demo-inbox" element={<DemoInboxPage />} />
         <Route path="schedule/:token" element={<ScheduleLinkPage />} />
+        <Route path="for-recruiters" element={<ForRecruitersPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route element={<AppShell />}>
@@ -81,6 +87,10 @@ export function AppRoutes() {
         <Route path="interviews/:id/scorecard" element={guard('/interviews/:id/scorecard', <ScorecardPage />)} />
         <Route path="offers" element={guard('/offers', <OffersPage />)} />
         <Route path="offers/:id" element={guard('/offers/:id', <OfferDetailPage />)} />
+        <Route path="career" element={guard('/career', <CareerPage />)} />
+        <Route path="career/jobs/:id" element={guard('/career/jobs/:id', <CareerJobPage />)} />
+        <Route path="internal-jobs" element={guard('/internal-jobs', <InternalJobsPage />)} />
+        <Route path="analytics" element={guard('/analytics', <AnalyticsPage />)} />
         <Route path="welcome" element={guard('/welcome', <WelcomePage />)} />
         <Route path="onboarding" element={guard('/onboarding', <OnboardingPage />)} />
         <Route path="onboarding/:id" element={guard('/onboarding/:id', <OnboardingDetailPage />)} />

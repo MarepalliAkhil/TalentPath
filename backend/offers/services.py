@@ -105,7 +105,8 @@ def visible_offers(user):
         return qs.filter(application__job__created_by=user)
     if user.role == Role.HIRING_MANAGER:
         return qs.filter(application__job__hiring_manager=user)
-    if user.role == Role.CANDIDATE:
+    if user.role in (Role.CANDIDATE, Role.EMPLOYEE):
+        # Employees see only offers on their own internal applications (week 4A).
         return qs.filter(application__candidate=user, status__in=CANDIDATE_VISIBLE)
     return qs.none()
 

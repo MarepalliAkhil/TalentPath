@@ -19,7 +19,7 @@ DEMO_LOGINS = {
 def test_seed_creates_fictional_demo_data_and_is_idempotent():
     call_command("seed")
     counts = (
-        Job.objects.open().count(),
+        Job.objects.public().count(),
         User.objects.filter(role=Role.CANDIDATE).count(),
         Application.objects.count(),
     )
@@ -36,7 +36,7 @@ def test_seed_creates_fictional_demo_data_and_is_idempotent():
     assert all(a.resume_text for a in Application.objects.all()[:20])
     call_command("seed")
     assert (
-        Job.objects.open().count(),
+        Job.objects.public().count(),
         User.objects.filter(role=Role.CANDIDATE).count(),
         Application.objects.count(),
     ) == counts
@@ -46,7 +46,7 @@ def test_seed_creates_fictional_demo_data_and_is_idempotent():
 def test_seed_reset_rebuilds():
     call_command("seed")
     call_command("seed", "--reset")
-    assert Job.objects.open().count() == 25
+    assert Job.objects.public().count() == 25  # plus 3 internal-only jobs (week 4A)
     assert User.objects.filter(role=Role.CANDIDATE).count() == 61
 
 
@@ -59,7 +59,7 @@ def test_seed_week2_pipeline_spread():
     from matching.models import FitScore
 
     call_command("seed")
-    counts = [job.applications.count() for job in Job.objects.open()]
+    counts = [job.applications.count() for job in Job.objects.public()]
     assert min(counts) >= 5 and max(counts) <= 15
     statuses = Counter(Application.objects.values_list("status", flat=True))
     assert {"applied", "screening", "interview", "offer", "rejected", "withdrawn"} <= set(statuses)
@@ -155,3 +155,25 @@ def test_seed_week3b_people_leave_attendance_and_hire_demo():
     before = counts()
     call_command("seed")
     assert counts() == before
+
+
+@pytest.mark.django_db
+def test_seed_week4a_audiences_sources_profiles_and_mobility():
+    from collections import Counter
+
+    from analytics import metrics
+    from growth.models import CareerProfile
+    from hr.models import Employee, InternalMove
+
+    call_command("seed")
+    assert Job.objects.open().filter(audience="internal").count() == 3
+    assert Job.objects.filter(audience="external").count() == 3
+    sources = Counter(Application.objects.values_list("source", flat=True))
+    assert {"career_site", "job_board", "referral", "internal"} <= set(sources)
+    assert sources["internal"] == 2
+    assert not Employee.objects.filter(level__isnull=True).exists()
+    assert CareerProfile.objects.filter(user__email="employee@demo.example").exists()
+    assert InternalMove.objects.count() == 1
+    # The timeline is spread out, so stage times are not all zero.
+    stage = metrics.hiring_report(User.objects.get(email="admin@demo.example"), metrics.parse_filters({}))[1]
+    assert any(row["median"] for row in stage["rows"])

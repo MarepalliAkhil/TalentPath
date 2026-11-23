@@ -125,6 +125,8 @@ DEMO_MODE = env_bool("DEMO_MODE", False)
 SHARED_DIR = Path(env("SHARED_DIR") or (BASE_DIR.parent / "shared"))
 POLICY_PATH = SHARED_DIR / "policy.json"
 BRAND_PATH = SHARED_DIR / "brand.json"
+SKILL_GRAPH_PATH = SHARED_DIR / "skill_graph.json"
+LEARNING_LINKS_PATH = SHARED_DIR / "learning_links.json"
 
 INSTALLED_APPS = [
     "daphne",  # makes `runserver` serve WebSockets too (ASGI)
@@ -145,6 +147,8 @@ INSTALLED_APPS = [
     "interviews",
     "offers",
     "hr",
+    "growth",
+    "analytics",
     "seeding",
 ]
 

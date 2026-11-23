@@ -20,6 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.audit import audit
 from core.auth import clear_auth_cookies, set_auth_cookies
+from core.demo import demo_account_for, demo_config, demo_mode, deny_demo, is_demo_email
 from core.utils import paginate
 from core.views import PolicyAPIView
 
@@ -149,7 +150,8 @@ class PasswordResetRequestView(PolicyAPIView):
         data = PasswordResetRequestSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         user = User.objects.filter(email__iexact=data.validated_data["email"].strip(), is_active=True).first()
-        if user is not None:
+        # Demo accounts cannot change their password in demo mode (same answer, so nothing leaks).
+        if user is not None and not (demo_mode() and is_demo_email(user.email)):
             send_password_reset(user)
             audit(request, "auth.password_reset_requested", actor=user, target=user)
         return Response(
@@ -177,6 +179,8 @@ class PasswordResetConfirmView(PolicyAPIView):
                 {"detail": "This reset link is invalid or has expired."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if demo_mode() and is_demo_email(user.email):
+            return Response({"detail": "Demo accounts cannot change their password."}, status=403)
         try:
             validate_password(v["password"], user=user)
         except DjangoValidationError as exc:
@@ -238,6 +242,7 @@ class UserListCreateView(PolicyAPIView):
         return paginate(self, request, qs, user_dict)
 
     def post(self, request):
+        deny_demo(request.user, "invite staff")
         data = StaffCreateSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         v = data.validated_data
@@ -251,6 +256,7 @@ class UserDetailView(PolicyAPIView):
     policy_actions = {"PATCH": "users.update"}
 
     def patch(self, request, pk):
+        deny_demo(request.user, "change staff accounts")
         user = get_object_or_404(User, pk=pk)
         data = UserUpdateSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
@@ -278,3 +284,30 @@ class HiringManagerListView(PolicyAPIView):
     def get(self, request):
         qs = User.objects.filter(role=Role.HIRING_MANAGER, is_active=True).order_by("full_name")
         return Response([{"id": str(u.id), "full_name": u.full_name} for u in qs])
+
+
+# ---------------------------------------------------------------- demo mode (week 4A)
+class DemoConfigView(PolicyAPIView):
+    """Whether demo mode is on, the banner text and which "Try as" buttons to show."""
+
+    policy_action = "demo.config"
+
+    def get(self, request):
+        return Response(demo_config())
+
+
+class DemoLoginView(PolicyAPIView):
+    """Sign in to a seeded demo account by role. Only works when DEMO_MODE is on."""
+
+    policy_action = "auth.demo_login"
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
+
+    def post(self, request):
+        if not demo_mode():
+            return Response({"detail": "Demo sign-in is switched off."}, status=status.HTTP_404_NOT_FOUND)
+        user = demo_account_for(str(request.data.get("role") or ""))
+        if user is None:
+            return Response({"role": "Choose one of the demo roles (run the seed first)."}, status=400)
+        audit(request, "auth.demo_login", actor=user, target=user, role=user.role)
+        return _signed_in_response(user, status.HTTP_200_OK)

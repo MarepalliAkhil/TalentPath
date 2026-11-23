@@ -257,6 +257,8 @@ export interface WorkPolicy {
   hr_approval_over_days: number;
   min_team_available_pct: number;
   escalate_after_hours: number;
+  /** Week 4A: when an internal applicant's reporting manager is told. */
+  internal_manager_notice?: 'interview' | 'offer';
 }
 
 export interface Policies {

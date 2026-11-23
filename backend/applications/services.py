@@ -41,7 +41,16 @@ class DuplicateApplication(APIException):
     default_code = "duplicate_application"
 
 
-def apply_to_job(*, candidate, job, filename: str, data: bytes, cover_note: str = "", silent=False):
+def apply_to_job(
+    *,
+    candidate,
+    job,
+    filename: str,
+    data: bytes,
+    cover_note: str = "",
+    silent=False,
+    source: str = "career_site",
+):
     if job.status != JobStatus.OPEN:
         raise ValidationError({"job": "This job is not accepting applications."})
     if Application.objects.filter(job=job, candidate=candidate).exists():
@@ -59,6 +68,7 @@ def apply_to_job(*, candidate, job, filename: str, data: bytes, cover_note: str 
                     job=job,
                     candidate=candidate,
                     cover_note=cover_note.strip()[:2000],
+                    source=source,
                     resume_file=stored,
                     resume_filename=name,
                     resume_text=text,
@@ -139,7 +149,7 @@ def suggested_jobs(application, limit: int = 3) -> list:
         return []
     applied = Application.objects.filter(candidate=application.candidate).values("job_id")
     scored = []
-    for job in Job.objects.open().exclude(pk__in=applied).prefetch_related("required_skills"):
+    for job in Job.objects.public().exclude(pk__in=applied).prefetch_related("required_skills"):
         overlap = len(skills & {s.slug for s in job.required_skills.all()})
         if overlap:
             scored.append((overlap, job.title, job))
@@ -180,6 +190,9 @@ def move_application(
     audit(request, "applications.status", actor=actor, target=application, old=old, new=new_status)
     broadcast_board(application)
     _coordinate(application, old, new_status, actor, silent)
+    from growth.services import internal_stage_notice
+
+    internal_stage_notice(application, new_status)
     if not silent:
         label = CANDIDATE_STATUS_WORDS.get(new_status, S(new_status).label)
         body = (
@@ -192,7 +205,11 @@ def move_application(
             kind="application_status",
             title=f"Update on {application.job.title}: {label}",
             body=body,
-            link="/jobs" if new_status == S.REJECTED else "/candidate",
+            link="/internal-jobs"
+            if application.source == "internal"
+            else "/jobs"
+            if new_status == S.REJECTED
+            else "/candidate",
         )
     return application
 

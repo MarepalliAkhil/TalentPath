@@ -38,6 +38,10 @@ class Employee(models.Model):
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="buddy_for"
     )
     joined_on = models.DateField()
+    # Week 4A: the employee's job level ("Your next role" looks at higher levels).
+    level = models.ForeignKey(
+        "org.JobLevel", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     status = models.CharField(max_length=12, choices=EmployeeStatus.choices, default=EmployeeStatus.ACTIVE)
     hired_from = models.ForeignKey(
         "offers.Offer", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -216,6 +220,10 @@ class WorkPolicy(models.Model):
     # Warn when fewer than this share of a team would be available on a day.
     min_team_available_pct = models.PositiveSmallIntegerField(default=50)
     escalate_after_hours = models.PositiveSmallIntegerField(default=48)
+    # Week 4A: when an internal applicant's reporting manager is told (never at application time).
+    internal_manager_notice = models.CharField(
+        max_length=10, choices=[("interview", "At Interview"), ("offer", "At Offer")], default="interview"
+    )
 
 
 # ---------------------------------------------------------------- leave
@@ -362,3 +370,25 @@ class Regularisation(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+# ---------------------------------------------------------------- internal mobility (week 4A)
+class InternalMove(models.Model):
+    """An employee moved to another role through an internal application. Append-only."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="moves")
+    application = models.ForeignKey(
+        "applications.Application", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    from_department = models.CharField(max_length=100)
+    to_department = models.CharField(max_length=100)
+    from_designation = models.CharField(max_length=120)
+    to_designation = models.CharField(max_length=120)
+    from_manager = models.CharField(max_length=120, blank=True, default="")
+    to_manager = models.CharField(max_length=120, blank=True, default="")
+    moved_on = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-moved_on"]
