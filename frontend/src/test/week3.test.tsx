@@ -51,7 +51,7 @@ function bodyOf(mock: FetchMock, method: string, path: string) {
 }
 
 /** Pretend HIRA's popup was already shown this session (for tests about other screens). */
-function briefingAlreadyShown(role: 'recruiter' | 'hr_admin') {
+function briefingAlreadyShown(role: 'recruiter' | 'hr') {
   window.sessionStorage.setItem(`hira-briefing-shown:${fakeUser(role).id}`, '1');
 }
 
@@ -201,7 +201,7 @@ describe('HIRA login briefing', () => {
 
   it('is not shown to hiring managers', async () => {
     const fetchMock = mockRoutes(staffApi);
-    renderApp('/manager', 'hiring_manager');
+    renderApp('/manager', 'manager');
     await screen.findByRole('heading', { level: 1, name: 'Your hiring' });
     expect(screen.queryByRole('dialog', { name: 'HIRA briefing' })).not.toBeInTheDocument();
     expect(calls(fetchMock, 'GET', '/api/hira/briefing')).toHaveLength(0);
@@ -386,7 +386,7 @@ const staffOffer: StaffOffer = {
   id: 'o1',
   status: 'pending_approval',
   status_label: 'Pending approval',
-  approval_step: 'hiring_manager',
+  approval_step: 'manager',
   approval_step_label: 'Hiring manager',
   expires_on: '2026-12-01',
   created_at: '2026-11-20T10:00:00Z',
@@ -395,7 +395,7 @@ const staffOffer: StaffOffer = {
   candidate: { code: 'Candidate #7F3A', full_name: 'Asha Verma' },
   terms,
   created_by: 'Meera Iyer',
-  approvals: { hiring_manager: { name: null, at: null }, hr_admin: { name: null, at: null } },
+  approvals: { manager: { name: null, at: null }, hr: { name: null, at: null } },
   rejected: null,
   sent_at: null,
   responded_at: null,
@@ -434,12 +434,12 @@ describe('offers', () => {
       'GET /api/offers/o1': staffOffer,
       'POST /api/offers/o1/approve': {
         ...staffOffer,
-        approval_step: 'hr_admin',
+        approval_step: 'hr',
         approval_step_label: 'HR admin',
         actions: { ...staffOffer.actions, approve: false, reject: false },
       },
     });
-    renderApp('/offers/o1', 'hiring_manager');
+    renderApp('/offers/o1', 'manager');
     expect(await screen.findByRole('heading', { level: 1, name: 'Offer: Asha Verma' })).toBeInTheDocument();
     expect(screen.getByText('Waiting for Hiring manager')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Send to candidate' })).not.toBeInTheDocument();
@@ -451,7 +451,7 @@ describe('offers', () => {
 
   it('a rejection needs a reason of at least 10 characters', async () => {
     mockRoutes({ ...signedInApi, '/api/auth/csrf': {}, 'GET /api/offers/o1': staffOffer });
-    renderApp('/offers/o1', 'hiring_manager');
+    renderApp('/offers/o1', 'manager');
     await userEvent.click(await screen.findByRole('button', { name: 'Request changes' }));
     const dialog = screen.getByRole('dialog', { name: 'Request changes' });
     const submit = within(dialog).getByRole('button', { name: 'Request changes' });
@@ -509,7 +509,14 @@ describe('interview panel in the application drawer', () => {
         updated_at: '2026-11-20T10:00:00Z',
         resume_filename: 'ravi.pdf',
         blind: false,
-        candidate: { id: 'u2', code: 'Candidate #9A11', full_name: 'Ravi Kumar', email: 'ravi@candidates.example', headline: '', location: '' },
+        candidate: {
+          id: 'u2',
+          code: 'Candidate #9A11',
+          full_name: 'Ravi Kumar',
+          email: 'ravi@candidates.example',
+          headline: '',
+          location: '',
+        },
         job: { id: 'j1', title: 'Backend Engineer', slug: 'backend' },
         allowed_transitions: ['offer', 'rejected'],
         fit: null,
@@ -549,7 +556,13 @@ describe('mobile 390 px', () => {
       },
     ],
     needs_feedback: [
-      { ...scheduledInterview, id: 'i2', status: 'completed', candidate: { code: 'Candidate #1B22', full_name: 'Neha Shah' }, can_submit_scorecard: true },
+      {
+        ...scheduledInterview,
+        id: 'i2',
+        status: 'completed',
+        candidate: { code: 'Candidate #1B22', full_name: 'Neha Shah' },
+        can_submit_scorecard: true,
+      },
     ],
     past: [],
   };
@@ -567,7 +580,7 @@ describe('mobile 390 px', () => {
   it('offers list is accessible', async () => {
     setViewport(390);
     mockRoutes({ ...signedInApi, '/api/offers': page([staffOffer]) });
-    renderApp('/offers', 'hiring_manager');
+    renderApp('/offers', 'manager');
     expect(await screen.findByRole('heading', { level: 1, name: 'Offers' })).toBeInTheDocument();
     expect(await screen.findByText('Waiting for Hiring manager')).toBeInTheDocument();
     expect(await axeViolations()).toEqual([]);

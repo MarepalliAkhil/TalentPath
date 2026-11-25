@@ -1,4 +1,4 @@
-"""Offers: drafted by a recruiter, approved by the hiring manager then hr_admin,
+"""Offers: drafted by a recruiter, approved by the hiring manager then HR,
 sent to the candidate, accepted or declined. Offer details are encrypted at rest."""
 
 import json
@@ -24,8 +24,8 @@ class OfferStatus(models.TextChoices):
 
 class ApprovalStep(models.TextChoices):
     NONE = "", "None"
-    HIRING_MANAGER = "hiring_manager", "Hiring manager"
-    HR_ADMIN = "hr_admin", "HR admin"
+    MANAGER = "manager", "Hiring manager"
+    HR = "hr", "HR"
 
 
 # Offers that still block a new offer for the same application.

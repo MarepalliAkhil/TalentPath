@@ -66,15 +66,11 @@ def _terms(offer) -> dict:
 
 def staff_offer_dict(offer, viewer) -> dict:
     job = offer.application.job
-    is_owner = viewer.role == Role.HR_ADMIN or job.created_by_id == viewer.id
+    is_owner = viewer.role == Role.HR or job.created_by_id == viewer.id
     step = offer.approval_step
     can_approve = offer.status == OfferStatus.PENDING_APPROVAL and (
-        (
-            step == ApprovalStep.HIRING_MANAGER
-            and viewer.role == Role.HIRING_MANAGER
-            and job.hiring_manager_id == viewer.id
-        )
-        or (step == ApprovalStep.HR_ADMIN and viewer.role == Role.HR_ADMIN)
+        (step == ApprovalStep.MANAGER and viewer.role == Role.MANAGER and job.hiring_manager_id == viewer.id)
+        or (step == ApprovalStep.HR and viewer.role == Role.HR)
     )
     editable = offer.status in (OfferStatus.DRAFT, OfferStatus.REJECTED)
     from hr.models import Employee
@@ -91,11 +87,11 @@ def staff_offer_dict(offer, viewer) -> dict:
         "terms": _terms(offer),
         "created_by": offer.created_by.full_name,
         "approvals": {
-            "hiring_manager": {
+            "manager": {
                 "name": offer.hm_approved_by.full_name if offer.hm_approved_by else None,
                 "at": offer.hm_approved_at.isoformat() if offer.hm_approved_at else None,
             },
-            "hr_admin": {
+            "hr": {
                 "name": offer.hr_approved_by.full_name if offer.hr_approved_by else None,
                 "at": offer.hr_approved_at.isoformat() if offer.hr_approved_at else None,
             },
@@ -125,7 +121,7 @@ def staff_offer_dict(offer, viewer) -> dict:
             ),
             # One-click hire (week 3B): accepted, still at Offer, not yet an employee.
             "hire": is_owner
-            and viewer.role in (Role.RECRUITER, Role.HR_ADMIN)
+            and viewer.role in (Role.RECRUITER, Role.HR)
             and offer.status == OfferStatus.ACCEPTED
             and offer.application.status == "offer"
             and hired is None,
@@ -163,10 +159,10 @@ class OfferListView(PolicyAPIView):
         if state:
             qs = qs.filter(status=state)
         if request.query_params.get("awaiting") == "me":
-            if request.user.role == Role.HIRING_MANAGER:
-                qs = qs.filter(status=OfferStatus.PENDING_APPROVAL, approval_step=ApprovalStep.HIRING_MANAGER)
-            elif request.user.role == Role.HR_ADMIN:
-                qs = qs.filter(status=OfferStatus.PENDING_APPROVAL, approval_step=ApprovalStep.HR_ADMIN)
+            if request.user.role == Role.MANAGER:
+                qs = qs.filter(status=OfferStatus.PENDING_APPROVAL, approval_step=ApprovalStep.MANAGER)
+            elif request.user.role == Role.HR:
+                qs = qs.filter(status=OfferStatus.PENDING_APPROVAL, approval_step=ApprovalStep.HR)
             else:
                 qs = qs.filter(status__in=[OfferStatus.APPROVED, OfferStatus.REJECTED])
         return paginate(self, request, qs, lambda o: staff_offer_dict(o, request.user))

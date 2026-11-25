@@ -40,6 +40,20 @@ def email_dict(e: EmailOutbox) -> dict:
     }
 
 
+def email_log_dict(e: EmailOutbox) -> dict:
+    """Admin email log: delivery status, never credentials (errors are scrubbed when stored)."""
+    return {
+        **email_dict(e),
+        "status": e.status,
+        "status_label": e.get_status_display(),
+        "provider": e.provider,
+        "attempts": e.attempts,
+        "last_error": e.last_error,
+        "hold_reason": e.hold_reason,
+        "sent_at": e.sent_at.isoformat() if e.sent_at else None,
+    }
+
+
 class NotificationListView(PolicyAPIView):
     policy_action = "notifications.list"
 
@@ -88,11 +102,19 @@ class OutboxView(PolicyAPIView):
     policy_action = "outbox.list"
 
     def get(self, request):
+        from .delivery import provider, status_counts
+
         qs = EmailOutbox.objects.all()
         to = request.query_params.get("to", "").strip()
         if to:
             qs = qs.filter(to_email__iexact=to)
-        return paginate(self, request, qs, email_dict)
+        state = request.query_params.get("status", "").strip()
+        if state:
+            qs = qs.filter(status=state)
+        response = paginate(self, request, qs, email_log_dict)
+        response.data["provider"] = provider()
+        response.data["counts"] = status_counts()
+        return response
 
 
 class DemoInboxView(PolicyAPIView):

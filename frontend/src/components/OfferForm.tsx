@@ -35,8 +35,21 @@ export function OfferForm({
   };
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Offer terms">
-      <TextField label="Designation" value={draft.designation} onChange={set('designation')} error={fields.designation} required maxLength={120} />
-      <SelectField label="Reporting manager" value={draft.reporting_manager_id} onChange={set('reporting_manager_id')} error={fields.reporting_manager_id} hint="Defaults to the job's hiring manager.">
+      <TextField
+        label="Designation"
+        value={draft.designation}
+        onChange={set('designation')}
+        error={fields.designation}
+        required
+        maxLength={120}
+      />
+      <SelectField
+        label="Reporting manager"
+        value={draft.reporting_manager_id}
+        onChange={set('reporting_manager_id')}
+        error={fields.reporting_manager_id}
+        hint="Defaults to the job's hiring manager."
+      >
         <option value="">Job's hiring manager</option>
         {managers.data?.map((m) => (
           <option key={m.id} value={m.id}>
@@ -45,13 +58,46 @@ export function OfferForm({
         ))}
       </SelectField>
       <div className="grid gap-3 sm:grid-cols-2">
-        <TextField label="Joining date" type="date" value={draft.joining_date} onChange={set('joining_date')} error={fields.joining_date} required />
-        <TextField label="Offer expires on" type="date" value={draft.expires_on} onChange={set('expires_on')} error={fields.expires_on} required />
+        <TextField
+          label="Joining date"
+          type="date"
+          value={draft.joining_date}
+          onChange={set('joining_date')}
+          error={fields.joining_date}
+          required
+        />
+        <TextField
+          label="Offer expires on"
+          type="date"
+          value={draft.expires_on}
+          onChange={set('expires_on')}
+          error={fields.expires_on}
+          required
+        />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <TextField label="Fixed pay (₹ per year)" inputMode="numeric" value={draft.fixed_pay} onChange={set('fixed_pay')} error={fields.fixed_pay} required />
-        <TextField label="Variable pay (₹ per year)" inputMode="numeric" value={draft.variable_pay} onChange={set('variable_pay')} error={fields.variable_pay} />
-        <TextField label="Joining bonus (₹, optional)" inputMode="numeric" value={draft.joining_bonus} onChange={set('joining_bonus')} error={fields.joining_bonus} />
+        <TextField
+          label="Fixed pay (₹ per year)"
+          inputMode="numeric"
+          value={draft.fixed_pay}
+          onChange={set('fixed_pay')}
+          error={fields.fixed_pay}
+          required
+        />
+        <TextField
+          label="Variable pay (₹ per year)"
+          inputMode="numeric"
+          value={draft.variable_pay}
+          onChange={set('variable_pay')}
+          error={fields.variable_pay}
+        />
+        <TextField
+          label="Joining bonus (₹, optional)"
+          inputMode="numeric"
+          value={draft.joining_bonus}
+          onChange={set('joining_bonus')}
+          error={fields.joining_bonus}
+        />
       </div>
       <p className="text-sm text-ink-soft" aria-live="polite">
         Total annual compensation: <span className="font-semibold text-ink">{Number.isFinite(total) ? rupees(total) : '-'}</span>

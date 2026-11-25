@@ -33,7 +33,10 @@ export function InternalJobsPage() {
   return (
     <>
       <PageHeader title="Internal jobs" intro="Open roles you can move into, with your match from the same scorer recruiters use." />
-      <section className="mb-6 rounded-xl2 border border-primary/20 bg-primary-soft/60 p-4 text-sm text-primary-strong" aria-labelledby="rule-heading">
+      <section
+        className="mb-6 rounded-xl2 border border-primary/20 bg-primary-soft/60 p-4 text-sm text-primary-strong"
+        aria-labelledby="rule-heading"
+      >
         <h2 id="rule-heading" className="font-semibold">
           Before you apply
         </h2>
@@ -95,7 +98,9 @@ export function InternalJobsPage() {
       )}
       {confirm && (
         <Dialog title={`Apply for ${confirm.title}?`} onClose={() => setConfirm(null)}>
-          <p className="text-sm text-ink-soft">We send the resume on your profile. It goes through the same screening as every application.</p>
+          <p className="text-sm text-ink-soft">
+            We send the resume on your profile. It goes through the same screening as every application.
+          </p>
           <p className="mt-2 text-sm font-semibold text-ink">{data.rule.text}</p>
           {apply.isError && <ErrorNote>{errorText(apply.error)}</ErrorNote>}
           <div className="mt-4 flex gap-2">

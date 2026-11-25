@@ -41,10 +41,10 @@ const COUNT_LABELS: Record<string, string> = {
   reminder_sent: 'Reminders sent',
 };
 
-/** HIRA's login briefing for recruiters and HR admins: once per browser session. */
+/** HIRA's login briefing for recruiters and HR: once per browser session. */
 export function HiraBriefing() {
   const { user } = useAuth();
-  const eligible = !!user && (user.role === 'recruiter' || user.role === 'hr_admin');
+  const eligible = !!user && (user.role === 'recruiter' || user.role === 'hr');
   const [open, setOpen] = useState(() => eligible && !!user && !alreadyShown(user.id));
   const [muted, setMuted] = useState(() => readSetting(MUTE_KEY) === '1');
   const briefing = useQuery({

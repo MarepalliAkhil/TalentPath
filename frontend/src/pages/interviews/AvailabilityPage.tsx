@@ -12,7 +12,10 @@ type Row = { on: boolean; start: string; end: string };
 
 function toRows(hours: WorkingHours): Record<string, Row> {
   return Object.fromEntries(
-    WEEKDAYS.map(({ key }) => [key, hours[key] ? { on: true, start: hours[key][0], end: hours[key][1] } : { on: false, start: '10:00', end: '18:00' }]),
+    WEEKDAYS.map(({ key }) => [
+      key,
+      hours[key] ? { on: true, start: hours[key][0], end: hours[key][1] } : { on: false, start: '10:00', end: '18:00' },
+    ]),
   );
 }
 
@@ -28,7 +31,11 @@ export function AvailabilityPage() {
   const refresh = (value: Availability) => client.setQueryData(['availability'], value);
   const save = useMutation({
     mutationFn: () => {
-      const hours = Object.fromEntries(Object.entries(rows ?? {}).filter(([, r]) => r.on).map(([k, r]) => [k, [r.start, r.end]]));
+      const hours = Object.fromEntries(
+        Object.entries(rows ?? {})
+          .filter(([, r]) => r.on)
+          .map(([k, r]) => [k, [r.start, r.end]]),
+      );
       return api<Availability>('/availability', { method: 'PUT', body: { working_hours: hours } });
     },
     onSuccess: refresh,
@@ -68,9 +75,7 @@ export function AvailabilityPage() {
           </Link>
         }
       />
-      {data.data.skills.length > 0 && (
-        <p className="mb-4 text-sm text-muted">You interview for: {data.data.skills.join(', ')}.</p>
-      )}
+      {data.data.skills.length > 0 && <p className="mb-4 text-sm text-muted">You interview for: {data.data.skills.join(', ')}.</p>}
       <form
         className="glass mb-8 rounded-xl2 p-5"
         aria-labelledby="hours-heading"
@@ -87,16 +92,37 @@ export function AvailabilityPage() {
             <fieldset key={key} className="grid grid-cols-1 items-center gap-2 py-2 sm:grid-cols-[10rem_1fr_1fr]">
               <legend className="sr-only">{label}</legend>
               <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-ink">
-                <input type="checkbox" checked={rows[key].on} onChange={(e) => set(key, { on: e.target.checked })} className="h-5 w-5 accent-primary" />
+                <input
+                  type="checkbox"
+                  checked={rows[key].on}
+                  onChange={(e) => set(key, { on: e.target.checked })}
+                  className="h-5 w-5 accent-primary"
+                />
                 {label}
               </label>
               <label className="flex items-center gap-2 text-sm text-ink-soft">
                 From
-                <input type="time" step={900} value={rows[key].start} disabled={!rows[key].on} onChange={(e) => set(key, { start: e.target.value })} className="min-h-11 rounded-xl border border-ink/15 bg-white px-2" aria-label={`${label} start`} />
+                <input
+                  type="time"
+                  step={900}
+                  value={rows[key].start}
+                  disabled={!rows[key].on}
+                  onChange={(e) => set(key, { start: e.target.value })}
+                  className="min-h-11 rounded-xl border border-ink/15 bg-white px-2"
+                  aria-label={`${label} start`}
+                />
               </label>
               <label className="flex items-center gap-2 text-sm text-ink-soft">
                 To
-                <input type="time" step={900} value={rows[key].end} disabled={!rows[key].on} onChange={(e) => set(key, { end: e.target.value })} className="min-h-11 rounded-xl border border-ink/15 bg-white px-2" aria-label={`${label} end`} />
+                <input
+                  type="time"
+                  step={900}
+                  value={rows[key].end}
+                  disabled={!rows[key].on}
+                  onChange={(e) => set(key, { end: e.target.value })}
+                  className="min-h-11 rounded-xl border border-ink/15 bg-white px-2"
+                  aria-label={`${label} end`}
+                />
               </label>
             </fieldset>
           ))}
@@ -130,9 +156,26 @@ export function AvailabilityPage() {
           <p className="mb-4 text-sm text-muted">No blocked time coming up.</p>
         )}
         <form onSubmit={submitBlock} className="grid gap-3 sm:grid-cols-3">
-          <TextField label="From (IST)" type="datetime-local" value={block.starts_at} onChange={(e) => setBlock({ ...block, starts_at: e.target.value })} required />
-          <TextField label="To (IST)" type="datetime-local" value={block.ends_at} onChange={(e) => setBlock({ ...block, ends_at: e.target.value })} required />
-          <TextField label="Reason (optional)" value={block.reason} maxLength={120} onChange={(e) => setBlock({ ...block, reason: e.target.value })} />
+          <TextField
+            label="From (IST)"
+            type="datetime-local"
+            value={block.starts_at}
+            onChange={(e) => setBlock({ ...block, starts_at: e.target.value })}
+            required
+          />
+          <TextField
+            label="To (IST)"
+            type="datetime-local"
+            value={block.ends_at}
+            onChange={(e) => setBlock({ ...block, ends_at: e.target.value })}
+            required
+          />
+          <TextField
+            label="Reason (optional)"
+            value={block.reason}
+            maxLength={120}
+            onChange={(e) => setBlock({ ...block, reason: e.target.value })}
+          />
           <div className="sm:col-span-3">
             {add.isError && <ErrorNote>{errorText(add.error)}</ErrorNote>}
             <Button type="submit" variant="secondary" disabled={add.isPending}>

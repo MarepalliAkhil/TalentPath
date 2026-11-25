@@ -11,7 +11,7 @@ from functools import lru_cache
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-ROLES = ("candidate", "recruiter", "hiring_manager", "employee", "hr_admin")
+ROLES = ("candidate", "recruiter", "manager", "employee", "hr", "admin")
 ANONYMOUS = "anonymous"
 INTERNAL = "internal"
 PRINCIPALS = (*ROLES, ANONYMOUS)

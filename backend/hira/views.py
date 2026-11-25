@@ -48,7 +48,7 @@ class MessageRecruiterView(PolicyAPIView):
 
 
 class BriefingView(PolicyAPIView):
-    """HIRA's login briefing for recruiters and hr_admin (counts from the activity log)."""
+    """HIRA's login briefing for recruiters and HR (counts from the activity log)."""
 
     policy_actions = {"GET": "hira.briefing", "POST": "hira.briefing"}
 

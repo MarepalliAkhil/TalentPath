@@ -37,7 +37,7 @@ export function JobsManagePage({ scope }: { scope: 'mine' | 'all' }) {
       setError('');
       void client.invalidateQueries({ queryKey: ['jobs'] });
     },
-    onError: (e) => setError(e instanceof ApiError ? Object.values(e.fieldErrors)[0] ?? e.message : 'Could not update the job.'),
+    onError: (e) => setError(e instanceof ApiError ? (Object.values(e.fieldErrors)[0] ?? e.message) : 'Could not update the job.'),
   });
 
   return (

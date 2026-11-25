@@ -12,6 +12,16 @@ os.environ.setdefault("INTERNAL_TICK_SECRET", "test-internal-secret-0123456789")
 os.environ.setdefault("ALLOWED_HOSTS", "testserver,localhost")
 os.environ.setdefault("SITE_URL", "https://careers.test")
 os.environ.setdefault("DEMO_MODE", "true")
+# Tests never send real email, whatever the shell has set (D-86).
+os.environ["EMAIL_PROVIDER"] = "console"
+for _name in (
+    "EMAIL_HOST_USER",
+    "EMAIL_HOST_PASSWORD",
+    "EMAIL_API_KEY",
+    "EMAIL_API_PROVIDER",
+    "EMAIL_ALLOWLIST",
+):
+    os.environ.pop(_name, None)
 
 from .settings import *  # noqa: E402,F403
 

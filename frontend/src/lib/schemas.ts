@@ -14,10 +14,18 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Enter your password.'),
 });
 
+const resumeFile = z
+  .instanceof(File, { message: 'Attach your resume (PDF or DOCX).' })
+  .refine((f) => /\.(pdf|docx)$/i.test(f.name), 'Upload a PDF or DOCX file.')
+  .refine((f) => f.size > 0, 'This file is empty.')
+  .refine((f) => f.size <= MAX_RESUME_BYTES, 'Resumes must be 5 MB or smaller.');
+
 export const registerSchema = z.object({
   full_name: z.string().trim().min(2, 'Enter your full name.').max(120, 'Keep it under 120 characters.'),
   email,
   password: newPassword,
+  resume: resumeFile,
+  accept_terms: z.literal(true, { errorMap: () => ({ message: 'Accept the Terms and the Privacy Policy to continue.' }) }),
 });
 
 export const forgotSchema = z.object({ email });
@@ -26,14 +34,7 @@ export const resetSchema = z
   .object({ password: newPassword, confirm: z.string() })
   .refine((v) => v.password === v.confirm, { message: 'Passwords do not match.', path: ['confirm'] });
 
-export const applySchema = z.object({
-  cover_note: z.string().max(2000, 'Keep the note under 2000 characters.'),
-  resume: z
-    .instanceof(File, { message: 'Attach your resume (PDF or DOCX).' })
-    .refine((f) => /\.(pdf|docx)$/i.test(f.name), 'Upload a PDF or DOCX file.')
-    .refine((f) => f.size > 0, 'This file is empty.')
-    .refine((f) => f.size <= MAX_RESUME_BYTES, 'Resumes must be 5 MB or smaller.'),
-});
+export const resumeSchema = z.object({ resume: resumeFile });
 
 export const jobSchema = z.object({
   title: z.string().trim().min(3, 'Give the job a title.').max(120),
@@ -55,11 +56,10 @@ export const jobSchema = z.object({
 export const staffSchema = z.object({
   full_name: z.string().trim().min(2, 'Enter a name.'),
   email,
-  role: z.enum(['recruiter', 'hiring_manager', 'employee', 'hr_admin']),
+  role: z.enum(['recruiter', 'manager', 'employee', 'hr']),
 });
 
 export const profileSchema = z.object({
-  full_name: z.string().trim().min(2, 'Enter your name.').max(120),
   headline: z.string().max(160),
   location_text: z.string().max(120),
   phone: z

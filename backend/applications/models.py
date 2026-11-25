@@ -57,7 +57,7 @@ class Application(models.Model):
     resume_filename = models.CharField(max_length=120, blank=True, default="")
     resume_text = EncryptedTextField(blank=True, default="")
     # Blind screening: set when identity is revealed (automatically at the job's
-    # reveal stage, or early by hr_admin with a reason).
+    # reveal stage, or early by HR with a reason).
     identity_revealed_at = models.DateTimeField(null=True, blank=True)
     revealed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -128,3 +128,33 @@ class ApplicationNote(models.Model):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class ApplicationForm(models.Model):
+    """The answers to the application form (D-83): personal, education, experience,
+    compensation, links, screening answers and the declarations. Stored encrypted. The fit
+    scorer never reads it; recruiters see compensation separately from the score."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.OneToOneField(Application, on_delete=models.CASCADE, related_name="form")
+    data = EncryptedTextField(blank=True, default="")
+    declared_at = models.DateTimeField()
+    terms_version = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ApplicationDraft(models.Model):
+    """A half-finished application form, saved by the candidate (encrypted)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    candidate = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="application_drafts"
+    )
+    job = models.ForeignKey("jobs.Job", on_delete=models.CASCADE, related_name="drafts")
+    data = EncryptedTextField(blank=True, default="")
+    step = models.PositiveSmallIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["candidate", "job"], name="uniq_draft_per_job")]
+        ordering = ["-updated_at"]

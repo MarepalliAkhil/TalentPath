@@ -69,7 +69,8 @@ function DeclineDialog({ interview, onClose }: { interview: Interview; onClose: 
   const client = useQueryClient();
   const [reason, setReason] = useState('');
   const decline = useMutation({
-    mutationFn: () => api<{ replaced: boolean; replacement?: string }>(`/interviews/${interview.id}/decline`, { method: 'POST', body: { reason } }),
+    mutationFn: () =>
+      api<{ replaced: boolean; replacement?: string }>(`/interviews/${interview.id}/decline`, { method: 'POST', body: { reason } }),
     onSuccess: () => client.invalidateQueries({ queryKey: ['assigned-interviews'] }),
   });
   return (
@@ -150,7 +151,9 @@ export function MyInterviewsPage() {
       {data.data && (
         <>
           {data.data.needs_feedback.length + data.data.upcoming.length + data.data.past.length === 0 && (
-            <EmptyState title="No interviews yet">HIRA picks interviewers by skills and free time. Keep your availability up to date.</EmptyState>
+            <EmptyState title="No interviews yet">
+              HIRA picks interviewers by skills and free time. Keep your availability up to date.
+            </EmptyState>
           )}
           <Group title="Needs your feedback" rows={data.data.needs_feedback} empty="Nothing to fill in." onDecline={setDeclining} />
           <Group title="Upcoming" rows={data.data.upcoming} empty="No upcoming interviews." onDecline={setDeclining} />

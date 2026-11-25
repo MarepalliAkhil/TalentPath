@@ -8,7 +8,7 @@ flowchart LR
   V -->|"rewrite /api/* (HTTPS)"| R[Render: Django ASGI in Docker]
   B -.->|"WebSocket + single-use ticket (direct)"| R
   R --> N[(Neon PostgreSQL)]
-  C[cron-job.org] -->|"POST /api/internal/tick, /nightly + X-Internal-Secret"| R
+  C[cron-job.org] -->|"POST /api/internal/tick, /nightly + X-Tick-Secret"| R
 ```
 
 - The browser only talks to the Vercel origin. Vercel rewrites `/api/*`, `/sitemap.xml` and `/robots.txt` to Render, so auth cookies are first-party and `SameSite=Lax` works.
@@ -20,12 +20,12 @@ flowchart LR
 | App | Responsibility |
 | --- | --- |
 | `core` | Policy loader and permission class, cookie JWT auth with CSRF, AES-GCM crypto and blind index, encrypted field, audit log, ping, cron hooks, sitemap and robots |
-| `accounts` | User (UUID id, email login, role), Profile (encrypted phone and address), auth endpoints, staff admin |
-| `org` | Departments, locations, job levels, skills taxonomy with synonyms (`resolve_skill`) |
-| `jobs` | Job model, status rules, role scoping, public career API, SEO and JSON-LD |
+| `accounts` | User (UUID id, email login, one of six roles), Profile (encrypted phone, address, date of birth, education and experience; photo; links; skills; notification preferences), registration with resume prefill (`prefill.py`), admin user management with audited overrides (`people.py`) |
+| `org` | Companies (fictional only, checked by `fictional.py`), departments, locations, job levels, skills taxonomy with synonyms (`resolve_skill`) |
+| `jobs` | Job model (company, team, responsibilities, qualifications, benefits, CTC range, screening questions), status rules, role scoping, public career API, SEO and JSON-LD |
 | `files` | `StoredFile`: zlib-compressed, AES-GCM encrypted bytes in PostgreSQL (free mode) |
-| `applications` | Resume validation and extraction, applications, status history, dashboard summary |
-| `notifications` | In-app notifications, simulated email outbox, WebSocket consumer and tickets, demo inbox |
+| `applications` | Resume validation and extraction, applications with the encrypted application form and drafts (`form.py`; the scorer never reads it), status history, dashboard summary |
+| `notifications` | In-app notifications, email outbox and send log, delivery through console, SMTP or Brevo/Resend with limits and retries (`delivery.py`, `docs/EMAIL.md`), branded templates (`templates.py`), WebSocket consumer and tickets, demo inbox |
 | `seeding` | `seed` and `bootstrap_admin` commands, synthetic PDF/DOCX generators |
 
 ### Permissions: one policy file
@@ -75,12 +75,14 @@ Keys come from `FIELD_ENCRYPTION_KEY` and `BLIND_INDEX_KEY` (32 bytes, base64). 
 | Need | Implementation |
 | --- | --- |
 | Keep-alive and health | `GET /api/ping`, no authentication, zero DB queries (tested) |
-| Scheduled work | `POST /api/internal/tick` and `/nightly`, `X-Internal-Secret` with constant-time compare; tasks in `core/tasks.py` |
+| Scheduled work | `POST /api/internal/tick` and `/nightly`, `X-Tick-Secret` with constant-time compare; tasks in `core/tasks.py` |
 | WebSockets behind Vercel | Single-use tickets, `OriginValidator` with `WS_ALLOWED_ORIGINS` |
 | No Redis on free tier | `InMemoryChannelLayer` unless `REDIS_URL` is set |
 | Ephemeral disk | Files stored in PostgreSQL (`FILE_STORAGE_MODE=db`) |
 | Fail fast | Settings raise `ImproperlyConfigured` without required env vars |
-| Render | `backend/Dockerfile` (build from repo root), runs `migrate` then `daphne` |
+| Render | `backend/Dockerfile` (build from repo root), runs `migrate` then one `daphne` on `$PORT`; `render.yaml` Blueprint |
+| Health check from any host | `core.middleware.HealthCheckMiddleware` answers `/api/ping` even for a `Host` not in `ALLOWED_HOSTS`; nothing else |
+| Missed cron | Work people read is caught up on read (D-73); step-by-step setup in [DEPLOY.md](DEPLOY.md) |
 
 ## Frontend (React + Vite)
 

@@ -30,7 +30,15 @@ export function Button({
   return <button type={type} className={buttonClass(variant, className)} {...props} />;
 }
 
-export function Card({ children, className = '', as: As = 'section' }: { children: ReactNode; className?: string; as?: 'section' | 'div' | 'article' | 'li' }) {
+export function Card({
+  children,
+  className = '',
+  as: As = 'section',
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: 'section' | 'div' | 'article' | 'li';
+}) {
   return <As className={`glass rounded-xl2 p-5 sm:p-6 ${className}`}>{children}</As>;
 }
 
@@ -63,7 +71,12 @@ function FieldShell({ label, error, hint, children, required }: FieldShellProps)
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-ink">
         {label}
-        {required && <span className="text-danger" aria-hidden="true"> *</span>}
+        {required && (
+          <span className="text-danger" aria-hidden="true">
+            {' '}
+            *
+          </span>
+        )}
       </label>
       {children({ id, describedBy, invalid: Boolean(error) })}
       {hint && (
@@ -165,7 +178,9 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function StatusBadge({ status, label }: { status: string; label: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLES[status] ?? 'bg-canvas-deep text-ink'}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLES[status] ?? 'bg-canvas-deep text-ink'}`}
+    >
       {label}
     </span>
   );
@@ -182,7 +197,10 @@ export function Chip({ children }: { children: ReactNode }) {
 export function PageLoader({ label = 'Loading' }: { label?: string }) {
   return (
     <div role="status" className="flex min-h-40 items-center justify-center gap-3 text-muted">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent motion-reduce:animate-none" aria-hidden="true" />
+      <span
+        className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent motion-reduce:animate-none"
+        aria-hidden="true"
+      />
       <span>{label}…</span>
     </div>
   );

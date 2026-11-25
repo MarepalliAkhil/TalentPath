@@ -139,7 +139,7 @@ def onboarding_scope(user):
         .filter(tasks__isnull=False)
         .distinct()
     )
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     return qs.filter(Q(manager__user=user) | Q(buddy__user=user))
 
@@ -204,7 +204,7 @@ class OnboardingListView(PolicyAPIView):
                         1 for t in tasks if not t.done_at and t.due_on < today_ist(timezone.now())
                     ),
                     "relationship": "hr"
-                    if request.user.role == Role.HR_ADMIN
+                    if request.user.role == Role.HR
                     else ("manager" if emp.manager and emp.manager.user_id == request.user.id else "buddy"),
                 }
             )
@@ -226,7 +226,7 @@ def _task_for(request, pk):
     user = request.user
     visible = (
         task.employee.user_id == user.id
-        or user.role == Role.HR_ADMIN
+        or user.role == Role.HR
         or onboarding_scope(user).filter(pk=task.employee_id).exists()
         or task.owner_id == user.id
     )
@@ -277,7 +277,7 @@ def leave_dict(req, viewer, *, detail=False) -> dict:
     show_reason = (
         own
         or can_act
-        or viewer.role == Role.HR_ADMIN
+        or viewer.role == Role.HR
         or (req.employee.manager_id and req.employee.manager.user_id == viewer.id)
     )
     data = {
@@ -298,7 +298,7 @@ def leave_dict(req, viewer, *, detail=False) -> dict:
         "escalated": req.escalated,
         "reason": req.reason if show_reason else None,
         "has_document": req.document_id is not None,
-        "decision_note": req.decision_note if (own or can_act or viewer.role == Role.HR_ADMIN) else None,
+        "decision_note": req.decision_note if (own or can_act or viewer.role == Role.HR) else None,
         "created_at": req.created_at.isoformat(),
         "can_cancel": own and req.status in engine.OPEN and req.start > today_ist(timezone.now()),
         "can_act": can_act,
@@ -331,7 +331,7 @@ def leave_scope(user):
     qs = LeaveRequest.objects.select_related(
         "employee", "employee__user", "employee__manager", "employee__location", "leave_type", "approver"
     )
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     return qs.filter(Q(employee__user=user) | Q(approver=user) | Q(employee__manager__user=user))
 
@@ -341,6 +341,7 @@ class LeaveBalancesView(PolicyAPIView):
 
     def get(self, request):
         emp = me(request)
+        engine.credit_entitlements(emp, today_ist(timezone.now()))  # lazy: never wait for the nightly accrual
         types = [
             {
                 "code": lt.code,
@@ -367,6 +368,7 @@ class LeavePreviewView(PolicyAPIView):
 
     def post(self, request):
         emp = me(request)
+        engine.credit_entitlements(emp, today_ist(timezone.now()))
         has_doc = str(request.data.get("has_document", "")).lower() in ("1", "true")
         return Response(engine.check(emp, request.data, has_document=has_doc).as_dict())
 
@@ -383,6 +385,7 @@ class LeaveRequestsView(PolicyAPIView):
 
     def post(self, request):
         emp = me(request)
+        engine.credit_entitlements(emp, today_ist(timezone.now()))
         leave = engine.apply(
             emp, request.user, request.data, document=read_document(request), request=request
         )
@@ -443,12 +446,15 @@ class ApprovalsView(PolicyAPIView):
 
     def get(self, request):
         user = request.user
+        # Lazy part of the tick: delegation and 48-hour escalation are applied when approvals are read.
+        engine.refresh_delegations()
+        engine.escalate_due()
         data = {
             "leave": [leave_dict(r, user) for r in engine.approvals_for(user)],
             "regularisations": [reg_dict(r, user) for r in attendance.regularisations_for(user)],
             "needs_attention": [],
         }
-        if user.role == Role.HR_ADMIN:
+        if user.role == Role.HR:
             data["needs_attention"] = [leave_dict(r, user) for r in engine.needs_attention()]
         return Response(data)
 
@@ -500,7 +506,7 @@ class TeamCalendarView(PolicyAPIView):
                 return Response({"manager": "Unknown team."}, status=400)
             team_of = Employee.objects.filter(pk=manager_id).select_related("user", "location").first()
             allowed = team_of is not None and (
-                request.user.role == Role.HR_ADMIN or team_of.user_id == request.user.id
+                request.user.role == Role.HR or team_of.user_id == request.user.id
             )
             if not allowed:
                 raise NotFound()
@@ -814,6 +820,7 @@ class AttentionView(PolicyAPIView):
     policy_action = "hr.attention"
 
     def get(self, request):
+        engine.escalate_due()  # lazy part of the tick
         today = today_ist(timezone.now())
         overdue = (
             OnboardingTask.objects.filter(done_at__isnull=True, due_on__lt=today)
@@ -851,7 +858,7 @@ def reg_dict(reg, viewer) -> dict:
         "check_out": reg.check_out.strftime("%H:%M"),
         "mode": reg.mode,
         "reason": reg.reason
-        if (own or attendance.can_decide(reg, viewer) or viewer.role == Role.HR_ADMIN)
+        if (own or attendance.can_decide(reg, viewer) or viewer.role == Role.HR)
         else None,
         "status": reg.status,
         "status_label": reg.get_status_display(),
@@ -941,7 +948,7 @@ class RegularisationDecideView(PolicyAPIView):
             Regularisation.objects.select_related("employee", "employee__user", "approver"), pk=pk
         )
         user = request.user
-        if not (reg.approver_id == user.id or user.role == Role.HR_ADMIN or reg.employee.user_id == user.id):
+        if not (reg.approver_id == user.id or user.role == Role.HR or reg.employee.user_id == user.id):
             raise NotFound()
         if reg.employee.user_id == user.id:
             return Response({"detail": "You cannot approve your own attendance correction."}, status=403)
@@ -964,7 +971,7 @@ class AttendanceTeamView(PolicyAPIView):
         return Response(
             {
                 "month": month.strftime("%Y-%m"),
-                "scope": "all" if request.user.role == Role.HR_ADMIN else "reports",
+                "scope": "all" if request.user.role == Role.HR else "reports",
                 "rows": attendance.team_summary(people.order_by("user__full_name")[:200], month, today=today),
             }
         )

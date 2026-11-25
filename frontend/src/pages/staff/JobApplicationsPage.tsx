@@ -5,7 +5,18 @@ import { ApplicationDrawer } from '@/components/ApplicationDrawer';
 import { CandidateName, FitBadge, ReasonChips } from '@/components/fit';
 import { Icon } from '@/components/Icon';
 import { STAGE_LABELS } from '@/lib/pipeline';
-import { Button, EmptyState, ErrorNote, PageHeader, PageLoader, Pager, SelectField, StatusBadge, TextField, buttonClass } from '@/components/ui';
+import {
+  Button,
+  EmptyState,
+  ErrorNote,
+  PageHeader,
+  PageLoader,
+  Pager,
+  SelectField,
+  StatusBadge,
+  TextField,
+  buttonClass,
+} from '@/components/ui';
 import { api, qs } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/hooks';
@@ -18,13 +29,25 @@ export function JobViewTabs({ jobId, current }: { jobId: string; current: 'list'
     `inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${active ? 'bg-ink text-white' : 'bg-white/70 text-ink-soft hover:text-ink'}`;
   return (
     <nav aria-label="Job views" className="mb-4 flex flex-wrap gap-2">
-      <Link to={`/recruiter/jobs/${jobId}/applications`} className={tab(current === 'list')} aria-current={current === 'list' ? 'page' : undefined}>
+      <Link
+        to={`/recruiter/jobs/${jobId}/applications`}
+        className={tab(current === 'list')}
+        aria-current={current === 'list' ? 'page' : undefined}
+      >
         <Icon name="layers" className="h-4 w-4" /> Ranked list
       </Link>
-      <Link to={`/recruiter/jobs/${jobId}/board`} className={tab(current === 'board')} aria-current={current === 'board' ? 'page' : undefined}>
+      <Link
+        to={`/recruiter/jobs/${jobId}/board`}
+        className={tab(current === 'board')}
+        aria-current={current === 'board' ? 'page' : undefined}
+      >
         <Icon name="columns" className="h-4 w-4" /> Pipeline board
       </Link>
-      <Link to={`/recruiter/jobs/${jobId}/interview-plan`} className={tab(current === 'plan')} aria-current={current === 'plan' ? 'page' : undefined}>
+      <Link
+        to={`/recruiter/jobs/${jobId}/interview-plan`}
+        className={tab(current === 'plan')}
+        aria-current={current === 'plan' ? 'page' : undefined}
+      >
         <Icon name="calendar" className="h-4 w-4" /> Interview plan
       </Link>
     </nav>

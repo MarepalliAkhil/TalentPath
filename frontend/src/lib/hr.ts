@@ -279,10 +279,19 @@ export interface HrConfig {
 
 export type HrCard =
   | { kind: 'balances'; rows: Balances['balances'] }
-  | { kind: 'leave_confirm'; payload: { leave_type: string; start: string; end: string; half: string; reason: string }; check: LeaveCheck; type_name: string }
+  | {
+      kind: 'leave_confirm';
+      payload: { leave_type: string; start: string; end: string; half: string; reason: string };
+      check: LeaveCheck;
+      type_name: string;
+    }
   | { kind: 'holidays'; rows: { date: string; name: string; regional: boolean }[]; note: string }
   | { kind: 'person'; name: string; designation: string; role: string; email: string }
-  | { kind: 'checklist'; progress: { done: number; total: number; percent: number }; rows: { title: string; due_on: string; done: boolean; owner: string }[] }
+  | {
+      kind: 'checklist';
+      progress: { done: number; total: number; percent: number };
+      rows: { title: string; due_on: string; done: boolean; owner: string }[];
+    }
   | { kind: 'attendance'; counts: Record<string, number>; month: string }
   | { kind: 'pending'; rows: { kind: string; name: string; detail: string; escalated: boolean }[] }
   | { kind: 'source'; title: string; link: string };

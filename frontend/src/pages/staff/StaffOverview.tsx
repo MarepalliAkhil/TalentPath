@@ -9,8 +9,8 @@ import type { Paginated, StaffJob, Summary } from '@/lib/types';
 
 const TITLES = {
   recruiter: 'Hiring overview',
-  hiring_manager: 'Your hiring',
-  hr_admin: 'Organisation overview',
+  manager: 'Your hiring',
+  hr: 'HR overview',
 } as const;
 
 export function StaffOverview({ role }: { role: keyof typeof TITLES }) {
@@ -20,7 +20,7 @@ export function StaffOverview({ role }: { role: keyof typeof TITLES }) {
   const summary = useQuery({ queryKey: ['summary'], queryFn: () => api<Summary>('/dashboard/summary') });
   const jobs = useQuery({ queryKey: ['jobs', 'recent'], queryFn: () => api<Paginated<StaffJob>>('/jobs?page_size=6') });
   const s = summary.data;
-  const jobsLink = role === 'hr_admin' ? '/admin/jobs' : '/recruiter/jobs';
+  const jobsLink = role === 'hr' ? '/hr/jobs' : '/recruiter/jobs';
 
   return (
     <>
@@ -62,9 +62,9 @@ export function StaffOverview({ role }: { role: keyof typeof TITLES }) {
       <section className="mt-10" aria-labelledby="jobs-heading">
         <div className="mb-3 flex items-end justify-between">
           <h2 id="jobs-heading" className="font-display text-xl font-semibold text-ink">
-            {role === 'hiring_manager' ? 'Jobs assigned to you' : 'Recent jobs'}
+            {role === 'manager' ? 'Jobs assigned to you' : 'Recent jobs'}
           </h2>
-          {role !== 'hiring_manager' && (
+          {role !== 'manager' && (
             <Link to={jobsLink} className="text-sm font-semibold text-primary-strong hover:underline">
               See all
             </Link>

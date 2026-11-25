@@ -170,7 +170,7 @@ def can_decide(reg, user) -> bool:
 
     if reg.status != RegularisationStatus.PENDING or reg.employee.user_id == user.id:
         return False
-    return reg.approver_id == user.id or (reg.approver_id is None and user.role == Role.HR_ADMIN)
+    return reg.approver_id == user.id or (reg.approver_id is None and user.role == Role.HR)
 
 
 def regularisations_for(user):
@@ -179,7 +179,7 @@ def regularisations_for(user):
     from accounts.models import Role
 
     q = Q(approver=user)
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         q |= Q(approver__isnull=True)
     return (
         Regularisation.objects.filter(status=RegularisationStatus.PENDING)
@@ -279,12 +279,14 @@ def summary(employee, month_start: date, *, today: date | None = None) -> dict:
                 status = "absent"
             else:
                 status = "today"
+        # A past day with a check-in and no check-out is missing even before the nightly job flags it.
+        missing = bool(rec and rec.check_in and (rec.missing_checkout or (not rec.check_out and day < today)))
         if rec and rec.check_in:
             counts["present"] += 1
             counts[rec.mode] += 1
             counts["late"] += int(rec.late)
             counts["early"] += int(rec.early)
-            counts["missing_checkout"] += int(rec.missing_checkout)
+            counts["missing_checkout"] += int(missing)
         elif status == "leave":
             counts["on_leave"] += 1
         elif status == "absent":
@@ -299,7 +301,7 @@ def summary(employee, month_start: date, *, today: date | None = None) -> dict:
                 "mode": rec.mode if rec and rec.check_in else None,
                 "late": bool(rec and rec.late),
                 "early": bool(rec and rec.early),
-                "missing_checkout": bool(rec and rec.missing_checkout),
+                "missing_checkout": missing,
                 "regularised": bool(rec and rec.regularised),
             }
         )
@@ -323,11 +325,11 @@ def team_summary(employees, month_start: date, today: date | None = None) -> lis
 
 
 def employees_in_scope(user, viewer_employee):
-    """hr_admin: everyone; a manager: direct reports; others: nobody else."""
+    """HR: everyone; a manager: direct reports; others: nobody else."""
     from accounts.models import Role
 
     qs = Employee.objects.select_related("user", "department", "location").filter(user__is_active=True)
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     if viewer_employee is None:
         return qs.none()

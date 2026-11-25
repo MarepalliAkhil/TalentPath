@@ -63,7 +63,12 @@ export function CandidateOfferPage() {
         </h2>
         <TermsList terms={data.terms} />
         {data.has_letter && (
-          <a href={`/api/offers/${id}/letter`} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold text-primary-strong underline">
+          <a
+            href={`/api/offers/${id}/letter`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold text-primary-strong underline"
+          >
             <Icon name="document" className="h-4 w-4" /> Open the offer letter (PDF)
           </a>
         )}
@@ -96,7 +101,13 @@ export function CandidateOfferPage() {
                 }}
                 className="flex flex-col gap-3"
               >
-                <TextAreaField label="Reason (optional)" rows={2} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+                <TextAreaField
+                  label="Reason (optional)"
+                  rows={2}
+                  maxLength={500}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
                 {decline.isError && <ErrorNote>{errorText(decline.error)}</ErrorNote>}
                 <div className="flex gap-2">
                   <Button type="submit" variant="danger" disabled={decline.isPending}>

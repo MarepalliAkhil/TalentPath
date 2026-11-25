@@ -1,7 +1,7 @@
 """Team calendar and clash warnings.
 
 A team is the people who share a reporting manager. Peers see who is off and
-when; only the team's manager (and hr_admin) see the leave type and reason.
+when; only the team's manager (and HR) see the leave type and reason.
 """
 
 from datetime import date, timedelta
@@ -70,7 +70,7 @@ def clash_warnings(employee, days: list, exclude=None) -> list[str]:
 
 
 def manager_view_allowed(viewer_user, manager_employee) -> bool:
-    return viewer_user.role == Role.HR_ADMIN or (
+    return viewer_user.role == Role.HR or (
         manager_employee is not None and manager_employee.user_id == viewer_user.id
     )
 

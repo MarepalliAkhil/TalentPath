@@ -50,6 +50,7 @@ def apply_to_job(
     cover_note: str = "",
     silent=False,
     source: str = "career_site",
+    form: dict | None = None,
 ):
     if job.status != JobStatus.OPEN:
         raise ValidationError({"job": "This job is not accepting applications."})
@@ -75,6 +76,8 @@ def apply_to_job(
                 )
         except IntegrityError as exc:
             raise DuplicateApplication() from exc
+        if form is not None:
+            save_form(application, candidate, form)
         ApplicationEvent.objects.create(
             application=application, from_status="", to_status=S.APPLIED, actor=candidate
         )
@@ -104,6 +107,31 @@ def apply_to_job(
     return application
 
 
+def save_form(application, candidate, form: dict) -> None:
+    """Keep the application form (encrypted) and, the first time, the date of birth on the
+    profile, where it then becomes a locked field (D-81, D-83)."""
+    import json
+
+    from django.utils import timezone
+
+    from accounts.models import Profile
+
+    from .form import TERMS_VERSION
+    from .models import ApplicationForm
+
+    ApplicationForm.objects.create(
+        application=application,
+        data=json.dumps(form, default=str),
+        declared_at=timezone.now(),
+        terms_version=TERMS_VERSION,
+    )
+    profile, _ = Profile.objects.get_or_create(user=candidate)
+    dob = form.get("personal", {}).get("date_of_birth", "")
+    if dob and not profile.date_of_birth:
+        profile.date_of_birth = dob
+        profile.save(update_fields=["date_of_birth", "updated_at"])
+
+
 def _record(application, old, new, actor, reason=""):
     application.status = new
     application.save(update_fields=["status", "updated_at"])
@@ -124,7 +152,7 @@ def board_viewers(job) -> set:
     ids = {job.created_by_id}
     if job.hiring_manager_id:
         ids.add(job.hiring_manager_id)
-    ids.update(User.objects.filter(role=Role.HR_ADMIN, is_active=True).values_list("id", flat=True))
+    ids.update(User.objects.filter(role=Role.HR, is_active=True).values_list("id", flat=True))
     return ids
 
 
@@ -240,9 +268,9 @@ def add_note(application, author, *, body: str = "", vote: str = "", request=Non
         raise ValidationError({"body": "Write a note or choose thumbs up or down."})
     if len(body) > 2000:
         raise ValidationError({"body": "Keep notes under 2000 characters."})
-    if author.role == Role.HIRING_MANAGER and application.status not in HM_NOTE_STAGES:
+    if author.role == Role.MANAGER and application.status not in HM_NOTE_STAGES:
         raise ValidationError({"status": "Hiring managers add notes at the Screening and Interview stages."})
-    if vote and author.role != Role.HIRING_MANAGER:
+    if vote and author.role != Role.MANAGER:
         raise ValidationError({"vote": "Thumbs up or down is for the hiring manager."})
     note = ApplicationNote.objects.create(
         application=application,
@@ -295,11 +323,11 @@ def withdraw_application(application, actor):
 
 def staff_visible_applications(user):
     qs = Application.objects.select_related("job", "candidate", "candidate__profile")
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     if user.role == Role.RECRUITER:
         return qs.filter(job__created_by=user)
-    if user.role == Role.HIRING_MANAGER:
+    if user.role == Role.MANAGER:
         return qs.filter(job__hiring_manager=user).exclude(job__status=JobStatus.DRAFT)
     return qs.none()
 

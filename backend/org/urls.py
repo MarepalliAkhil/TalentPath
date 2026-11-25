@@ -1,7 +1,13 @@
 from django.urls import path
 
-from .models import Department, JobLevel, Location, Skill
-from .serializers import DepartmentSerializer, JobLevelSerializer, LocationSerializer, SkillSerializer
+from .models import Company, Department, JobLevel, Location, Skill
+from .serializers import (
+    CompanySerializer,
+    DepartmentSerializer,
+    JobLevelSerializer,
+    LocationSerializer,
+    SkillSerializer,
+)
 from .views import OrgDetailView, OrgListView
 
 RESOURCES = [
@@ -9,6 +15,7 @@ RESOURCES = [
     ("locations", Location, LocationSerializer, ("name", "country")),
     ("job-levels", JobLevel, JobLevelSerializer, ("name",)),
     ("skills", Skill, SkillSerializer, ("name", "category")),
+    ("companies", Company, CompanySerializer, ("name", "industry", "headquarters")),
 ]
 
 urlpatterns = []

@@ -7,7 +7,17 @@ import { api } from '@/lib/api';
 import { SOURCE_LABEL, type JobMap, type SkillRow } from '@/lib/growth';
 import { useDocumentTitle } from '@/lib/hooks';
 
-function SkillList({ title, rows, empty, showEvidence = false }: { title: string; rows: SkillRow[]; empty: string; showEvidence?: boolean }) {
+function SkillList({
+  title,
+  rows,
+  empty,
+  showEvidence = false,
+}: {
+  title: string;
+  rows: SkillRow[];
+  empty: string;
+  showEvidence?: boolean;
+}) {
   return (
     <section className="glass rounded-xl2 p-5" aria-label={title}>
       <h2 className="font-display text-lg font-semibold text-ink">
@@ -65,7 +75,8 @@ export function CareerJobPage() {
           Your learning path
         </h2>
         <p className="mb-3 text-sm text-muted">
-          In order: a skill never comes before the skills it builds on. Effort is a rough label, not a promise. Links go only to official documentation.
+          In order: a skill never comes before the skills it builds on. Effort is a rough label, not a promise. Links go only to official
+          documentation.
         </p>
         <LearningPath steps={data.path} />
       </section>

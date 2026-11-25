@@ -13,10 +13,15 @@ from .conftest import PASSWORD, ROLES
 DASHBOARDS = {
     "candidate": "/candidate",
     "recruiter": "/recruiter",
-    "hiring_manager": "/manager",
+    "manager": "/manager",
     "employee": "/employee",
-    "hr_admin": "/admin",
+    "hr": "/hr",
+    "admin": "/admin",
 }
+
+
+def register_data(name, email, password, resume):
+    return {"full_name": name, "email": email, "password": password, "accept_terms": "true", "resume": resume}
 
 
 def login(client, email, password=PASSWORD):
@@ -24,12 +29,12 @@ def login(client, email, password=PASSWORD):
 
 
 @pytest.mark.django_db
-def test_candidate_registration_signs_in_with_httponly_cookies():
+def test_candidate_registration_signs_in_with_httponly_cookies(upload, pdf_bytes):
     client = APIClient()
     resp = client.post(
         "/api/auth/register",
-        {"full_name": "Asha Verma", "email": "Asha@Example.test", "password": "Sturdy-Pass-123"},
-        format="json",
+        register_data("Asha Verma", "Asha@Example.test", "Sturdy-Pass-123", upload(pdf_bytes)),
+        format="multipart",
     )
     assert resp.status_code == 201
     assert resp.data["user"]["role"] == Role.CANDIDATE
@@ -47,29 +52,29 @@ def test_candidate_registration_signs_in_with_httponly_cookies():
 
 
 @pytest.mark.django_db
-def test_registration_rejects_duplicates_and_weak_passwords(make_user):
+def test_registration_rejects_duplicates_and_weak_passwords(make_user, upload, pdf_bytes):
     make_user(email="taken@test.example")
     client = APIClient()
     dup = client.post(
         "/api/auth/register",
-        {"full_name": "X Y", "email": "TAKEN@test.example", "password": "Sturdy-Pass-123"},
-        format="json",
+        register_data("X Y", "TAKEN@test.example", "Sturdy-Pass-123", upload(pdf_bytes)),
+        format="multipart",
     )
     assert dup.status_code == 400 and "email" in dup.data
     weak = client.post(
         "/api/auth/register",
-        {"full_name": "X Y", "email": "new@test.example", "password": "password"},
-        format="json",
+        register_data("X Y", "new@test.example", "password", upload(pdf_bytes)),
+        format="multipart",
     )
     assert weak.status_code == 400
 
 
 @pytest.mark.django_db
-def test_registration_cannot_choose_a_role():
+def test_registration_cannot_choose_a_role(upload, pdf_bytes):
     resp = APIClient().post(
         "/api/auth/register",
-        {"full_name": "Sneaky", "email": "s@test.example", "password": "Sturdy-Pass-123", "role": "hr_admin"},
-        format="json",
+        {**register_data("Sneaky", "s@test.example", "Sturdy-Pass-123", upload(pdf_bytes)), "role": "hr"},
+        format="multipart",
     )
     assert resp.status_code == 201
     assert User.objects.get(email="s@test.example").role == Role.CANDIDATE

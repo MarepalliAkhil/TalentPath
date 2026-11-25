@@ -234,8 +234,8 @@ def test_hr_adjustment_needs_a_note_and_is_audited(emp, users):
     from rest_framework.exceptions import ValidationError
 
     with pytest.raises(ValidationError):
-        engine.adjust(emp, comp, 1, "", users["hr_admin"])
-    engine.adjust(emp, comp, Decimal("1"), "Worked on the release Saturday", users["hr_admin"])
+        engine.adjust(emp, comp, 1, "", users["hr"])
+    engine.adjust(emp, comp, Decimal("1"), "Worked on the release Saturday", users["hr"])
     assert LeaveLedger.objects.get(employee=emp, leave_type=comp, kind="adjust").days == Decimal("1")
     assert AuditLog.objects.filter(action="leave.adjusted").exists()
 

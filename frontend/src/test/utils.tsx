@@ -13,9 +13,10 @@ export function fakeUser(role: Role): User {
   const labels: Record<Role, string> = {
     candidate: 'Candidate',
     recruiter: 'Recruiter',
-    hiring_manager: 'Hiring manager',
+    manager: 'Manager',
     employee: 'Employee',
-    hr_admin: 'HR admin',
+    hr: 'HR',
+    admin: 'Admin',
   };
   return {
     id: `00000000-0000-4000-8000-00000000000${role.length % 10}`,
@@ -34,7 +35,8 @@ export function mockApi(routes: Record<string, unknown>) {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.pathname + input.search : input.url;
     const path = url.split('?')[0];
     const key = Object.keys(routes).find((candidate) => candidate === path);
-    if (!key) return new Response(JSON.stringify({ detail: 'Not found' }), { status: 404, headers: { 'content-type': 'application/json' } });
+    if (!key)
+      return new Response(JSON.stringify({ detail: 'Not found' }), { status: 404, headers: { 'content-type': 'application/json' } });
     return new Response(JSON.stringify(routes[key]), { status: 200, headers: { 'content-type': 'application/json' } });
   });
   vi.stubGlobal('fetch', fetchMock);

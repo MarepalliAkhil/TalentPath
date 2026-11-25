@@ -17,17 +17,6 @@ export function useDemoConfig() {
   });
 }
 
-/** Slim banner on every page while demo mode is on. */
-export function DemoBanner() {
-  const config = useDemoConfig();
-  if (!config.data?.demo_mode) return null;
-  return (
-    <p role="note" className="bg-ink px-4 py-1.5 text-center text-xs font-semibold text-white">
-      {config.data.banner}
-    </p>
-  );
-}
-
 /** "Try as …" buttons: sign in to a seeded demo account. Shown only when demo mode is on. */
 export function DemoButtons({ heading = 'Try it as' }: { heading?: string }) {
   const config = useDemoConfig();
@@ -47,11 +36,11 @@ export function DemoButtons({ heading = 'Try it as' }: { heading?: string }) {
       <div className="flex flex-wrap gap-2">
         {config.data.accounts.map((a) => (
           <Button key={a.role} variant="secondary" onClick={() => signIn.mutate(a.role)} disabled={signIn.isPending}>
-            Try as {a.role === 'hr_admin' ? a.label : a.label.toLowerCase()}
+            Try as {a.role === 'hr' ? 'HR' : a.label.toLowerCase()}
           </Button>
         ))}
       </div>
-      <p className="text-xs text-muted">Signs you in to a seeded demo account. Demo data resets nightly.</p>
+      <p className="text-xs text-muted">Signs you in to a seeded account with fictional data.</p>
       {signIn.isError && <ErrorNote>{errorText(signIn.error)}</ErrorNote>}
     </div>
   );
@@ -97,9 +86,7 @@ export function ResumeCard({ compact = false }: { compact?: boolean }) {
           )}
         </p>
       )}
-      {!compact && data && data.skills.length > 0 && (
-        <p className="mt-2 text-sm text-muted">Skills: {data.skills.join(', ')}</p>
-      )}
+      {!compact && data && data.skills.length > 0 && <p className="mt-2 text-sm text-muted">Skills: {data.skills.join(', ')}</p>}
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex flex-col gap-1">
           <label htmlFor={inputId} className="text-sm font-medium text-ink">
@@ -145,13 +132,20 @@ export function LearningPath({ steps }: { steps: PathStep[] }) {
     <ol className="space-y-2">
       {steps.map((step, i) => (
         <li key={step.slug} className="flex gap-3 rounded-xl border border-ink/10 bg-white/70 p-3">
-          <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+          <span
+            aria-hidden="true"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white"
+          >
             {i + 1}
           </span>
           <div className="text-sm">
             <p className="font-semibold text-ink">
               {step.name}
-              {step.kind && <span className="ml-2 rounded-full bg-canvas-deep px-2 py-0.5 text-xs font-medium text-ink-soft">{KIND_LABEL[step.kind]}</span>}
+              {step.kind && (
+                <span className="ml-2 rounded-full bg-canvas-deep px-2 py-0.5 text-xs font-medium text-ink-soft">
+                  {KIND_LABEL[step.kind]}
+                </span>
+              )}
             </p>
             <p className="text-ink-soft">
               Effort: {step.effort_label}
@@ -181,7 +175,9 @@ export function BandPill({ band, label, score }: { band: string; label: string; 
     low: 'bg-canvas-deep text-ink-soft',
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${style[band] ?? 'bg-canvas-deep text-ink'}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${style[band] ?? 'bg-canvas-deep text-ink'}`}
+    >
       {label} · {score}
     </span>
   );

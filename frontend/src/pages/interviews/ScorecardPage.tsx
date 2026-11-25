@@ -88,8 +88,7 @@ export function ScorecardPage() {
   const [recommendation, setRecommendation] = useState<Recommendation | ''>('');
   const [summary, setSummary] = useState('');
   const submit = useMutation({
-    mutationFn: () =>
-      api(`/interviews/${id}/scorecards`, { method: 'POST', body: { ratings, comments, recommendation, summary } }),
+    mutationFn: () => api(`/interviews/${id}/scorecards`, { method: 'POST', body: { ratings, comments, recommendation, summary } }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['scorecards', id] });
       void client.invalidateQueries({ queryKey: ['assigned-interviews'] });
@@ -123,9 +122,8 @@ export function ScorecardPage() {
       {canSubmit && (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-label="Scorecard">
           <p className="text-sm text-muted">
-            Rate each area from 1 to 5. Ratings of 1, 2 and 5 need a short comment. Others' feedback stays hidden until you
-            submit, so your view is your own.{' '}
-            {interview.scorecard_due_at && <>Due {ist(interview.scorecard_due_at)}.</>}
+            Rate each area from 1 to 5. Ratings of 1, 2 and 5 need a short comment. Others' feedback stays hidden until you submit, so your
+            view is your own. {interview.scorecard_due_at && <>Due {ist(interview.scorecard_due_at)}.</>}
           </p>
           {data.template.map((c) => (
             <CriterionField
@@ -143,15 +141,31 @@ export function ScorecardPage() {
             <legend className="px-1 font-semibold text-ink">Overall recommendation</legend>
             <div className="flex flex-wrap gap-2">
               {RECOMMENDATIONS.map((r) => (
-                <label key={r.value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${recommendation === r.value ? 'border-primary bg-primary-soft font-semibold' : 'border-ink/15 bg-white'}`}>
-                  <input type="radio" name="recommendation" value={r.value} checked={recommendation === r.value} onChange={() => setRecommendation(r.value)} className="h-4 w-4 accent-primary" />
+                <label
+                  key={r.value}
+                  className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${recommendation === r.value ? 'border-primary bg-primary-soft font-semibold' : 'border-ink/15 bg-white'}`}
+                >
+                  <input
+                    type="radio"
+                    name="recommendation"
+                    value={r.value}
+                    checked={recommendation === r.value}
+                    onChange={() => setRecommendation(r.value)}
+                    className="h-4 w-4 accent-primary"
+                  />
                   {r.label}
                 </label>
               ))}
             </div>
             {errors.recommendation && <p className="mt-1 text-sm font-medium text-danger">{errors.recommendation}</p>}
           </fieldset>
-          <TextAreaField label="Summary (optional)" rows={3} maxLength={2000} value={summary} onChange={(e) => setSummary(e.target.value)} />
+          <TextAreaField
+            label="Summary (optional)"
+            rows={3}
+            maxLength={2000}
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+          />
           {submit.isError && <ErrorNote>{submit.error instanceof ApiError ? submit.error.message : 'Could not submit.'}</ErrorNote>}
           <Button type="submit" className="self-start" disabled={submit.isPending}>
             Submit scorecard

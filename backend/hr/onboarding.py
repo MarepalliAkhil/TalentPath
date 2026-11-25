@@ -101,7 +101,7 @@ def _owner(kind, employee) -> object | None:
         return employee.manager.user if employee.manager else None
     if kind == TaskOwner.BUDDY:
         return employee.buddy.user if employee.buddy else None
-    return None  # HR and IT tasks: any hr_admin
+    return None  # HR and IT tasks: any HR
 
 
 def generate_checklist(employee) -> int:
@@ -258,6 +258,7 @@ def hire(offer, actor, request=None, now=None) -> Employee:
             level=job.level,
             status=EmployeeStatus.ONBOARDING,
             hired_from=offer,
+            company=job.company,
         )
         employee.buddy = choose_buddy(department, joining, exclude_ids=(employee.id, manager.id))
         employee.save(update_fields=["buddy"])
@@ -434,7 +435,7 @@ def _welcome_messages(employee_id) -> None:
             body=f"They join {employee.department.name} on {start}. Lunch on day two is on the plan.",
             link=f"/onboarding/{employee.id}",
         )
-    for admin in User.objects.filter(role=Role.HR_ADMIN, is_active=True):
+    for admin in User.objects.filter(role=Role.HR, is_active=True):
         notify(
             admin,
             kind="new_joiner",
@@ -454,8 +455,8 @@ def progress(employee) -> dict:
 
 def can_complete(task, user) -> bool:
     if task.owner_id is not None:
-        return task.owner_id == user.id or user.role == Role.HR_ADMIN
-    return user.role == Role.HR_ADMIN
+        return task.owner_id == user.id or user.role == Role.HR
+    return user.role == Role.HR
 
 
 def complete(task, user, *, document=None, request=None) -> OnboardingTask:

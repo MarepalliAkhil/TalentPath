@@ -91,8 +91,8 @@ def test_briefing_and_activity_are_scoped_to_your_jobs(pending_interview, users,
     other = as_user(make_user(Role.RECRUITER))
     assert other.get("/api/hira/briefing").data["counts"]["interview_scheduled"] == 0
     assert other.get("/api/hira/activity").data["results"] == []
-    assert as_user(users["hr_admin"]).get("/api/hira/briefing").data["counts"]["interview_scheduled"] == 3
-    for role in ("candidate", "hiring_manager", "employee"):
+    assert as_user(users["hr"]).get("/api/hira/briefing").data["counts"]["interview_scheduled"] == 3
+    for role in ("candidate", "manager", "employee"):
         assert as_user(users[role]).get("/api/hira/briefing").status_code == 403
 
 

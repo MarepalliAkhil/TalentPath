@@ -34,7 +34,14 @@ function ChartBlock({ section }: { section: Section }) {
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               {chart.series.map((s, i) => (
-                <Line key={s.key} dataKey={s.key} name={s.label} stroke={COLORS[i % COLORS.length]} strokeWidth={2} isAnimationActive={!reduced} />
+                <Line
+                  key={s.key}
+                  dataKey={s.key}
+                  name={s.label}
+                  stroke={COLORS[i % COLORS.length]}
+                  strokeWidth={2}
+                  isAnimationActive={!reduced}
+                />
               ))}
             </LineChart>
           ) : (
@@ -144,7 +151,7 @@ export function AnalyticsPage() {
     queryKey: ['analytics', report, from, to, department],
     queryFn: () => api<AnalyticsReport>(`/analytics/${report}${qs(filters)}`),
   });
-  const isAdmin = user?.role === 'hr_admin';
+  const isAdmin = user?.role === 'hr';
   return (
     <>
       <PageHeader

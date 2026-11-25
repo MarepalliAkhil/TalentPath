@@ -111,6 +111,9 @@ class Command(BaseCommand):
         history = hiring.seed_hira_history()
         people = seed_people(staff, self.password_hash)
         growth = seed_growth(staff)
+        from seeding.companies import seed_prompt1
+
+        prompt1 = seed_prompt1()
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seed complete: {Job.objects.open().count()} open jobs, "
@@ -126,6 +129,7 @@ class Command(BaseCommand):
             f"leave {leave}, attendance {people['attendance']}."
         )
         self.stdout.write(f"Career and mobility: {growth}.")
+        self.stdout.write(f"Companies and application forms: {prompt1}.")
         demo = people["hire_demo"]
         if not demo.get("skipped"):
             self.stdout.write(

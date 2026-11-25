@@ -11,7 +11,7 @@ def ready_to_hire(sender, offer, **kwargs):
     from notifications.services import notify
 
     job = offer.application.job
-    for admin in User.objects.filter(role=Role.HR_ADMIN, is_active=True):
+    for admin in User.objects.filter(role=Role.HR, is_active=True):
         notify(
             admin,
             kind="ready_to_hire",

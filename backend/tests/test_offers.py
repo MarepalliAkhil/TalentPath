@@ -98,20 +98,18 @@ def test_approval_order_hiring_manager_then_hr(finalist, users):
     assert offer.status == OfferStatus.DRAFT
     recruiter, manager, admin = (
         as_user(users["recruiter"]),
-        as_user(users["hiring_manager"]),
-        as_user(users["hr_admin"]),
+        as_user(users["manager"]),
+        as_user(users["hr"]),
     )
     assert recruiter.post(f"/api/offers/{offer.id}/send").status_code == 400  # not approved yet
-    assert recruiter.post(f"/api/offers/{offer.id}/submit").data["approval_step"] == "hiring_manager"
+    assert recruiter.post(f"/api/offers/{offer.id}/submit").data["approval_step"] == "manager"
     assert admin.post(f"/api/offers/{offer.id}/approve").status_code == 400  # HR waits for the manager
     assert recruiter.post(f"/api/offers/{offer.id}/approve").status_code == 403  # policy
     step = manager.post(f"/api/offers/{offer.id}/approve").data
-    assert step["status"] == "pending_approval" and step["approval_step"] == "hr_admin"
+    assert step["status"] == "pending_approval" and step["approval_step"] == "hr"
     assert manager.post(f"/api/offers/{offer.id}/approve").status_code == 400  # not twice
     done = admin.post(f"/api/offers/{offer.id}/approve").data
-    assert (
-        done["status"] == "approved" and done["approvals"]["hr_admin"]["name"] == users["hr_admin"].full_name
-    )
+    assert done["status"] == "approved" and done["approvals"]["hr"]["name"] == users["hr"].full_name
     actions = set(AuditLog.objects.filter(target_id=str(offer.id)).values_list("action", flat=True))
     assert {"offers.created", "offers.submitted", "offers.approved_hm", "offers.approved_hr"} <= actions
 
@@ -120,7 +118,7 @@ def test_approval_order_hiring_manager_then_hr(finalist, users):
 def test_either_approver_can_reject_with_a_reason_and_the_recruiter_edits(finalist, users):
     offer = draft(finalist, users)
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/submit")
-    manager = as_user(users["hiring_manager"])
+    manager = as_user(users["manager"])
     assert (
         manager.post(f"/api/offers/{offer.id}/reject", {"reason": "too low"}, format="json").status_code
         == 400
@@ -143,7 +141,7 @@ def test_either_approver_can_reject_with_a_reason_and_the_recruiter_edits(finali
     # HR can reject too, at its own step.
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/submit")
     manager.post(f"/api/offers/{offer.id}/approve")
-    hr = as_user(users["hr_admin"]).post(
+    hr = as_user(users["hr"]).post(
         f"/api/offers/{offer.id}/reject", {"reason": "Joining date clashes with a freeze."}, format="json"
     )
     assert hr.data["status"] == "rejected"
@@ -152,8 +150,8 @@ def test_either_approver_can_reject_with_a_reason_and_the_recruiter_edits(finali
 def approved(finalist, users, **extra):
     offer = draft(finalist, users, **extra)
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/submit")
-    as_user(users["hiring_manager"]).post(f"/api/offers/{offer.id}/approve")
-    as_user(users["hr_admin"]).post(f"/api/offers/{offer.id}/approve")
+    as_user(users["manager"]).post(f"/api/offers/{offer.id}/approve")
+    as_user(users["hr"]).post(f"/api/offers/{offer.id}/approve")
     return offer
 
 
@@ -286,8 +284,8 @@ def test_candidates_see_only_their_own_sent_offers(finalist, users, make_user):
     assert candidate.get(f"/api/offers/{offer.id}").status_code == 404  # drafts are internal
     assert candidate.get(f"/api/offers/{offer.id}/letter").status_code == 404
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/submit")
-    as_user(users["hiring_manager"]).post(f"/api/offers/{offer.id}/approve")
-    as_user(users["hr_admin"]).post(f"/api/offers/{offer.id}/approve")
+    as_user(users["manager"]).post(f"/api/offers/{offer.id}/approve")
+    as_user(users["hr"]).post(f"/api/offers/{offer.id}/approve")
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/send")
     assert candidate.get(f"/api/offers/{offer.id}").status_code == 200
     stranger = as_user(make_user(Role.CANDIDATE))
@@ -306,12 +304,12 @@ def test_candidates_see_only_their_own_sent_offers(finalist, users, make_user):
 def test_approval_queues(finalist, users):
     offer = draft(finalist, users)
     as_user(users["recruiter"]).post(f"/api/offers/{offer.id}/submit")
-    assert [
-        o["id"] for o in as_user(users["hiring_manager"]).get("/api/offers?awaiting=me").data["results"]
-    ] == [str(offer.id)]
-    assert as_user(users["hr_admin"]).get("/api/offers?awaiting=me").data["results"] == []
-    as_user(users["hiring_manager"]).post(f"/api/offers/{offer.id}/approve")
-    assert [o["id"] for o in as_user(users["hr_admin"]).get("/api/offers?awaiting=me").data["results"]] == [
+    assert [o["id"] for o in as_user(users["manager"]).get("/api/offers?awaiting=me").data["results"]] == [
+        str(offer.id)
+    ]
+    assert as_user(users["hr"]).get("/api/offers?awaiting=me").data["results"] == []
+    as_user(users["manager"]).post(f"/api/offers/{offer.id}/approve")
+    assert [o["id"] for o in as_user(users["hr"]).get("/api/offers?awaiting=me").data["results"]] == [
         str(offer.id)
     ]
 

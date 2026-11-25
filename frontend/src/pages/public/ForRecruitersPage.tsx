@@ -8,7 +8,7 @@ import type { Score } from '../../../build/repoFacts';
 
 const SEO = {
   title: `For recruiters | ${brand.name}`,
-  description: `${brand.name} is an independent portfolio project: a hire-to-onboard platform with explainable matching, blind screening, interview scheduling, offers, leave and analytics, built on synthetic data.`,
+  description: `${brand.name}, a portfolio project: hire to onboard with explainable matching, blind screening, interview scheduling, offers and leave, on synthetic data.`,
 };
 
 /** Companies named in plain text only: no logos, no brand colours, no claims about their internal systems. */

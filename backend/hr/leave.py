@@ -1,7 +1,7 @@
 """Leave engine: day counting, every policy rule, balances, routing, approvals,
 delegation, escalation, accrual and carry-forward.
 
-Rules come from `LeaveType` / `WorkPolicy` rows per location (hr_admin edits
+Rules come from `LeaveType` / `WorkPolicy` rows per location (HR edits
 them); nothing here hard-codes a quota or a notice period.
 """
 
@@ -121,8 +121,10 @@ def available(employee, leave_type, year: int, *, today: date, month: int = 12, 
             upcoming = entitlement_until(leave_type, employee, year, month) - entitlement_until(
                 leave_type, employee, year, today.month
             )
-        return ledger_total(employee, leave_type, year) + upcoming - pending_days(
-            employee, leave_type, year, exclude
+        return (
+            ledger_total(employee, leave_type, year)
+            + upcoming
+            - pending_days(employee, leave_type, year, exclude)
         )
     now_left = max(ZERO, available(employee, leave_type, today.year, today=today, exclude=exclude))
     carry = min(now_left, leave_type.carry_forward_cap)
@@ -543,10 +545,10 @@ def _notify_approver(leave, user):
     )
 
 
-def _hr_admins():
+def _hr_people():
     from accounts.models import User
 
-    return User.objects.filter(role=Role.HR_ADMIN, is_active=True)
+    return User.objects.filter(role=Role.HR, is_active=True)
 
 
 def assign(leave, now, *, stage: str, start_from=_UNSET, reason="") -> None:
@@ -566,7 +568,7 @@ def assign(leave, now, *, stage: str, start_from=_UNSET, reason="") -> None:
         _notify_approver(leave, leave.approver)
     else:
         _log(leave, None, "assigned", reason or "Waiting for HR")
-        for admin in _hr_admins():
+        for admin in _hr_people():
             if admin.id != leave.employee.user_id:
                 _notify_approver(leave, admin)
 
@@ -608,8 +610,8 @@ def can_act(leave, user) -> bool:
     if leave.status != LeaveStatus.PENDING or leave.employee.user_id == user.id:
         return False
     if leave.approver_id is not None:
-        return leave.approver_id == user.id or (leave.escalated and user.role == Role.HR_ADMIN)
-    return user.role == Role.HR_ADMIN
+        return leave.approver_id == user.id or (leave.escalated and user.role == Role.HR)
+    return user.role == Role.HR
 
 
 def approvals_for(user):
@@ -617,7 +619,7 @@ def approvals_for(user):
         "employee", "employee__user", "employee__department", "leave_type", "approver"
     )
     mine = Q(approver=user)
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         mine |= Q(approver__isnull=True) | Q(escalated=True)
     return qs.filter(mine).exclude(employee__user=user).order_by("start")
 
@@ -658,7 +660,7 @@ def approve(leave, actor, note: str = "", request=None, now=None) -> LeaveReques
             raise PermissionDenied("This leave is not waiting for you.")
         leave.decision_note = (note or "").strip()[:500]
         needs_hr = leave.days > policy_for(leave.employee.location).hr_approval_over_days
-        if leave.stage == ApprovalStage.MANAGER and needs_hr and actor.role != Role.HR_ADMIN:
+        if leave.stage == ApprovalStage.MANAGER and needs_hr and actor.role != Role.HR:
             leave.manager_approved_by = actor
             leave.escalated = False
             _log(leave, actor, "approved", "Approved by the reporting manager; HR approval needed")
@@ -798,7 +800,7 @@ def escalate_due(now=None) -> int:
 
 
 def needs_attention():
-    """Escalated requests and those with nobody in the reporting line (for hr_admin)."""
+    """Escalated requests and those with nobody in the reporting line (for HR)."""
     return (
         LeaveRequest.objects.filter(status=LeaveStatus.PENDING)
         .filter(Q(escalated=True) | Q(approver__isnull=True))

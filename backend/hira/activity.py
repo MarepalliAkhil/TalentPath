@@ -67,7 +67,7 @@ def log(
 
 def scoped(user):
     qs = HiraActivity.objects.select_related("job", "application", "interview", "interview__round")
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     if user.role == Role.RECRUITER:
         return qs.filter(job__created_by=user)

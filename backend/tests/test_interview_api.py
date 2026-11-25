@@ -168,14 +168,9 @@ def test_recruiter_sees_rounds_and_can_ask_hira_or_schedule_by_hand(interviewing
     )
     assert manual.status_code == 201 and manual.data["scheduled_by"] == "manual"
     # Hiring managers read, but cannot schedule (policy) and other recruiters cannot see it (scope).
+    assert as_user(users["manager"]).get(f"/api/applications/{application.id}/interviews").status_code == 200
     assert (
-        as_user(users["hiring_manager"]).get(f"/api/applications/{application.id}/interviews").status_code
-        == 200
-    )
-    assert (
-        as_user(users["hiring_manager"])
-        .post(f"/api/applications/{application.id}/interviews/propose")
-        .status_code
+        as_user(users["manager"]).post(f"/api/applications/{application.id}/interviews/propose").status_code
         == 403
     )
 
@@ -201,7 +196,7 @@ def test_plan_can_be_edited_and_hira_switched_off(plan_job, users, interviewers)
             "duration_minutes": 30,
             "mode": "phone",
             "interviewers_needed": 1,
-            "pool": [str(users["hr_admin"].id)],
+            "pool": [str(users["hr"].id)],
         },
     ]
     response = client.put(
@@ -227,7 +222,7 @@ def test_plan_can_be_edited_and_hira_switched_off(plan_job, users, interviewers)
     )
     assert bad.status_code == 400
     assert (
-        as_user(users["hiring_manager"])
+        as_user(users["manager"])
         .put(f"/api/jobs/{plan_job.id}/interview-plan", {}, format="json")
         .status_code
         == 403
@@ -242,7 +237,7 @@ def test_default_plan_is_built_from_the_job(make_job, interviewers, users):
     plan = get_plan(job)
     names = list(plan.rounds.values_list("name", flat=True))
     assert names == ["Technical 1", "Technical 2", "Hiring manager", "HR"]
-    assert list(plan.rounds.get(name="Hiring manager").pool.all()) == [users["hiring_manager"]]
+    assert list(plan.rounds.get(name="Hiring manager").pool.all()) == [users["manager"]]
     assert set(plan.rounds.get(name="Technical 1").pool.all()) == set(interviewers)
     assert plan.rounds.get(name="Technical 2").interviewers_needed == 2
 
@@ -287,8 +282,8 @@ def test_availability_working_hours_and_blocks(users):
 
 
 @pytest.mark.django_db
-def test_hr_admin_tags_interviewer_skills(users, skills):
-    client = as_user(users["hr_admin"])
+def test_hr_tags_interviewer_skills(users, skills):
+    client = as_user(users["hr"])
     response = client.patch(
         f"/api/interviewers/{users['employee'].id}",
         {"skills": [str(skills["react"].id)], "working_hours": {"5": ["10:00", "12:00"]}},

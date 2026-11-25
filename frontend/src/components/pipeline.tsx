@@ -62,15 +62,7 @@ export function RejectDialog({
 }
 
 /** Keyboard-friendly alternative to drag and drop. */
-export function MoveTo({
-  app,
-  onMove,
-  disabled,
-}: {
-  app: StaffApplication;
-  onMove: (status: string) => void;
-  disabled?: boolean;
-}) {
+export function MoveTo({ app, onMove, disabled }: { app: StaffApplication; onMove: (status: string) => void; disabled?: boolean }) {
   const id = useId();
   const [target, setTarget] = useState('');
   if (!app.allowed_transitions.length) return null;

@@ -95,12 +95,29 @@ if len(INTERNAL_TICK_SECRET) < 24:
     raise ImproperlyConfigured("INTERNAL_TICK_SECRET must be at least 24 characters long.")
 
 
+# --- Production (Render) -------------------------------------------------------
+# Render sets RENDER=true on every service. PRODUCTION=true applies the same rules anywhere else.
+PRODUCTION = env_bool("PRODUCTION", env_bool("RENDER", False))
+RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME")
+FRONTEND_DOMAIN = env("FRONTEND_DOMAIN").removeprefix("https://").removeprefix("http://").strip("/")
+if PRODUCTION:
+    _prod_missing = [name for name in ("FRONTEND_DOMAIN",) if not env(name)]
+    if _prod_missing:
+        raise ImproperlyConfigured(
+            "Missing required production environment variables: " + ", ".join(_prod_missing) + "."
+        )
+    if DEBUG:
+        raise ImproperlyConfigured("DEBUG must be off in production.")
+
+
 def _database(url: str) -> dict:
     parsed = urlparse(url)
     if parsed.scheme not in ("postgres", "postgresql"):
         raise ImproperlyConfigured("DATABASE_URL must be a postgres:// URL.")
     allowed_options = {"sslmode", "connect_timeout", "channel_binding"}
     options = {k: v[0] for k, v in parse_qs(parsed.query).items() if k in allowed_options}
+    if PRODUCTION:
+        options.setdefault("sslmode", "require")  # Neon needs TLS; never connect in clear text
     return {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": unquote(parsed.path.lstrip("/")),
@@ -116,10 +133,19 @@ def _database(url: str) -> dict:
 
 DATABASES = {"default": _database(env("DATABASE_URL"))}
 
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
-SITE_URL = env("SITE_URL", "http://localhost:5173").rstrip("/")
-CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", SITE_URL)
-WS_ALLOWED_ORIGINS = env_list("WS_ALLOWED_ORIGINS", SITE_URL)
+if PRODUCTION:
+    _frontend = f"https://{FRONTEND_DOMAIN}"
+    ALLOWED_HOSTS = list(
+        dict.fromkeys(h for h in [RENDER_EXTERNAL_HOSTNAME, FRONTEND_DOMAIN, *env_list("ALLOWED_HOSTS")] if h)
+    )
+    SITE_URL = (env("SITE_URL") or _frontend).rstrip("/")
+    CSRF_TRUSTED_ORIGINS = list(dict.fromkeys([_frontend, *env_list("CSRF_TRUSTED_ORIGINS")]))
+    WS_ALLOWED_ORIGINS = list(dict.fromkeys([_frontend, *env_list("WS_ALLOWED_ORIGINS")]))
+else:
+    ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
+    SITE_URL = env("SITE_URL", "http://localhost:5173").rstrip("/")
+    CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", SITE_URL)
+    WS_ALLOWED_ORIGINS = env_list("WS_ALLOWED_ORIGINS", SITE_URL)
 DEMO_MODE = env_bool("DEMO_MODE", False)
 
 SHARED_DIR = Path(env("SHARED_DIR") or (BASE_DIR.parent / "shared"))
@@ -153,6 +179,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First: lets the platform's health check reach /api/ping whatever Host it sends (core/middleware.py).
+    "core.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -185,10 +213,16 @@ TIME_ZONE = "UTC"
 USE_I18N = False
 USE_TZ = True
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+# In-memory cache on one free instance; Redis only when REDIS_URL is set (several instances).
+if env("REDIS_URL"):
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": env("REDIS_URL")}
+    }
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 # --- Cookies, CSRF and security headers ---------------------------------------
-COOKIE_SECURE = env_bool("COOKIE_SECURE", not DEBUG)
+COOKIE_SECURE = True if PRODUCTION else env_bool("COOKIE_SECURE", not DEBUG)
 ACCESS_COOKIE = "tp_access"
 REFRESH_COOKIE = "tp_refresh"
 REFRESH_COOKIE_PATH = "/api/auth"
@@ -199,7 +233,13 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_HSTS_SECONDS = env_int("SECURE_HSTS_SECONDS", 0)
+SECURE_HSTS_SECONDS = env_int("SECURE_HSTS_SECONDS", 31536000 if PRODUCTION else 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = PRODUCTION
+SECURE_SSL_REDIRECT = PRODUCTION
+# Render's health check calls /api/ping over the internal network without TLS.
+SECURE_REDIRECT_EXEMPT = [r"^api/ping$"]
+# HSTS preload needs control of the parent domain (onrender.com belongs to Render), so it stays off.
+SILENCED_SYSTEM_CHECKS = ["security.W021"]
 
 # --- Uploads -----------------------------------------------------------------
 RESUME_MAX_BYTES = 5 * 1024 * 1024
@@ -257,9 +297,44 @@ else:
     CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 WS_TICKET_TTL_SECONDS = 30
 
+# --- Email delivery (D-86) -------------------------------------------------------
+# "console" logs one line per email and sends nothing (default; tests). "smtp" sends with
+# Gmail and an App Password (local use). "api" uses Brevo or Resend over HTTPS (Render's free
+# plan blocks SMTP ports). Credentials come only from the environment, never from code.
+EMAIL_PROVIDER = (env("EMAIL_PROVIDER") or "console").strip().lower()
+if EMAIL_PROVIDER not in ("console", "smtp", "api"):
+    raise ImproperlyConfigured("EMAIL_PROVIDER must be console, smtp or api.")
+DEFAULT_FROM_EMAIL = env("EMAIL_FROM") or env("EMAIL_HOST_USER") or "no-reply@talentpath.example"
+EMAIL_FROM_NAME = env("EMAIL_FROM_NAME") or "TalentPath"
+EMAIL_HOST = env("EMAIL_HOST") or "smtp.gmail.com"
+EMAIL_PORT = env_int("EMAIL_PORT", 587)
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True) if env("EMAIL_USE_TLS") else True
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
+EMAIL_API_PROVIDER = env("EMAIL_API_PROVIDER", "").strip().lower()
+EMAIL_API_KEY = env("EMAIL_API_KEY", "")
+EMAIL_TIMEOUT = env_int("EMAIL_TIMEOUT", 15)
+# Comma-separated addresses or @domains. When set, real emails go only there; the rest stay
+# in the outbox as "held" (handy for demos with real inboxes).
+EMAIL_ALLOWLIST = env("EMAIL_ALLOWLIST", "")
+EMAIL_MAX_PER_RECIPIENT_PER_HOUR = env_int("EMAIL_MAX_PER_RECIPIENT_PER_HOUR", 10)
+EMAIL_MAX_PER_HOUR = env_int("EMAIL_MAX_PER_HOUR", 60)
+EMAIL_DAILY_CAP = env_int("EMAIL_DAILY_CAP", 250)
+EMAIL_MAX_ATTEMPTS = env_int("EMAIL_MAX_ATTEMPTS", 5)
+if EMAIL_PROVIDER == "smtp" and not (EMAIL_HOST_USER and EMAIL_HOST_PASSWORD):
+    raise ImproperlyConfigured("EMAIL_PROVIDER=smtp needs EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.")
+if EMAIL_PROVIDER == "api" and (EMAIL_API_PROVIDER not in ("brevo", "resend") or not EMAIL_API_KEY):
+    raise ImproperlyConfigured(
+        "EMAIL_PROVIDER=api needs EMAIL_API_PROVIDER (brevo or resend) and EMAIL_API_KEY."
+    )
+# Django's own mail helpers never send by themselves; everything goes through notifications.delivery.
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
+    # Email logs carry the masked recipient and kind only (never bodies or credentials).
+    "loggers": {"talentpath.email": {"handlers": ["console"], "level": "INFO", "propagate": False}},
 }

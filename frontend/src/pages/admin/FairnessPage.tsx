@@ -49,7 +49,10 @@ export function FairnessPage() {
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">
           <li>Each resume is copied in memory with a different name, gender words and pronouns, college and city. Nothing is stored.</li>
           <li>Every copy goes through the same extractor and scorer. Score, band and explanation must not change.</li>
-          <li>It proves the scorer ignores these details. It does not prove that a job's requirements are fair, or catch bias in what people write about themselves.</li>
+          <li>
+            It proves the scorer ignores these details. It does not prove that a job's requirements are fair, or catch bias in what people
+            write about themselves.
+          </li>
           <li>The same check runs automatically in CI on synthetic resumes for every demo job.</li>
         </ul>
       </Card>

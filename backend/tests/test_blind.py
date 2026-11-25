@@ -57,7 +57,7 @@ def _assert_no_personal_data(blob: str):
         assert value not in blob, value
 
 
-@pytest.mark.parametrize("role", ["recruiter", "hiring_manager", "hr_admin"])
+@pytest.mark.parametrize("role", ["recruiter", "manager", "hr"])
 def test_blind_list_board_and_detail_hide_identity(role, client_for, blind_app):
     client = client_for(role)
     rows = client.get(f"/api/jobs/{blind_app.job_id}/applications").data["results"]
@@ -107,17 +107,16 @@ def test_reveal_stage_offer_keeps_interview_blind(client_for, blind_app):
     assert client_for("recruiter").get(f"/api/applications/{blind_app.id}").data["blind"] is False
 
 
-def test_manual_reveal_only_hr_admin_with_reason_and_audited(client_for, blind_app):
+def test_manual_reveal_only_hr_with_reason_and_audited(client_for, blind_app):
     url = f"/api/applications/{blind_app.id}/reveal"
     assert (
         client_for("recruiter").post(url, {"reason": "I really want to know"}, format="json").status_code
         == 403
     )
     assert (
-        client_for("hiring_manager").post(url, {"reason": "I really want to know"}, format="json").status_code
-        == 403
+        client_for("manager").post(url, {"reason": "I really want to know"}, format="json").status_code == 403
     )
-    admin = client_for("hr_admin")
+    admin = client_for("hr")
     assert admin.post(url, {"reason": "short"}, format="json").status_code == 400
     ok = admin.post(url, {"reason": "Candidate asked for an accessibility adjustment"}, format="json")
     assert ok.status_code == 200 and ok.data["blind"] is False

@@ -8,8 +8,8 @@ from notifications.models import EmailOutbox
 from .conftest import PASSWORD
 
 
-def test_hr_admin_creates_staff_with_invite(client_for):
-    resp = client_for("hr_admin").post(
+def test_admin_creates_staff_with_invite(client_for):
+    resp = client_for("admin").post(
         "/api/users",
         {"full_name": "New Recruiter", "email": "New.Rec@test.example", "role": "recruiter"},
         format="json",
@@ -24,15 +24,15 @@ def test_hr_admin_creates_staff_with_invite(client_for):
 
 
 def test_staff_endpoint_cannot_create_candidates(client_for):
-    resp = client_for("hr_admin").post(
+    resp = client_for("admin").post(
         "/api/users", {"full_name": "X Y", "email": "c@test.example", "role": "candidate"}, format="json"
     )
     assert resp.status_code == 400
 
 
-def test_hr_admin_cannot_lock_themselves_out(users, client_for):
-    admin = users["hr_admin"]
-    client = client_for("hr_admin")
+def test_admin_cannot_lock_themselves_out(users, client_for):
+    admin = users["admin"]
+    client = client_for("admin")
     assert client.patch(f"/api/users/{admin.id}", {"is_active": False}, format="json").status_code == 400
     assert client.patch(f"/api/users/{admin.id}", {"role": "employee"}, format="json").status_code == 400
 
@@ -41,7 +41,7 @@ def test_deactivated_user_cannot_sign_in(users, client_for):
     from rest_framework.test import APIClient
 
     target = users["employee"]
-    resp = client_for("hr_admin").patch(f"/api/users/{target.id}", {"is_active": False}, format="json")
+    resp = client_for("admin").patch(f"/api/users/{target.id}", {"is_active": False}, format="json")
     assert resp.status_code == 200 and resp.data["is_active"] is False
     login = APIClient().post("/api/auth/login", {"email": target.email, "password": PASSWORD}, format="json")
     assert login.status_code == 401

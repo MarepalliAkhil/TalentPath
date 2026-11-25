@@ -25,7 +25,8 @@ function Meeting({ interview }: { interview: Interview }) {
         </p>
       ) : (
         <p>
-          {interview.location} <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">Simulated</span>
+          {interview.location}{' '}
+          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">Simulated</span>
         </p>
       )}
       <p className="text-xs text-muted">{interview.meeting_note}</p>
@@ -88,7 +89,11 @@ function InterviewCard({ interview }: { interview: Interview }) {
         <>
           <Meeting interview={interview} />
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <a href={`/api/interviews/${interview.id}/calendar.ics`} download className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-strong underline">
+            <a
+              href={`/api/interviews/${interview.id}/calendar.ics`}
+              download
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-strong underline"
+            >
               <Icon name="download" className="h-4 w-4" /> Add to calendar (.ics)
             </a>
             {interview.can_reschedule ? (
@@ -119,7 +124,9 @@ function InterviewCard({ interview }: { interview: Interview }) {
         </>
       )}
       {(interview.status === 'completed' || interview.status === 'no_show') && (
-        <p className="mt-2 text-sm text-muted">{istRange(interview.starts_at, interview.ends_at)} · {interview.status_label}</p>
+        <p className="mt-2 text-sm text-muted">
+          {istRange(interview.starts_at, interview.ends_at)} · {interview.status_label}
+        </p>
       )}
     </li>
   );

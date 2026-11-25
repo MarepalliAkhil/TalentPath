@@ -25,9 +25,13 @@ export function InterviewPlanPage() {
   const { id = '' } = useParams();
   const { user } = useAuth();
   const client = useQueryClient();
-  const canEdit = user?.role === 'recruiter' || user?.role === 'hr_admin';
+  const canEdit = user?.role === 'recruiter' || user?.role === 'hr';
   const plan = useQuery({ queryKey: ['interview-plan', id], queryFn: () => api<InterviewPlan>(`/jobs/${id}/interview-plan`) });
-  const people = useQuery({ queryKey: ['interviewers'], queryFn: () => api<{ results: Interviewer[] }>('/interviewers'), enabled: canEdit });
+  const people = useQuery({
+    queryKey: ['interviewers'],
+    queryFn: () => api<{ results: Interviewer[] }>('/interviewers'),
+    enabled: canEdit,
+  });
   useDocumentTitle(plan.data ? `Interview plan · ${plan.data.job.title}` : 'Interview plan');
   const [rounds, setRounds] = useState<RoundDraft[] | null>(null);
   const [hira, setHira] = useState(true);
@@ -60,12 +64,15 @@ export function InterviewPlanPage() {
     next.splice(index + delta, 0, item);
     setRounds(next);
   };
-  const names = new Map((plan.data.rounds.flatMap((r) => r.pool ?? [])).map((p) => [p.id, p.name]));
+  const names = new Map(plan.data.rounds.flatMap((r) => r.pool ?? []).map((p) => [p.id, p.name]));
   people.data?.results.forEach((p) => names.set(p.id, p.name));
 
   return (
     <>
-      <PageHeader title={`Interview plan · ${plan.data.job.title}`} intro="Rounds run in order. HIRA picks interviewers from each round's pool by free time and weekly load." />
+      <PageHeader
+        title={`Interview plan · ${plan.data.job.title}`}
+        intro="Rounds run in order. HIRA picks interviewers from each round's pool by free time and weekly load."
+      />
       <JobViewTabs jobId={id} current="plan" />
       <form
         onSubmit={(e) => {
@@ -75,10 +82,18 @@ export function InterviewPlanPage() {
         aria-label="Interview plan"
       >
         <label className="glass mb-4 flex min-h-11 items-center gap-3 rounded-xl2 p-4 text-sm font-semibold text-ink">
-          <input type="checkbox" checked={hira} disabled={!canEdit} onChange={(e) => setHira(e.target.checked)} className="h-5 w-5 accent-primary" />
+          <input
+            type="checkbox"
+            checked={hira}
+            disabled={!canEdit}
+            onChange={(e) => setHira(e.target.checked)}
+            className="h-5 w-5 accent-primary"
+          />
           Let HIRA schedule
           <span className="font-normal text-muted">
-            {hira ? 'HIRA offers slots as soon as a candidate reaches Interview.' : 'Off: you schedule each interview by hand (with the same clash checks).'}
+            {hira
+              ? 'HIRA offers slots as soon as a candidate reaches Interview.'
+              : 'Off: you schedule each interview by hand (with the same clash checks).'}
           </span>
         </label>
         <ol className="flex flex-col gap-4">
@@ -89,8 +104,18 @@ export function InterviewPlanPage() {
                   Round {index + 1}: {round.name || 'New round'}
                 </legend>
                 <div className="grid gap-3 sm:grid-cols-4">
-                  <TextField label="Name" value={round.name} maxLength={60} onChange={(e) => set(index, { name: e.target.value })} required />
-                  <SelectField label="Duration" value={round.duration_minutes} onChange={(e) => set(index, { duration_minutes: Number(e.target.value) })}>
+                  <TextField
+                    label="Name"
+                    value={round.name}
+                    maxLength={60}
+                    onChange={(e) => set(index, { name: e.target.value })}
+                    required
+                  />
+                  <SelectField
+                    label="Duration"
+                    value={round.duration_minutes}
+                    onChange={(e) => set(index, { duration_minutes: Number(e.target.value) })}
+                  >
                     {DURATIONS.map((d) => (
                       <option key={d} value={d}>
                         {d} minutes
@@ -104,7 +129,11 @@ export function InterviewPlanPage() {
                       </option>
                     ))}
                   </SelectField>
-                  <SelectField label="Interviewers" value={round.interviewers_needed} onChange={(e) => set(index, { interviewers_needed: Number(e.target.value) })}>
+                  <SelectField
+                    label="Interviewers"
+                    value={round.interviewers_needed}
+                    onChange={(e) => set(index, { interviewers_needed: Number(e.target.value) })}
+                  >
                     {[1, 2, 3, 4].map((n) => (
                       <option key={n} value={n}>
                         {n === 1 ? '1 interviewer' : `Panel of ${n}`}
@@ -115,18 +144,30 @@ export function InterviewPlanPage() {
                 <fieldset>
                   <legend className="mb-1 text-sm font-medium text-ink">Pool ({round.pool.length} people)</legend>
                   {canEdit && people.data ? (
-                    <div className="grid max-h-48 gap-1 overflow-y-auto rounded-xl bg-canvas p-2 sm:grid-cols-2" tabIndex={0} role="group" aria-label={`Pool for ${round.name}`}>
+                    <div
+                      className="grid max-h-48 gap-1 overflow-y-auto rounded-xl bg-canvas p-2 sm:grid-cols-2"
+                      tabIndex={0}
+                      role="group"
+                      aria-label={`Pool for ${round.name}`}
+                    >
                       {people.data.results.map((p) => (
                         <label key={p.id} className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm hover:bg-white">
                           <input
                             type="checkbox"
                             className="h-4 w-4 accent-primary"
                             checked={round.pool.includes(p.id)}
-                            onChange={(e) => set(index, { pool: e.target.checked ? [...round.pool, p.id] : round.pool.filter((x) => x !== p.id) })}
+                            onChange={(e) =>
+                              set(index, { pool: e.target.checked ? [...round.pool, p.id] : round.pool.filter((x) => x !== p.id) })
+                            }
                           />
                           <span>
                             {p.name}
-                            <span className="block text-xs text-muted">{p.skills.slice(0, 3).map((s) => s.name).join(', ') || p.role}</span>
+                            <span className="block text-xs text-muted">
+                              {p.skills
+                                .slice(0, 3)
+                                .map((s) => s.name)
+                                .join(', ') || p.role}
+                            </span>
                           </span>
                         </label>
                       ))}

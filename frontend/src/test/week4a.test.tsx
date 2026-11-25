@@ -29,22 +29,50 @@ function mockRoutes(routes: Record<string, Value>) {
 
 type FetchMock = ReturnType<typeof mockRoutes>;
 const calls = (mock: FetchMock, method: string, path: string) =>
-  mock.mock.calls.filter(([input, init]) => String(input).split('?')[0] === path && ((init as RequestInit | undefined)?.method ?? 'GET') === method);
+  mock.mock.calls.filter(
+    ([input, init]) => String(input).split('?')[0] === path && ((init as RequestInit | undefined)?.method ?? 'GET') === method,
+  );
 
-const demoOff = { demo_mode: false, banner: '', accounts: [], upload_limit_bytes: null };
+const demoOff = { demo_mode: false, accounts: [], upload_limit_bytes: null };
 const demoOn = {
   demo_mode: true,
-  banner: 'Demo data, resets nightly',
   accounts: [
     { role: 'candidate', label: 'Candidate' },
     { role: 'recruiter', label: 'Recruiter' },
-    { role: 'hiring_manager', label: 'Hiring manager' },
+    { role: 'manager', label: 'Manager' },
     { role: 'employee', label: 'Employee' },
-    { role: 'hr_admin', label: 'HR admin' },
+    { role: 'hr', label: 'HR' },
+    { role: 'admin', label: 'Admin' },
   ],
   upload_limit_bytes: 1048576,
 };
 const api = { ...signedInApi, '/api/auth/csrf': {}, '/api/demo/config': demoOff };
+const PROFILE = {
+  id: 'u',
+  email: 'candidate@demo.example',
+  full_name: 'Asha Verma',
+  role: 'candidate',
+  role_label: 'Candidate',
+  dashboard: '/candidate',
+  is_active: true,
+  headline: '',
+  location_text: '',
+  phone: '',
+  address: '',
+  linkedin_url: '',
+  github_url: '',
+  portfolio_url: '',
+  skills: [],
+  education: [],
+  experience: [],
+  date_of_birth: null,
+  has_photo: false,
+  employee: null,
+  locked: { email: true, full_name: true, role: true, date_of_birth: false, employee_code: false, joined_on: false },
+  notification_prefs: { applications: true },
+  notification_categories: [{ key: 'applications', label: 'Applications and stage changes' }],
+  resume_versions: [],
+};
 
 const mapJob: MapJob = {
   id: 'j1',
@@ -66,16 +94,59 @@ const jobMap: JobMap = {
   missing_required: [{ slug: 'kubernetes', name: 'Kubernetes', effort: 'large' }],
   missing_nice: [{ slug: 'stakeholder-management', name: 'Stakeholder Management', effort: null }],
   path: [
-    { slug: 'linux', name: 'Linux', kind: 'prerequisite', effort: 'medium', effort_label: 'Medium', prerequisites: [], unlocks: ['Docker', 'Kubernetes'], link: null },
-    { slug: 'docker', name: 'Docker', kind: 'prerequisite', effort: 'medium', effort_label: 'Medium', prerequisites: ['Linux'], unlocks: ['Kubernetes'], link: { title: 'Docker documentation', url: 'https://docs.docker.com/' } },
-    { slug: 'kubernetes', name: 'Kubernetes', kind: 'required', effort: 'large', effort_label: 'Large', prerequisites: ['Docker', 'Linux'], unlocks: [], link: { title: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/home/' } },
-    { slug: 'stakeholder-management', name: 'Stakeholder Management', kind: 'nice', effort: null, effort_label: 'Not rated', prerequisites: [], unlocks: [], link: null },
+    {
+      slug: 'linux',
+      name: 'Linux',
+      kind: 'prerequisite',
+      effort: 'medium',
+      effort_label: 'Medium',
+      prerequisites: [],
+      unlocks: ['Docker', 'Kubernetes'],
+      link: null,
+    },
+    {
+      slug: 'docker',
+      name: 'Docker',
+      kind: 'prerequisite',
+      effort: 'medium',
+      effort_label: 'Medium',
+      prerequisites: ['Linux'],
+      unlocks: ['Kubernetes'],
+      link: { title: 'Docker documentation', url: 'https://docs.docker.com/' },
+    },
+    {
+      slug: 'kubernetes',
+      name: 'Kubernetes',
+      kind: 'required',
+      effort: 'large',
+      effort_label: 'Large',
+      prerequisites: ['Docker', 'Linux'],
+      unlocks: [],
+      link: { title: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/home/' },
+    },
+    {
+      slug: 'stakeholder-management',
+      name: 'Stakeholder Management',
+      kind: 'nice',
+      effort: null,
+      effort_label: 'Not rated',
+      prerequisites: [],
+      unlocks: [],
+      link: null,
+    },
   ],
   applied: false,
   can_apply_internally: false,
 };
 
-const profile = { has_resume: true, filename: 'asha.pdf', updated_at: '2026-11-22T10:00:00Z', source: 'profile', skills: ['Django', 'Python'], experience_years: 4 };
+const profile = {
+  has_resume: true,
+  filename: 'asha.pdf',
+  updated_at: '2026-11-22T10:00:00Z',
+  source: 'profile',
+  skills: ['Django', 'Python'],
+  experience_years: 4,
+};
 
 describe('career map', () => {
   it('lists the jobs you are closest to with the same band labels recruiters see', async () => {
@@ -122,7 +193,12 @@ describe('career map', () => {
         },
       ],
     };
-    mockRoutes({ ...api, '/api/career/profile': profile, '/api/career/map': { source: 'profile', jobs: [mapJob] }, '/api/career/next-role': next });
+    mockRoutes({
+      ...api,
+      '/api/career/profile': profile,
+      '/api/career/map': { source: 'profile', jobs: [mapJob] },
+      '/api/career/next-role': next,
+    });
     renderApp('/career', 'employee');
     expect(await screen.findByRole('heading', { name: 'Your next role' })).toBeInTheDocument();
     expect(screen.getByText('Manager: Engineering Manager, Platform Services')).toBeInTheDocument();
@@ -134,7 +210,7 @@ describe('career map', () => {
       ...api,
       'GET /api/career/profile': profile,
       'DELETE /api/career/profile': {},
-      '/api/profile': { id: 'u', email: 'candidate@demo.example', full_name: 'Asha Verma', role: 'candidate', headline: '', location_text: '', phone: '', address: '' },
+      '/api/profile': PROFILE,
     });
     renderApp('/profile', 'candidate');
     await userEvent.click(await screen.findByRole('button', { name: 'Delete my resume' }));
@@ -155,7 +231,11 @@ describe('internal jobs', () => {
   };
 
   it('shows the manager rule before applying and applies in one click', async () => {
-    const fetchMock = mockRoutes({ ...api, 'GET /api/internal/jobs': internal, 'POST /api/internal/jobs/j1/apply': { id: 'a1', job: 'Platform Engineer', status: 'applied' } });
+    const fetchMock = mockRoutes({
+      ...api,
+      'GET /api/internal/jobs': internal,
+      'POST /api/internal/jobs/j1/apply': { id: 'a1', job: 'Platform Engineer', status: 'applied' },
+    });
     renderApp('/internal-jobs', 'employee');
     const rule = await screen.findByRole('heading', { name: 'Before you apply' });
     expect(rule.parentElement).toHaveTextContent('reaches the Interview stage');
@@ -221,9 +301,14 @@ describe('analytics', () => {
     const fetchMock = mockRoutes({
       ...api,
       '/api/analytics/hiring': { ...report, scope: 'all' },
-      '/api/analytics/people': { ...report, report: 'people', scope: 'all', sections: [{ ...report.sections[0], key: 'onboarding', title: 'Onboarding completion', chart: null }] },
+      '/api/analytics/people': {
+        ...report,
+        report: 'people',
+        scope: 'all',
+        sections: [{ ...report.sections[0], key: 'onboarding', title: 'Onboarding completion', chart: null }],
+      },
     });
-    renderApp('/analytics', 'hr_admin');
+    renderApp('/analytics', 'hr');
     await userEvent.click(await screen.findByRole('button', { name: 'People' }));
     expect(await screen.findByRole('heading', { name: 'Onboarding completion' })).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText('Department'), 'd1');
@@ -251,7 +336,9 @@ describe('for recruiters', () => {
     expect(screen.getByTestId('fact-Permission actions')).toHaveTextContent(String(facts.policy.actions));
     const matching = facts.evaluations.matching.holdout;
     expect(matching).not.toBeNull();
-    expect(screen.getByRole('rowheader', { name: 'Matching (fit band)' }).parentElement).toHaveTextContent(`${matching!.correct} / ${matching!.total}`);
+    expect(screen.getByRole('rowheader', { name: 'Matching (fit band)' }).parentElement).toHaveTextContent(
+      `${matching!.correct} / ${matching!.total}`,
+    );
     expect(screen.getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/MarepalliAkhil');
     expect(document.body.textContent).not.toMatch(/\+91|phone/i);
     expect(await axeViolations()).toEqual([]);
@@ -266,7 +353,8 @@ describe('for recruiters', () => {
   });
 
   it('the repo facts parser reads bold figures only', () => {
-    const doc = '| Split | x |\n| --- | --- |\n| Tune (44), first run | 41 / 44 |\n| Tune (44), after | **44 / 44 (100%)** |\n| Holdout (44) | **35 / 44** |';
+    const doc =
+      '| Split | x |\n| --- | --- |\n| Tune (44), first run | 41 / 44 |\n| Tune (44), after | **44 / 44 (100%)** |\n| Holdout (44) | **35 / 44** |';
     expect(boldScore(doc, /^Tune/)).toEqual({ correct: 44, total: 44 });
     expect(boldScore(doc, /^Holdout/)).toEqual({ correct: 35, total: 44 });
     expect(boldScore(null, /^Tune/)).toBeNull();
@@ -274,26 +362,36 @@ describe('for recruiters', () => {
 });
 
 describe('demo mode', () => {
-  it('shows no Try-as buttons or banner when it is off', async () => {
-    mockRoutes({ ...api });
+  it('never shows a banner or Try-as buttons on the login page', async () => {
+    mockRoutes({ ...api, '/api/demo/config': demoOn });
     renderApp('/login');
     expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('button', { name: /Try as/ })).not.toBeInTheDocument());
-    expect(screen.queryByText('Demo data, resets nightly')).not.toBeInTheDocument();
+    expect(screen.queryByText(/resets nightly/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 
-  it('signs in with a Try-as button when it is on', async () => {
+  it('keeps the Try-as buttons on For recruiters when it is on', async () => {
     const fetchMock = mockRoutes({
       ...api,
       '/api/demo/config': demoOn,
-      'POST /api/auth/demo-login': { user: { id: 'u', email: 'admin@demo.example', full_name: 'Priya', role: 'hr_admin', role_label: 'HR admin', dashboard: '/admin', is_active: true } },
+      'POST /api/auth/demo-login': {
+        user: {
+          id: 'u',
+          email: 'hr@demo.example',
+          full_name: 'Anita',
+          role: 'hr',
+          role_label: 'HR',
+          dashboard: '/hr',
+          is_active: true,
+        },
+      },
     });
-    renderApp('/login');
-    expect(await screen.findByText('Demo data, resets nightly')).toBeInTheDocument();
+    renderApp('/for-recruiters');
     const labels = (await screen.findAllByRole('button', { name: /^Try as/ })).map((b) => b.textContent);
-    expect(labels).toEqual(['Try as candidate', 'Try as recruiter', 'Try as hiring manager', 'Try as employee', 'Try as HR admin']);
-    await userEvent.click(screen.getByRole('button', { name: 'Try as HR admin' }));
+    expect(labels).toEqual(['Try as candidate', 'Try as recruiter', 'Try as manager', 'Try as employee', 'Try as HR', 'Try as admin']);
+    expect(screen.queryByText(/resets nightly/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Try as HR' }));
     await waitFor(() => expect(calls(fetchMock, 'POST', '/api/auth/demo-login')).toHaveLength(1));
-    expect(await axeViolations()).toEqual([]);
   });
 });

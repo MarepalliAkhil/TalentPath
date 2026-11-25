@@ -54,7 +54,11 @@ export function OnboardingPage() {
     <>
       <PageHeader
         title="Onboarding"
-        intro={user?.role === 'hr_admin' ? 'Every new joiner and their checklist progress.' : 'New joiners who report to you or who you are a buddy for.'}
+        intro={
+          user?.role === 'hr'
+            ? 'Every new joiner and their checklist progress.'
+            : 'New joiners who report to you or who you are a buddy for.'
+        }
         actions={
           <label className="inline-flex min-h-11 items-center gap-2 text-sm">
             <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} className="h-4 w-4" />
@@ -62,7 +66,7 @@ export function OnboardingPage() {
           </label>
         }
       />
-      {user?.role === 'hr_admin' && <AttentionPanel />}
+      {user?.role === 'hr' && <AttentionPanel />}
       {query.isPending && <PageLoader />}
       {query.isError && <ErrorNote>We could not load onboarding.</ErrorNote>}
       {query.data && query.data.results.length === 0 && <EmptyState title="Nobody is onboarding right now" />}
@@ -72,14 +76,19 @@ export function OnboardingPage() {
             <li key={row.id} className="glass rounded-xl2 p-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <Link to={`/onboarding/${row.id}`} className="font-display text-lg font-semibold text-ink underline-offset-2 hover:underline">
+                  <Link
+                    to={`/onboarding/${row.id}`}
+                    className="font-display text-lg font-semibold text-ink underline-offset-2 hover:underline"
+                  >
                     {row.name}
                   </Link>
                   <p className="text-sm text-ink-soft">
                     {row.designation}, {row.department} · {row.code}
                   </p>
                 </div>
-                <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-strong">{REL[row.relationship]}</span>
+                <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-strong">
+                  {REL[row.relationship]}
+                </span>
               </div>
               <p className="mt-2 text-sm text-muted">
                 Joins {day(row.joined_on)} · manager {row.manager ?? 'not set'} · buddy {row.buddy ?? 'not set'}

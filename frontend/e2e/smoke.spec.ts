@@ -7,6 +7,7 @@ const LOGINS = [
   { email: 'recruiter@demo.example', dashboard: '/recruiter', heading: 'Hiring overview' },
   { email: 'manager@demo.example', dashboard: '/manager', heading: 'Your hiring' },
   { email: 'employee@demo.example', dashboard: '/employee', heading: /^Hello/ },
+  { email: 'hr@demo.example', dashboard: '/hr', heading: 'HR overview' },
   { email: 'admin@demo.example', dashboard: '/admin', heading: 'Organisation overview' },
 ];
 
@@ -38,7 +39,6 @@ async function dismissHiraBriefing(page: Page) {
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
 }
-
 
 for (const path of ['/', '/jobs', '/login', '/register', '/this-page-does-not-exist']) {
   test(`public page ${path} is accessible and fits the screen`, async ({ page }) => {

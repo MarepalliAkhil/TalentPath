@@ -3,7 +3,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { brand } from '@/lib/brand';
 import { AskHira } from './AskHira';
 import { BrandMark } from './BrandMark';
-import { DemoBanner } from './growth';
 import { buttonClass } from './ui';
 
 export function PublicLayout() {
@@ -13,7 +12,6 @@ export function PublicLayout() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <DemoBanner />
       <header className="glass-bar sticky top-0 z-20">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 sm:px-6">
           <Link to="/" className="rounded-lg" aria-label={`${brand.name} home`}>
@@ -61,12 +59,18 @@ export function PublicLayout() {
           <p>
             {brand.name} · {brand.tagline}
           </p>
-          <p>
-            All people, companies and jobs here are fictional demo data.{' '}
+          <p>Companies and jobs on this site are fictional, for demonstration.</p>
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link to="/terms" className="font-semibold text-primary-strong underline">
+              Terms
+            </Link>
+            <Link to="/privacy" className="font-semibold text-primary-strong underline">
+              Privacy
+            </Link>
             <Link to="/for-recruiters" className="font-semibold text-primary-strong underline">
               For recruiters
             </Link>
-          </p>
+          </nav>
         </div>
       </footer>
       {(!user || user.role === 'candidate') && <AskHira />}

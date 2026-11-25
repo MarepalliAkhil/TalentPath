@@ -29,7 +29,13 @@ export function TeamCalendarPage() {
       intro="Approved and pending leave, holidays and joiners. Plan around busy days; clash warnings appear when you apply."
     />
   );
-  if (query.isPending) return (<>{header}<PageLoader /></>);
+  if (query.isPending)
+    return (
+      <>
+        {header}
+        <PageLoader />
+      </>
+    );
   if (query.isError) {
     const missing = query.error instanceof ApiError && query.error.status === 404;
     return (
@@ -87,7 +93,12 @@ export function TeamCalendarPage() {
                 Person
               </th>
               {cal.days.map((d) => (
-                <th key={d.date} scope="col" className={`w-7 text-center font-medium ${d.kind !== 'working' ? 'text-muted' : 'text-ink'}`} title={d.holiday || undefined}>
+                <th
+                  key={d.date}
+                  scope="col"
+                  className={`w-7 text-center font-medium ${d.kind !== 'working' ? 'text-muted' : 'text-ink'}`}
+                  title={d.holiday || undefined}
+                >
                   {Number(d.date.slice(8))}
                 </th>
               ))}
@@ -125,10 +136,20 @@ export function TeamCalendarPage() {
         </table>
       </div>
       <p className="mt-2 flex flex-wrap gap-3 text-xs text-ink-soft">
-        <span><span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-accent align-middle" />A approved</span>
-        <span><span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded border border-warning/40 bg-warning-soft align-middle" />P pending</span>
-        <span><span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-primary-soft align-middle" />H holiday</span>
-        <span><span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-canvas-deep align-middle" />weekly off</span>
+        <span>
+          <span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-accent align-middle" />A approved
+        </span>
+        <span>
+          <span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded border border-warning/40 bg-warning-soft align-middle" />P
+          pending
+        </span>
+        <span>
+          <span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-primary-soft align-middle" />H holiday
+        </span>
+        <span>
+          <span aria-hidden="true" className="mr-1 inline-block h-3 w-3 rounded bg-canvas-deep align-middle" />
+          weekly off
+        </span>
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -141,14 +162,21 @@ export function TeamCalendarPage() {
               {cal.entries.map((e) => (
                 <li key={e.id}>
                   <span className="font-semibold text-ink">{e.name}</span>: {dateRange(e.start, e.end, e.half)} ({e.status})
-                  {e.type && <span className="block text-xs text-muted">{e.type}{e.reason ? `: ${e.reason}` : ''}</span>}
+                  {e.type && (
+                    <span className="block text-xs text-muted">
+                      {e.type}
+                      {e.reason ? `: ${e.reason}` : ''}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
           ) : (
             <p className="mt-2 text-sm text-muted">Nobody is off this month.</p>
           )}
-          {!cal.sees_reasons && <p className="mt-3 text-xs text-muted">Leave types and reasons are visible only to the team’s manager and HR.</p>}
+          {!cal.sees_reasons && (
+            <p className="mt-3 text-xs text-muted">Leave types and reasons are visible only to the team’s manager and HR.</p>
+          )}
         </section>
         <section className="glass rounded-xl2 p-5" aria-labelledby="hol-heading">
           <h2 id="hol-heading" className="font-display text-lg font-semibold text-ink">

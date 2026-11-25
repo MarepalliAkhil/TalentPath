@@ -4,7 +4,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { useMediaQuery } from '@/lib/hooks';
 import { useLiveInvalidation } from '@/lib/live';
 import { AskHira } from './AskHira';
-import { DemoBanner } from './growth';
 import { HiraBriefing } from './HiraBriefing';
 import { navFor } from '@/lib/nav';
 import type { User } from '@/lib/types';
@@ -114,7 +113,6 @@ export function AppShell() {
         </div>
       )}
       <div className={isDesktop ? 'pl-64' : ''}>
-        <DemoBanner />
         <header className="glass-bar sticky top-0 z-20 flex items-center gap-2 px-3 py-2 sm:px-6">
           {!isDesktop && (
             <>
@@ -139,13 +137,17 @@ export function AppShell() {
             <ProfileMenu />
           </div>
         </header>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-24 lg:pt-10">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-24 lg:pt-10"
+        >
           <Outlet />
         </main>
       </div>
       {/* Candidates ask about jobs and applications; staff also get HR answers (week 3B). */}
       <AskHira />
-      {(user.role === 'recruiter' || user.role === 'hr_admin') && <HiraBriefing />}
+      {(user.role === 'recruiter' || user.role === 'hr') && <HiraBriefing />}
     </div>
   );
 }

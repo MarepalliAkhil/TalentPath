@@ -37,15 +37,17 @@ STAFF = [
     ("recruiter", "recruiter", "Meera Iyer", "recruiter"),
     ("recruiter2", "kabir.mehta", "Kabir Mehta", "recruiter"),
     ("recruiter3", "sana.qureshi", "Sana Qureshi", "recruiter"),
-    ("manager", "manager", "Vikram Natarajan", "hiring_manager"),
-    ("hm_data", "neha.kulkarni", "Neha Kulkarni", "hiring_manager"),
-    ("hm_product", "rohan.das", "Rohan Das", "hiring_manager"),
-    ("hm_gtm", "priya.menon", "Priya Menon", "hiring_manager"),
-    ("hm_people", "farhan.ali", "Farhan Ali", "hiring_manager"),
+    ("manager", "manager", "Vikram Natarajan", "manager"),
+    ("hm_data", "neha.kulkarni", "Neha Kulkarni", "manager"),
+    ("hm_product", "rohan.das", "Rohan Das", "manager"),
+    ("hm_gtm", "priya.menon", "Priya Menon", "manager"),
+    ("hm_people", "farhan.ali", "Farhan Ali", "manager"),
     ("employee", "employee", "Divya Pillai", "employee"),
     ("employee2", "suresh.babu", "Suresh Babu", "employee"),
     ("employee3", "lakshmi.varma", "Lakshmi Varma", "employee"),
-    ("admin", "admin", "Kavya Rao", "hr_admin"),
+    ("hr", "hr", "Anita Fernandes", "hr"),
+    # The admin manages accounts and the organisation; no hiring or HR work (D-80).
+    ("admin", "admin", "Kavya Rao", "admin"),
     # Week 3A: more interviewers (employees tagged with skills).
     ("int_arjun", "arjun.reddy", "Arjun Reddy", "employee"),
     ("int_ananya", "ananya.krishnan", "Ananya Krishnan", "employee"),
@@ -76,7 +78,7 @@ INTERVIEWERS = {
     "hm_product": (["Product", "Design"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
     "hm_gtm": (["Sales", "Marketing", "Customer Success"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
     "hm_people": (["People & HR", "Finance"], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
-    "admin": ([], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
+    "hr": ([], {d: ["10:00", "18:00"] for d in _WEEKDAYS}),
 }
 # Offer pay bands by job level (INR per year, fixed).
 LEVEL_PAY = {

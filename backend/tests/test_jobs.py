@@ -18,7 +18,7 @@ def payload(org, skills, users):
         "required_skills": [str(skills["python"].id), str(skills["postgresql"].id)],
         "nice_to_have_skills": [str(skills["kubernetes"].id)],
         "openings": 2,
-        "hiring_manager": str(users["hiring_manager"].id),
+        "hiring_manager": str(users["manager"].id),
     }
 
 
@@ -51,7 +51,7 @@ def test_status_transitions(client_for, make_job, users):
     blocked = client.post(url, {"status": "open"}, format="json")
     assert blocked.status_code == 400  # needs a hiring manager first
     assert client.post(url, {"status": "closed"}, format="json").status_code == 400  # draft -> closed
-    job.hiring_manager = users["hiring_manager"]
+    job.hiring_manager = users["manager"]
     job.save()
     opened = client.post(url, {"status": "open"}, format="json")
     assert opened.status_code == 200 and opened.data["published_at"]
@@ -83,15 +83,15 @@ def test_recruiters_only_see_and_edit_their_own_jobs(client_for, make_job, make_
 def test_hiring_manager_sees_assigned_published_jobs_only(client_for, make_job, make_user):
     assigned = make_job(title="Assigned Job")
     draft = make_job(title="Draft Job", status=JobStatus.DRAFT)
-    other = make_job(title="Not Mine", manager=make_user("hiring_manager"))
-    listed = {j["id"] for j in client_for("hiring_manager").get("/api/jobs").data["results"]}
+    other = make_job(title="Not Mine", manager=make_user("manager"))
+    listed = {j["id"] for j in client_for("manager").get("/api/jobs").data["results"]}
     assert str(assigned.id) in listed
     assert str(draft.id) not in listed and str(other.id) not in listed
 
 
-def test_hr_admin_sees_and_manages_all_jobs(client_for, make_job, make_user):
+def test_hr_sees_and_manages_all_jobs(client_for, make_job, make_user):
     job = make_job(owner=make_user("recruiter"))
-    client = client_for("hr_admin")
+    client = client_for("hr")
     assert client.get(f"/api/jobs/{job.id}").status_code == 200
     assert client.patch(f"/api/jobs/{job.id}", {"openings": 5}, format="json").data["openings"] == 5
 
@@ -114,12 +114,12 @@ def test_patch_updates_skills(client_for, make_job, skills):
     assert [s["name"] for s in resp.data["required_skills"]] == ["React"]
 
 
-def test_hr_admin_can_create_jobs_and_recruiters_stay_scoped(client_for, payload, users):
-    created = client_for("hr_admin").post("/api/jobs", payload, format="json")
+def test_hr_can_create_jobs_and_recruiters_stay_scoped(client_for, payload, users):
+    created = client_for("hr").post("/api/jobs", payload, format="json")
     assert created.status_code == 201
     job_id = created.data["id"]
     assert client_for("recruiter").get(f"/api/jobs/{job_id}").status_code == 404  # not the recruiter's job
-    assert client_for("hr_admin").get(f"/api/jobs/{job_id}").status_code == 200
+    assert client_for("hr").get(f"/api/jobs/{job_id}").status_code == 200
 
 
 def test_blind_settings_are_editable(client_for, payload):

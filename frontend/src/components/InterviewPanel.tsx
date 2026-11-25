@@ -88,7 +88,14 @@ function DraftOffer({ appId, designation, onClose }: { appId: string; designatio
   });
   return (
     <Dialog title="Draft an offer" description="It goes to the hiring manager, then HR, before you can send it." onClose={onClose}>
-      <OfferForm initial={draftFrom(undefined, undefined, designation)} submitLabel="Save draft" busy={create.isPending} error={create.error} onSubmit={(d) => create.mutate(d)} onCancel={onClose} />
+      <OfferForm
+        initial={draftFrom(undefined, undefined, designation)}
+        submitLabel="Save draft"
+        busy={create.isPending}
+        error={create.error}
+        onSubmit={(d) => create.mutate(d)}
+        onCancel={onClose}
+      />
     </Dialog>
   );
 }
@@ -111,33 +118,46 @@ export function InterviewPanel({ appId, jobTitle }: { appId: string; jobTitle: s
   if (data.isError || !data.data) return <ErrorNote>Could not load interviews.</ErrorNote>;
   const d = data.data;
   const canOffer =
-    (user?.role === 'recruiter' || user?.role === 'hr_admin') &&
+    (user?.role === 'recruiter' || user?.role === 'hr') &&
     d.final_round_passed &&
     ['interview', 'offer'].includes(d.status) &&
     (!d.offer || ['revoked', 'declined', 'expired'].includes(d.offer.status));
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted">{d.hira_enabled ? 'HIRA schedules this job.' : 'Let HIRA schedule is off for this job: schedule by hand.'}</p>
+      <p className="text-xs text-muted">
+        {d.hira_enabled ? 'HIRA schedules this job.' : 'Let HIRA schedule is off for this job: schedule by hand.'}
+      </p>
       <ol className="space-y-3">
         {d.rounds.map(({ round, interview, outcome, summary }) => (
           <li key={round.id} className="rounded-xl bg-canvas p-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-semibold text-ink">
-                {round.order}. {round.name} <span className="font-normal text-muted">· {round.mode_label}, {round.duration_minutes} min</span>
+                {round.order}. {round.name}{' '}
+                <span className="font-normal text-muted">
+                  · {round.mode_label}, {round.duration_minutes} min
+                </span>
               </p>
-              <span className="text-xs font-semibold text-ink-soft">{outcome ? OUTCOME[outcome] : interview ? interview.status_label : 'Not started'}</span>
+              <span className="text-xs font-semibold text-ink-soft">
+                {outcome ? OUTCOME[outcome] : interview ? interview.status_label : 'Not started'}
+              </span>
             </div>
             {interview?.starts_at && <p className="text-ink-soft">{istRange(interview.starts_at, interview.ends_at)}</p>}
             {interview && interview.interviewers.length > 0 && (
               <p className="text-muted">
-                With {interview.interviewers.filter((i) => i.status === 'assigned').map((i) => i.name).join(', ')}
+                With{' '}
+                {interview.interviewers
+                  .filter((i) => i.status === 'assigned')
+                  .map((i) => i.name)
+                  .join(', ')}
                 {interview.scheduled_by === 'manual' && ' (scheduled by hand)'}
               </p>
             )}
             {interview?.status === 'pending' && <p className="text-muted">{interview.slots.length} slots offered to the candidate.</p>}
             {interview?.attention_label && (
-              <p className="mt-1 rounded-lg bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">Needs you: {interview.attention_label}</p>
+              <p className="mt-1 rounded-lg bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">
+                Needs you: {interview.attention_label}
+              </p>
             )}
             {summary && interview && ['completed', 'scheduled'].includes(interview.status) && (
               <div className="mt-2">

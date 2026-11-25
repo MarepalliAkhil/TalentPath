@@ -117,7 +117,7 @@ def test_feedback_stays_hidden_until_you_submit_yours(plan_job, application, int
     assert after["others_hidden"] is False and [c["interviewer"]["id"] for c in after["others"]] == [
         str(a.id)
     ]
-    for viewer in (users["recruiter"], users["hiring_manager"], users["hr_admin"]):
+    for viewer in (users["recruiter"], users["manager"], users["hr"]):
         seen = as_user(viewer).get(f"/api/interviews/{interview.id}/scorecards").data
         assert len(seen["others"]) == 2 and seen["others_hidden"] is False
     summary = scorecards.summary(interview, users["recruiter"])

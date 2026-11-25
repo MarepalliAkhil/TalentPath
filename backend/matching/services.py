@@ -29,7 +29,7 @@ def _matcher_for(rows) -> SkillMatcher:
 
 
 def get_matcher() -> SkillMatcher:
-    """Rebuilt automatically when hr_admin edits the taxonomy (rows are the cache key)."""
+    """Rebuilt automatically when HR edits the taxonomy (rows are the cache key)."""
     return _matcher_for(_taxonomy_rows())
 
 

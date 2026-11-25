@@ -9,12 +9,15 @@ from core.fields import EncryptedTextField
 class Role(models.TextChoices):
     CANDIDATE = "candidate", "Candidate"
     RECRUITER = "recruiter", "Recruiter"
-    HIRING_MANAGER = "hiring_manager", "Hiring manager"
+    MANAGER = "manager", "Manager"
     EMPLOYEE = "employee", "Employee"
-    HR_ADMIN = "hr_admin", "HR admin"
+    HR = "hr", "HR"
+    ADMIN = "admin", "Admin"
 
 
-STAFF_ROLES = (Role.RECRUITER, Role.HIRING_MANAGER, Role.EMPLOYEE, Role.HR_ADMIN)
+# Roles an admin can give (D-80): never candidate (people register) and never admin
+# (created only with the bootstrap_admin command).
+STAFF_ROLES = (Role.RECRUITER, Role.MANAGER, Role.EMPLOYEE, Role.HR)
 
 
 class UserManager(BaseUserManager):
@@ -64,6 +67,25 @@ class Profile(models.Model):
     phone = EncryptedTextField(blank=True, default="")
     phone_bidx = models.CharField(max_length=64, blank=True, default="", db_index=True)
     address = EncryptedTextField(blank=True, default="")
+    # Prompt 1 (D-81, D-82). Date of birth is a locked field: set once by the person, then only
+    # an admin can change it (audited, with a reason). Stored encrypted as YYYY-MM-DD.
+    date_of_birth = EncryptedTextField(blank=True, default="")
+    # Profile photo (compressed and encrypted like every file). Never shown to the fit scorer
+    # or on application screens.
+    photo = models.ForeignKey(
+        "files.StoredFile", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    linkedin_url = models.CharField(max_length=200, blank=True, default="")
+    github_url = models.CharField(max_length=200, blank=True, default="")
+    portfolio_url = models.CharField(max_length=200, blank=True, default="")
+    # Skill names the person lists (pre-filled from the resume at registration).
+    skills = models.JSONField(default=list, blank=True)
+    # JSON lists, encrypted: [{"qualification", "college", "branch", "year", "score"}] and
+    # [{"company", "title", "start", "end", "responsibilities"}].
+    education = EncryptedTextField(blank=True, default="")
+    experience = EncryptedTextField(blank=True, default="")
+    # {"applications": true, "interviews": true, ...}; missing keys mean "on".
+    notification_prefs = models.JSONField(default=dict, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:

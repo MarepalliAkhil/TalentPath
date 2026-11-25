@@ -43,8 +43,8 @@ def test_public_skill_search(client_for):
     assert {"Java", "JavaScript"} <= names
 
 
-def test_hr_admin_manages_departments(client_for, open_job):
-    client = client_for("hr_admin")
+def test_admin_manages_departments(client_for, open_job):
+    client = client_for("admin")
     created = client.post("/api/departments", {"name": "Research & Development"}, format="json")
     assert created.status_code == 201 and created.data["slug"] == "research-development"
     dup = client.post("/api/departments", {"name": "research & development"}, format="json")
@@ -54,8 +54,8 @@ def test_hr_admin_manages_departments(client_for, open_job):
     assert client.delete(f"/api/departments/{created.data['id']}").status_code == 204
 
 
-def test_hr_admin_adds_skill_with_synonyms(client_for):
-    resp = client_for("hr_admin").post(
+def test_admin_adds_skill_with_synonyms(client_for):
+    resp = client_for("admin").post(
         "/api/skills",
         {"name": "Elixir", "kind": "tech", "category": "Programming languages", "synonyms": ["ex"]},
         format="json",

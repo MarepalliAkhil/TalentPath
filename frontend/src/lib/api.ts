@@ -40,7 +40,7 @@ export function getCookie(name: string): string | null {
 let csrfPromise: Promise<void> | null = null;
 async function ensureCsrf(): Promise<void> {
   if (getCookie('csrftoken')) return;
-  csrfPromise ??= fetch('/api/auth/csrf', { credentials: 'same-origin' })
+  csrfPromise ??= fetchWithWake('/api/auth/csrf', { credentials: 'same-origin' })
     .then(() => undefined)
     .finally(() => {
       csrfPromise = null;
@@ -52,7 +52,7 @@ let refreshPromise: Promise<boolean> | null = null;
 export function refreshSession(): Promise<boolean> {
   refreshPromise ??= (async () => {
     await ensureCsrf();
-    const res = await fetch('/api/auth/refresh', {
+    const res = await fetchWithWake('/api/auth/refresh', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'X-CSRFToken': getCookie('csrftoken') ?? '' },
@@ -65,6 +65,65 @@ export function refreshSession(): Promise<boolean> {
 }
 
 const NO_REFRESH = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+
+/*
+ * Free hosting sleeps after a quiet spell. While it wakes, the proxy answers 502, 503 or 504
+ * (or the connection fails). Those requests are retried for about a minute and a
+ * "Waking up the server" notice is shown. Writes are retried only on 502/503 and network
+ * errors, where the request never reached the app; 504 is retried for reads only.
+ */
+export const WAKE_DELAYS_MS = [2_000, 4_000, 6_000, 8_000, 10_000, 10_000, 10_000, 10_000];
+type WakeListener = (waking: boolean) => void;
+const wakeListeners = new Set<WakeListener>();
+let wakingRequests = 0;
+
+export function onWakeChange(listener: WakeListener): () => void {
+  wakeListeners.add(listener);
+  return () => wakeListeners.delete(listener);
+}
+
+function setWaking(delta: number) {
+  const before = wakingRequests > 0;
+  wakingRequests = Math.max(0, wakingRequests + delta);
+  const after = wakingRequests > 0;
+  if (before !== after) wakeListeners.forEach((listener) => listener(after));
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function retryable(status: number, method: string): boolean {
+  if (status === 502 || status === 503) return true;
+  return status === 504 && (method === 'GET' || method === 'HEAD');
+}
+
+/** fetch that waits for a sleeping server to wake up (see above). */
+export async function fetchWithWake(input: string, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  let waiting = false;
+  try {
+    for (let attempt = 0; ; attempt += 1) {
+      let response: Response | null = null;
+      let failure: unknown = null;
+      try {
+        response = await fetch(input, init);
+      } catch (error) {
+        failure = error;
+      }
+      const again = response ? retryable(response.status, method) : true;
+      if (!again || attempt >= WAKE_DELAYS_MS.length) {
+        if (response) return response;
+        throw failure;
+      }
+      if (!waiting) {
+        waiting = true;
+        setWaking(1);
+      }
+      await sleep(WAKE_DELAYS_MS[attempt]);
+    }
+  } finally {
+    if (waiting) setWaking(-1);
+  }
+}
 
 export interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -87,7 +146,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     body = JSON.stringify(options.body);
     headers['Content-Type'] = 'application/json';
   }
-  const res = await fetch(`/api${path}`, { method, headers, body, credentials: 'same-origin' });
+  const res = await fetchWithWake(`/api${path}`, { method, headers, body, credentials: 'same-origin' });
   if (res.status === 401 && options.retry !== false && !NO_REFRESH.includes(path)) {
     if (await refreshSession()) return api<T>(path, { ...options, retry: false });
   }

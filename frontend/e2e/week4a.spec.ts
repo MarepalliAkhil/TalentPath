@@ -67,8 +67,8 @@ test('employee applies internally after reading the manager rule', async ({ page
   await expect(page.getByRole('heading', { name: 'My internal applications' })).toBeVisible();
 });
 
-test('hr_admin analytics: summaries, table view and CSV', async ({ page }) => {
-  await signIn(page, 'admin@demo.example');
+test('hr analytics: summaries, table view and CSV', async ({ page }) => {
+  await signIn(page, 'hr@demo.example');
   await closeBriefing(page);
   await page.goto('/analytics');
   await expect(page.getByRole('heading', { level: 1, name: 'Analytics' })).toBeVisible();
@@ -99,5 +99,5 @@ test('the For recruiters page is public, accessible and can start the demo', asy
   test.skip(!config.demo_mode, 'DEMO_MODE is off on this backend');
   await page.getByRole('button', { name: 'Try as candidate' }).click();
   await expect(page).toHaveURL(/\/candidate/);
-  await expect(page.getByText('Demo data, resets nightly')).toBeVisible();
+  await expect(page.getByText(/resets nightly/)).toHaveCount(0); // D-87: no banner
 });

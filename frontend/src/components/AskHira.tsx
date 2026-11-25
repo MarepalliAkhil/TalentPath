@@ -35,7 +35,12 @@ function RecruiterMessage({ reply, onSent }: { reply: HiraReply; onSent: (text: 
       <label htmlFor={`${id}-app`} className="text-xs font-semibold text-ink">
         Application
       </label>
-      <select id={`${id}-app`} value={application} onChange={(e) => setApplication(e.target.value)} className="min-h-10 rounded-lg border border-ink/15 px-2 text-sm">
+      <select
+        id={`${id}-app`}
+        value={application}
+        onChange={(e) => setApplication(e.target.value)}
+        className="min-h-10 rounded-lg border border-ink/15 px-2 text-sm"
+      >
         {reply.applications.map((a) => (
           <option key={a.id} value={a.id}>
             {a.title} ({a.status_label})
@@ -45,7 +50,14 @@ function RecruiterMessage({ reply, onSent }: { reply: HiraReply; onSent: (text: 
       <label htmlFor={`${id}-msg`} className="text-xs font-semibold text-ink">
         Message for the recruiter
       </label>
-      <textarea id={`${id}-msg`} rows={2} maxLength={1000} value={message} onChange={(e) => setMessage(e.target.value)} className="rounded-lg border border-ink/15 p-2 text-sm" />
+      <textarea
+        id={`${id}-msg`}
+        rows={2}
+        maxLength={1000}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="rounded-lg border border-ink/15 p-2 text-sm"
+      />
       {send.isError && <p className="text-xs text-danger">{errorText(send.error)}</p>}
       <Button type="submit" className="min-h-9 self-start px-3" disabled={!message.trim() || send.isPending}>
         Send to recruiter
@@ -90,7 +102,12 @@ function ReplyBody({ reply, onChip, onSent }: { reply: HiraReply; onChip: (text:
       )}
       <div className="mt-2 flex flex-wrap gap-1.5">
         {reply.chips.slice(0, 3).map((chip) => (
-          <button key={chip} type="button" onClick={() => onChip(chip)} className="rounded-full border border-primary/30 bg-white px-2.5 py-1 text-xs font-medium text-primary-strong hover:bg-primary-soft">
+          <button
+            key={chip}
+            type="button"
+            onClick={() => onChip(chip)}
+            className="rounded-full border border-primary/30 bg-white px-2.5 py-1 text-xs font-medium text-primary-strong hover:bg-primary-soft"
+          >
             {chip}
           </button>
         ))}
@@ -198,7 +215,10 @@ export function AskHira() {
             {turns.length === 0 && (
               <div className="rounded-xl bg-primary-soft p-3 text-sm text-primary-strong">
                 {isStaff ? (
-                  <>Hi, I am {assistant.name}. Ask about your leave, holidays, attendance, onboarding or HR policies. I only ever show your own data.</>
+                  <>
+                    Hi, I am {assistant.name}. Ask about your leave, holidays, attendance, onboarding or HR policies. I only ever show your
+                    own data.
+                  </>
                 ) : (
                   <>
                     Hi, I am {assistant.name}. Ask about jobs, how matching works
@@ -207,7 +227,12 @@ export function AskHira() {
                 )}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {starters.map((chip) => (
-                    <button key={chip} type="button" onClick={() => send(chip)} className="rounded-full border border-primary/30 bg-white px-2.5 py-1 text-xs font-medium hover:bg-primary-soft">
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => send(chip)}
+                      className="rounded-full border border-primary/30 bg-white px-2.5 py-1 text-xs font-medium hover:bg-primary-soft"
+                    >
                       {chip}
                     </button>
                   ))}
@@ -217,7 +242,9 @@ export function AskHira() {
             {turns.map((turn) => (
               <div key={turn.id} className={turn.from === 'you' ? 'ml-8 text-right' : 'mr-4'}>
                 <p className="sr-only">{turn.from === 'you' ? 'You said:' : `${assistant.name} said:`}</p>
-                <div className={`inline-block rounded-xl px-3 py-2 text-left text-sm ${turn.from === 'you' ? 'bg-ink text-white' : 'bg-white/80 text-ink'}`}>
+                <div
+                  className={`inline-block rounded-xl px-3 py-2 text-left text-sm ${turn.from === 'you' ? 'bg-ink text-white' : 'bg-white/80 text-ink'}`}
+                >
                   {turn.text}
                   {turn.reply && <ReplyBody reply={turn.reply} onChip={send} onSent={(t) => add({ from: 'hira', text: t })} />}
                 </div>
@@ -239,7 +266,12 @@ export function AskHira() {
               placeholder="Type your question"
               className="min-h-11 flex-1 rounded-xl border border-ink/15 bg-white px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <button type="submit" aria-label="Send" disabled={!text.trim() || ask.isPending} className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-50">
+            <button
+              type="submit"
+              aria-label="Send"
+              disabled={!text.trim() || ask.isPending}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-50"
+            >
               <Icon name="send" />
             </button>
           </form>

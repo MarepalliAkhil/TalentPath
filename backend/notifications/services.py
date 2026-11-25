@@ -12,24 +12,57 @@ log = logging.getLogger(__name__)
 
 
 def queue_email(
-    *, to_email: str, subject: str, body: str, kind: str, user=None, attachment: tuple | None = None
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    kind: str,
+    user=None,
+    attachment: tuple | None = None,
+    bell: bool = True,
 ) -> EmailOutbox:
-    """Simulated delivery: the email is stored and marked sent immediately.
+    """Write an email to the outbox (branded HTML plus plain text) and hand it to the
+    delivery service (D-86), which sends it after the transaction commits.
 
     `attachment` is an optional (filename, content_type, text) tuple, e.g. an .ics invite.
+    `bell`: also show it under the person's bell (without any link, which may be single-use).
     """
+    from .delivery import SAFETY_NET, schedule
+    from .templates import render
+
     name, ctype, content = attachment or ("", "", "")
-    return EmailOutbox.objects.create(
+    plain, html_body = render(kind=kind, subject=subject, body=body)
+    email = EmailOutbox.objects.create(
         user=user,
         to_email=to_email,
         subject=subject[:200],
-        body=body,
+        body=plain,
+        html_body=html_body,
         kind=kind,
         attachment_name=name[:120],
         attachment_type=ctype[:60],
         attachment=content,
-        sent_at=timezone.now(),
+        next_attempt_at=timezone.now() + SAFETY_NET,
     )
+    if bell and user is not None:
+        Notification.objects.create(
+            user=user, kind=kind, title=subject[:160], body=f"We emailed {to_email} about this."
+        )
+    schedule(email)
+    return email
+
+
+def wants_email(user, kind: str) -> bool:
+    """Notification preferences: account emails always go; other categories can be switched off."""
+    from .templates import category_for
+
+    category = category_for(kind)
+    if category == "account":
+        return True
+    from accounts.models import Profile
+
+    prefs = Profile.objects.filter(user_id=user.pk).values_list("notification_prefs", flat=True).first() or {}
+    return prefs.get(category, True) is not False
 
 
 def user_group(user_id) -> str:
@@ -64,7 +97,7 @@ def notify(
     scheduling link that must not be stored in the in-app notification).
     """
     note = Notification.objects.create(user=user, kind=kind, title=title[:160], body=body, link=link[:200])
-    if email:
+    if email and wants_email(user, kind):
         queue_email(
             to_email=user.email,
             user=user,
@@ -72,6 +105,7 @@ def notify(
             subject=title,
             body=f"Hi {user.full_name},\n\n{body}\n\n{settings.SITE_URL}{email_link or link}",
             attachment=attachment,
+            bell=False,
         )
     push_realtime(user.pk, {"id": str(note.id), "title": note.title, "kind": kind})
     return note

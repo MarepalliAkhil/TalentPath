@@ -73,7 +73,7 @@ def build_default_plan(job) -> InterviewPlan:
     plan, _ = InterviewPlan.objects.get_or_create(job=job)
     if plan.rounds.exists():
         return plan
-    hr = list(User.objects.filter(role=Role.HR_ADMIN, is_active=True).order_by("id"))
+    hr = list(User.objects.filter(role=Role.HR, is_active=True).order_by("id"))
     skills = skill_pool(job)
     for order, (name, minutes, mode, need, kind) in enumerate(DEFAULT_ROUNDS, start=1):
         if kind == "manager":
@@ -864,6 +864,16 @@ def chase_scorecards(now) -> dict:
     return {"chased": chased, "flagged": flagged}
 
 
+def catch_up(now=None) -> None:
+    """Lazy part of the tick, run when interviews are read, so correctness never waits for cron:
+    expired holds are released and interviews whose end time has passed become completed (so
+    scorecards can be submitted). Both are idempotent, indexed updates that do nothing when nothing
+    is due. Reminders and feedback chasing are notifications and still need the tick."""
+    now = now or timezone.now()
+    expire_holds(now)
+    complete_finished(now)
+
+
 def tick(now=None) -> dict:
     now = now or timezone.now()
     return {
@@ -885,11 +895,11 @@ def candidate_interviews(user):
 
 def staff_can_see(user, interview) -> bool:
     job = interview.application.job
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return True
     if user.role == Role.RECRUITER and job.created_by_id == user.id:
         return True
-    if user.role == Role.HIRING_MANAGER and job.hiring_manager_id == user.id:
+    if user.role == Role.MANAGER and job.hiring_manager_id == user.id:
         return True
     return interview.assignments.filter(interviewer=user).exists()
 

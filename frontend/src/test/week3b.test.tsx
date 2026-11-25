@@ -43,7 +43,13 @@ function bodyOf(mock: FetchMock, method: string, path: string) {
 const api = { ...signedInApi, '/api/auth/csrf': {} };
 
 // ---------------------------------------------------------------- fixtures
-const person = (name: string, designation: string) => ({ id: name, name, designation, department: 'Engineering', email: `${name.split(' ')[0].toLowerCase()}@demo.example` });
+const person = (name: string, designation: string) => ({
+  id: name,
+  name,
+  designation,
+  department: 'Engineering',
+  email: `${name.split(' ')[0].toLowerCase()}@demo.example`,
+});
 
 const onboarding: Onboarding = {
   employee: {
@@ -61,19 +67,58 @@ const onboarding: Onboarding = {
   progress: { done: 1, total: 3, percent: 33 },
   tasks: [
     {
-      id: 't1', title: 'Upload ID and address proof', description: 'Synthetic in this demo.', category: 'documents', category_label: 'Documents',
-      owner_kind: 'employee', owner_label: 'New joiner', owner_name: 'Asha Verma', kind: 'upload', due_on: '2026-11-26', done: false,
-      done_at: null, done_by: null, has_document: false, can_complete: true, overdue: false,
+      id: 't1',
+      title: 'Upload ID and address proof',
+      description: 'Synthetic in this demo.',
+      category: 'documents',
+      category_label: 'Documents',
+      owner_kind: 'employee',
+      owner_label: 'New joiner',
+      owner_name: 'Asha Verma',
+      kind: 'upload',
+      due_on: '2026-11-26',
+      done: false,
+      done_at: null,
+      done_by: null,
+      has_document: false,
+      can_complete: true,
+      overdue: false,
     },
     {
-      id: 't2', title: 'Read and acknowledge the code of conduct', description: '', category: 'policies', category_label: 'Policies',
-      owner_kind: 'employee', owner_label: 'New joiner', owner_name: 'Asha Verma', kind: 'acknowledge', due_on: '2026-12-01', done: false,
-      done_at: null, done_by: null, has_document: false, can_complete: true, overdue: false,
+      id: 't2',
+      title: 'Read and acknowledge the code of conduct',
+      description: '',
+      category: 'policies',
+      category_label: 'Policies',
+      owner_kind: 'employee',
+      owner_label: 'New joiner',
+      owner_name: 'Asha Verma',
+      kind: 'acknowledge',
+      due_on: '2026-12-01',
+      done: false,
+      done_at: null,
+      done_by: null,
+      has_document: false,
+      can_complete: true,
+      overdue: false,
     },
     {
-      id: 't3', title: 'Prepare laptop and accounts', description: '', category: 'it', category_label: 'IT setup',
-      owner_kind: 'it', owner_label: 'IT desk', owner_name: 'IT desk', kind: 'task', due_on: '2026-11-27', done: true,
-      done_at: '2026-11-22T10:00:00Z', done_by: 'Meera Iyer', has_document: false, can_complete: false, overdue: false,
+      id: 't3',
+      title: 'Prepare laptop and accounts',
+      description: '',
+      category: 'it',
+      category_label: 'IT setup',
+      owner_kind: 'it',
+      owner_label: 'IT desk',
+      owner_name: 'IT desk',
+      kind: 'task',
+      due_on: '2026-11-27',
+      done: true,
+      done_at: '2026-11-22T10:00:00Z',
+      done_by: 'Meera Iyer',
+      has_document: false,
+      can_complete: false,
+      overdue: false,
     },
   ],
   first_week: [
@@ -156,9 +201,25 @@ const calendar: TeamCalendar = {
   days: Array.from({ length: 31 }, (_, i) => {
     const d = `2026-12-${String(i + 1).padStart(2, '0')}`;
     const dow = new Date(`${d}T00:00:00Z`).getUTCDay();
-    return { date: d, kind: d === '2026-12-25' ? 'holiday' : dow === 0 || dow === 6 ? 'weekly_off' : 'working', holiday: d === '2026-12-25' ? 'Christmas' : '' };
+    return {
+      date: d,
+      kind: d === '2026-12-25' ? 'holiday' : dow === 0 || dow === 6 ? 'weekly_off' : 'working',
+      holiday: d === '2026-12-25' ? 'Christmas' : '',
+    };
   }),
-  entries: [{ id: 'l1', employee: 'e2', name: 'Rahul Verma', start: '2026-12-04', end: '2026-12-07', half: '', status: 'approved', type: null, reason: null }],
+  entries: [
+    {
+      id: 'l1',
+      employee: 'e2',
+      name: 'Rahul Verma',
+      start: '2026-12-04',
+      end: '2026-12-07',
+      half: '',
+      status: 'approved',
+      type: null,
+      reason: null,
+    },
+  ],
   joiners: [{ name: 'Asha Verma', joined_on: '2026-11-30', designation: 'Frontend Engineer' }],
   has_reports: false,
   me: 'e1',
@@ -169,10 +230,43 @@ const attendance: AttendanceMe = {
   shift: { start: '09:30', end: '18:30', late_grace_minutes: 15, early_grace_minutes: 15, location: 'Hyderabad' },
   summary: {
     month: '2026-11',
-    counts: { working_days: 15, present: 12, office: 8, remote: 4, late: 2, early: 1, missing_checkout: 1, on_leave: 1, holidays: 0, absent: 2 },
+    counts: {
+      working_days: 15,
+      present: 12,
+      office: 8,
+      remote: 4,
+      late: 2,
+      early: 1,
+      missing_checkout: 1,
+      on_leave: 1,
+      holidays: 0,
+      absent: 2,
+    },
     days: [
-      { date: '2026-11-20', status: 'present', holiday: '', check_in: '09:52', check_out: null, mode: 'office', late: true, early: false, missing_checkout: true, regularised: false },
-      { date: '2026-11-21', status: 'weekly_off', holiday: '', check_in: null, check_out: null, mode: null, late: false, early: false, missing_checkout: false, regularised: false },
+      {
+        date: '2026-11-20',
+        status: 'present',
+        holiday: '',
+        check_in: '09:52',
+        check_out: null,
+        mode: 'office',
+        late: true,
+        early: false,
+        missing_checkout: true,
+        regularised: false,
+      },
+      {
+        date: '2026-11-21',
+        status: 'weekly_off',
+        holiday: '',
+        check_in: null,
+        check_out: null,
+        mode: null,
+        late: false,
+        early: false,
+        missing_checkout: false,
+        regularised: false,
+      },
     ],
   },
   regularisations: [],
@@ -204,7 +298,10 @@ const accepted: StaffOffer = {
     currency: 'INR',
   },
   created_by: 'Meera Iyer',
-  approvals: { hiring_manager: { name: 'Vikram Rao', at: '2026-11-11T10:00:00Z' }, hr_admin: { name: 'Priya Nair', at: '2026-11-12T10:00:00Z' } },
+  approvals: {
+    manager: { name: 'Vikram Rao', at: '2026-11-11T10:00:00Z' },
+    hr: { name: 'Priya Nair', at: '2026-11-12T10:00:00Z' },
+  },
   rejected: null,
   sent_at: '2026-11-12T11:00:00Z',
   responded_at: '2026-11-13T09:00:00Z',
@@ -223,7 +320,11 @@ describe('one-click hire', () => {
       ...api,
       'GET /api/offers/o1': () =>
         hired
-          ? { ...accepted, actions: { ...accepted.actions, hire: false }, hired: { employee: 'e9', code: 'LW1031', joined_on: '2026-11-30' } }
+          ? {
+              ...accepted,
+              actions: { ...accepted.actions, hire: false },
+              hired: { employee: 'e9', code: 'LW1031', joined_on: '2026-11-30' },
+            }
           : accepted,
       'POST /api/offers/o1/hire': () => {
         hired = true;
@@ -302,7 +403,11 @@ describe('leave', () => {
     expect(await axeViolations()).toEqual([]);
     await userEvent.click(screen.getByRole('button', { name: 'Apply for 4 days' }));
     await waitFor(() => expect(calls(fetchMock, 'POST', '/api/leave/requests')).toHaveLength(1));
-    expect(bodyOf(fetchMock, 'POST', '/api/leave/requests')).toMatchObject({ leave_type: 'earned', start: '2026-12-04', end: '2026-12-07' });
+    expect(bodyOf(fetchMock, 'POST', '/api/leave/requests')).toMatchObject({
+      leave_type: 'earned',
+      start: '2026-12-04',
+      end: '2026-12-07',
+    });
     expect(await screen.findByText(/Sent for approval/)).toBeInTheDocument();
   });
 
@@ -325,8 +430,12 @@ describe('approvals inbox', () => {
   const approvals: Approvals = { leave: [leave], regularisations: [], needs_attention: [] };
 
   it('the manager sees the reason and the clash warning, and approves', async () => {
-    const fetchMock = mockRoutes({ ...api, 'GET /api/leave/approvals': approvals, 'POST /api/leave/requests/l1/approve': { ...leave, status: 'approved' } });
-    renderApp('/leave/approvals', 'hiring_manager');
+    const fetchMock = mockRoutes({
+      ...api,
+      'GET /api/leave/approvals': approvals,
+      'POST /api/leave/requests/l1/approve': { ...leave, status: 'approved' },
+    });
+    renderApp('/leave/approvals', 'manager');
     expect(await screen.findByText('“Sister’s wedding in Vizag”')).toBeInTheDocument();
     expect(screen.getByText(warning)).toBeInTheDocument();
     expect(await axeViolations()).toEqual([]);
@@ -365,7 +474,14 @@ describe('attendance', () => {
     const fetchMock = mockRoutes({
       ...api,
       'GET /api/attendance/me': attendance,
-      'POST /api/attendance/check-in': { date: '2026-11-22', check_in: '09:31', check_out: null, mode: 'remote', late: false, early: false },
+      'POST /api/attendance/check-in': {
+        date: '2026-11-22',
+        check_in: '09:31',
+        check_out: null,
+        mode: 'remote',
+        late: false,
+        early: false,
+      },
       '/api/attendance/team': { month: '2026-11', scope: 'reports', rows: [] },
     });
     renderApp('/attendance', 'employee');
@@ -424,8 +540,15 @@ describe('Ask HIRA for employees', () => {
       '/api/leave/balances': balances,
       'GET /api/onboarding/me': { ...onboarding, welcome_pending: false },
       'POST /api/hira/ask': {
-        intent: 'leave_balance', answer: 'Available now: Casual leave: 11 days.', chips: [], jobs: [], applications: [],
-        action: null, link: '/leave', needs_sign_in: false, card: { kind: 'balances', rows: balances.balances },
+        intent: 'leave_balance',
+        answer: 'Available now: Casual leave: 11 days.',
+        chips: [],
+        jobs: [],
+        applications: [],
+        action: null,
+        link: '/leave',
+        needs_sign_in: false,
+        card: { kind: 'balances', rows: balances.balances },
       },
     });
     renderApp('/employee', 'employee');
@@ -454,9 +577,24 @@ describe('policies and HR settings', () => {
 
   it('hr_admin edits a leave rule', async () => {
     const lt = {
-      id: 'lt1', location: 'loc1', location_name: 'Hyderabad', code: 'casual', name: 'Casual leave', yearly_quota: 12, monthly_accrual: true,
-      prorate_joiners: true, carry_forward_cap: 0, min_notice_days: 1, backdate_days: 0, max_consecutive_days: 3, half_day_allowed: true,
-      document_after_days: null, sandwich_rule: false, unpaid: false, active: true, summary: 'Casual leave: 12 days a year, credited monthly.',
+      id: 'lt1',
+      location: 'loc1',
+      location_name: 'Hyderabad',
+      code: 'casual',
+      name: 'Casual leave',
+      yearly_quota: 12,
+      monthly_accrual: true,
+      prorate_joiners: true,
+      carry_forward_cap: 0,
+      min_notice_days: 1,
+      backdate_days: 0,
+      max_consecutive_days: 3,
+      half_day_allowed: true,
+      document_after_days: null,
+      sandwich_rule: false,
+      unpaid: false,
+      active: true,
+      summary: 'Casual leave: 12 days a year, credited monthly.',
     };
     const config: HrConfig = {
       locations: [{ id: 'loc1', name: 'Hyderabad' }],
@@ -465,8 +603,12 @@ describe('policies and HR settings', () => {
       holidays: [],
       codes: [],
     };
-    const fetchMock = mockRoutes({ ...api, '/api/hr/config': config, 'PATCH /api/hr/config/leave-types/lt1': { ...lt, min_notice_days: 2 } });
-    renderApp('/admin/hr-settings', 'hr_admin');
+    const fetchMock = mockRoutes({
+      ...api,
+      '/api/hr/config': config,
+      'PATCH /api/hr/config/leave-types/lt1': { ...lt, min_notice_days: 2 },
+    });
+    renderApp('/hr/settings', 'hr');
     await userEvent.click(await screen.findByRole('button', { name: 'Edit Casual leave' }));
     const notice = screen.getByLabelText('Minimum notice (days)');
     await userEvent.clear(notice);

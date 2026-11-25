@@ -46,7 +46,16 @@ export interface PublicJob {
   required_skills: SkillRef[];
   nice_to_have_skills: SkillRef[];
   excerpt: string;
+  company: CompanyBrief | Company | null;
+  ctc: CtcRange | null;
   description?: string;
+  about_team?: string;
+  responsibilities?: string[];
+  required_qualifications?: string[];
+  preferred_qualifications?: string[];
+  benefits?: string[];
+  hiring_process?: { step: string; detail: string }[];
+  screening_question_count?: number;
   seo?: Seo;
 }
 
@@ -77,6 +86,15 @@ export interface StaffJob {
   reveal_stage: 'interview' | 'offer';
   audience?: 'both' | 'external' | 'internal';
   audience_label?: string;
+  company?: CompanyBrief | null;
+  about_team?: string;
+  responsibilities?: string[];
+  required_qualifications?: string[];
+  preferred_qualifications?: string[];
+  benefits?: string[];
+  ctc_min_lpa?: number | null;
+  ctc_max_lpa?: number | null;
+  screening_questions?: ScreeningQuestion[];
   application_count: number | null;
   created_at: string;
   updated_at: string;
@@ -170,6 +188,7 @@ export interface StaffApplication {
   notes?: NoteItem[];
   revealed?: { at: string; reason: string } | null;
   reveal_stage?: string;
+  candidate_details?: CandidateDetails | null;
 }
 
 export interface BoardColumn {
@@ -238,6 +257,13 @@ export interface EmailItem {
   body: string;
   attachment?: { name: string; content_type: string; content: string } | null;
   created_at: string;
+  status?: 'queued' | 'sent' | 'held' | 'failed';
+  status_label?: string;
+  provider?: string;
+  attempts?: number;
+  last_error?: string;
+  hold_reason?: string;
+  sent_at?: string | null;
 }
 
 export interface AuditEntry {
@@ -276,11 +302,114 @@ export interface Skill {
   synonyms: string[];
 }
 
+// ---------------------------------------------------------------- prompt 1: profiles, admin
+export interface EducationRow {
+  qualification: string;
+  college: string;
+  branch: string;
+  year: string;
+  score: string;
+}
+
+export interface ExperienceRow {
+  company: string;
+  title: string;
+  start: string;
+  end: string;
+  responsibilities: string;
+}
+
+export interface EmployeeRecord {
+  id: string;
+  code: string;
+  designation: string;
+  department: string;
+  location: string;
+  joined_on: string;
+  manager: Ref | null;
+  company: Ref | null;
+}
+
 export interface ProfileData extends User {
   headline: string;
   location_text: string;
   phone: string;
   address: string;
+  linkedin_url: string;
+  github_url: string;
+  portfolio_url: string;
+  skills: string[];
+  education: EducationRow[];
+  experience: ExperienceRow[];
+  date_of_birth: string | null;
+  has_photo: boolean;
+  employee: EmployeeRecord | null;
+  locked: Record<'email' | 'full_name' | 'role' | 'date_of_birth' | 'employee_code' | 'joined_on', boolean>;
+  notification_prefs: Record<string, boolean>;
+  notification_categories: { key: string; label: string }[];
+  resume_versions: { id: string; filename: string; uploaded_at: string; current: boolean }[];
+}
+
+export interface AdminUser extends User {
+  created_at: string;
+  employee: EmployeeRecord | null;
+  date_of_birth?: string | null;
+}
+
+export interface CompanyBrief {
+  id: string;
+  name: string;
+  slug: string;
+  industry: string;
+  headquarters: string;
+  logo_initials: string;
+  logo_color: string;
+}
+
+export interface Company extends CompanyBrief {
+  tagline: string;
+  about: string;
+  size: string;
+  founded: number | null;
+  offices: string[];
+  culture: string;
+  benefits: string[];
+  hiring_process: { step: string; detail: string }[];
+  website: string;
+}
+
+export interface CtcRange {
+  min_lpa: number | null;
+  max_lpa: number | null;
+  label: string;
+}
+
+export type QuestionKind = 'yes_no' | 'number' | 'text';
+
+export interface ScreeningQuestion {
+  id: string;
+  text: string;
+  kind: QuestionKind;
+  required: boolean;
+}
+
+export interface CandidateDetails {
+  compensation: {
+    current_ctc_lpa: string | null;
+    expected_ctc_lpa: string | null;
+    notice_period: string | null;
+    earliest_joining: string | null;
+  };
+  experience: { status: string | null; total_years: string | null; roles?: ExperienceRow[] };
+  willing_to_relocate: boolean | null;
+  answers: { question: string; answer: string }[];
+  declared_at: string;
+  terms_version: string;
+  blind: boolean;
+  personal?: { phone: string | null; current_city: string | null; date_of_birth: string | null };
+  education?: Record<string, string | number | null>;
+  links?: Record<string, string>;
+  cover_letter?: string;
 }
 
 export interface Summary {
@@ -289,6 +418,8 @@ export interface Summary {
   applications_by_status?: Record<string, number>;
   jobs_by_status?: Record<string, number>;
   users_by_role?: Record<string, number>;
+  inactive_users?: number;
+  emails_by_status?: Record<string, number>;
   open_jobs?: number;
 }
 
@@ -397,7 +528,7 @@ export interface OfferBrief {
   id: string;
   status: string;
   status_label: string;
-  approval_step: '' | 'hiring_manager' | 'hr_admin';
+  approval_step: '' | 'manager' | 'hr';
   approval_step_label: string;
   expires_on: string;
   created_at: string;
@@ -407,7 +538,12 @@ export interface ApplicationInterviews {
   application: string;
   status: string;
   hira_enabled: boolean;
-  rounds: { round: InterviewRound; interview: Interview | null; outcome: 'passed' | 'not_passed' | null; summary: ScorecardSummary | null }[];
+  rounds: {
+    round: InterviewRound;
+    interview: Interview | null;
+    outcome: 'passed' | 'not_passed' | null;
+    summary: ScorecardSummary | null;
+  }[];
   final_round_passed: boolean;
   can_schedule: boolean;
   offer: OfferBrief | null;
@@ -462,7 +598,7 @@ export interface StaffOffer extends OfferBrief {
   candidate: { code: string; full_name: string | null };
   terms: OfferTerms;
   created_by: string;
-  approvals: Record<'hiring_manager' | 'hr_admin', { name: string | null; at: string | null }>;
+  approvals: Record<'manager' | 'hr', { name: string | null; at: string | null }>;
   rejected: { reason: string; at: string } | null;
   sent_at: string | null;
   responded_at: string | null;

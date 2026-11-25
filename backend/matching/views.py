@@ -10,7 +10,7 @@ from .services import get_matcher, job_requirements
 
 
 class FairnessCheckView(PolicyAPIView):
-    """hr_admin: run the counterfactual check on current applications (in memory only)."""
+    """HR: run the counterfactual check on current applications (in memory only)."""
 
     policy_action = "fairness.check"
 

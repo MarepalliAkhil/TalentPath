@@ -21,13 +21,14 @@ DEMO_SUFFIX = ".example"  # what seed --reset removes (see seeding)
 DEMO_UPLOAD_MAX_BYTES = 1024 * 1024
 DEMO_UPLOADS_PER_USER = 10
 
-# (role, button label, email) — the five seeded logins.
+# (role, button label, email) — the six seeded logins.
 DEMO_ACCOUNTS = [
     ("candidate", "Candidate", "candidate@demo.example"),
     ("recruiter", "Recruiter", "recruiter@demo.example"),
-    ("hiring_manager", "Hiring manager", "manager@demo.example"),
+    ("manager", "Manager", "manager@demo.example"),
     ("employee", "Employee", "employee@demo.example"),
-    ("hr_admin", "HR admin", "admin@demo.example"),
+    ("hr", "HR", "hr@demo.example"),
+    ("admin", "Admin", "admin@demo.example"),
 ]
 
 
@@ -67,9 +68,9 @@ def check_demo_upload(user, size: int, field: str = "resume") -> None:
 
 def demo_config() -> dict:
     on = demo_mode()
+    # Prompt 1 (D-87): no banner anywhere; the "Try as" buttons live only on For recruiters.
     return {
         "demo_mode": on,
-        "banner": "Demo data, resets nightly" if on else "",
         "accounts": [{"role": r, "label": label} for r, label, _ in DEMO_ACCOUNTS] if on else [],
         "upload_limit_bytes": DEMO_UPLOAD_MAX_BYTES if on else None,
     }
@@ -97,3 +98,34 @@ def reset_demo_data(now=None) -> dict:
     demo_users = User.objects.filter(email__endswith=DEMO_SUFFIX).count()
     audit(None, "demo.reset", demo_users=demo_users)
     return {"skipped": False, "demo_users": demo_users}
+
+
+# ---------------------------------------------------------------- background reset (week 4B)
+_reset_lock = __import__("threading").Lock()
+
+
+def start_demo_reset_in_background() -> str:
+    """Start the demo reset in a background thread and return at once.
+
+    cron-job.org gives up after 30 seconds and a full reseed on the free tier can take longer,
+    so the nightly endpoint answers immediately ("started") while the single Daphne process
+    finishes the work. A lock stops two resets from overlapping ("running").
+    """
+    import threading
+
+    from django.db import connection
+
+    if not demo_mode():
+        return "skipped"
+    if not _reset_lock.acquire(blocking=False):
+        return "running"
+
+    def work():
+        try:
+            reset_demo_data()
+        finally:
+            connection.close()
+            _reset_lock.release()
+
+    threading.Thread(target=work, name="demo-reset", daemon=True).start()
+    return "started"

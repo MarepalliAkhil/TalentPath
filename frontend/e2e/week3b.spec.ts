@@ -50,7 +50,11 @@ async function apiGet<T>(request: APIRequestContext, path: string): Promise<T | 
   return response.ok() ? ((await response.json()) as T) : null;
 }
 
-type Calendar = { days: { date: string; kind: string }[]; entries: { employee: string; start: string; end: string }[]; team: { members: unknown[] } };
+type Calendar = {
+  days: { date: string; kind: string }[];
+  entries: { employee: string; start: string; end: string }[];
+  team: { members: unknown[] };
+};
 
 /** The working day (from the joining date on) in the next two months on which most teammates are already off. */
 async function busiestDay(request: APIRequestContext): Promise<string | null> {
@@ -78,16 +82,14 @@ async function busiestDay(request: APIRequestContext): Promise<string | null> {
 const desktopOnly = () => test.skip(test.info().project.name !== 'desktop', 'Changes shared data; runs once');
 
 test.describe.serial('one-click hire to first leave', () => {
-  test('hr_admin hires the accepted candidate in one click', async ({ page }) => {
+  test('hr hires the accepted candidate in one click', async ({ page }) => {
     desktopOnly();
-    await signIn(page, 'admin@demo.example');
+    await signIn(page, 'hr@demo.example');
     await closeBriefing(page);
     const offers = await apiGet<{
       results: { id: string; status: string; job: { title: string }; candidate: { full_name: string | null } }[];
     }>(page.request, '/offers?status=accepted');
-    const offer = offers?.results.find(
-      (o) => o.candidate.full_name === JOINER_NAME || o.job.title === 'Frontend Engineer (React)',
-    );
+    const offer = offers?.results.find((o) => o.candidate.full_name === JOINER_NAME || o.job.title === 'Frontend Engineer (React)');
     test.skip(!offer, 'No accepted offer for the demo joiner (run: python manage.py seed --reset)');
     await page.goto(`/offers/${offer!.id}`);
     await expect(page.getByRole('heading', { level: 1, name: /^Offer:/ })).toBeVisible();
@@ -171,10 +173,10 @@ test.describe('week 3B screens are accessible', () => {
     });
   }
 
-  test('hr_admin onboarding and HR settings', async ({ page }) => {
-    await signIn(page, 'admin@demo.example');
+  test('hr onboarding and HR settings', async ({ page }) => {
+    await signIn(page, 'hr@demo.example');
     await closeBriefing(page);
-    for (const path of ['/onboarding', '/admin/hr-settings']) {
+    for (const path of ['/onboarding', '/hr/settings']) {
       await page.goto(path);
       await expect(page.locator('h1')).toBeVisible();
       await page.waitForLoadState('networkidle');

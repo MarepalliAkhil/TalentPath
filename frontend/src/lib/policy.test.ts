@@ -7,19 +7,24 @@ describe('policy-driven routing', () => {
   it('sends every role to its own dashboard', () => {
     expect(dashboardFor('candidate')).toBe('/candidate');
     expect(dashboardFor('recruiter')).toBe('/recruiter');
-    expect(dashboardFor('hiring_manager')).toBe('/manager');
+    expect(dashboardFor('manager')).toBe('/manager');
     expect(dashboardFor('employee')).toBe('/employee');
-    expect(dashboardFor('hr_admin')).toBe('/admin');
+    expect(dashboardFor('hr')).toBe('/hr');
+    expect(dashboardFor('admin')).toBe('/admin');
   });
 
   it('isolates role areas and denies unknown routes', () => {
-    expect(canVisit('/admin', 'hr_admin')).toBe(true);
+    expect(canVisit('/admin', 'admin')).toBe(true);
+    expect(canVisit('/admin', 'hr')).toBe(false);
+    expect(canVisit('/hr', 'hr')).toBe(true);
+    expect(canVisit('/hr', 'admin')).toBe(false);
+    expect(canVisit('/profile', 'admin')).toBe(true);
     expect(canVisit('/admin', 'recruiter')).toBe(false);
     expect(canVisit('/candidate', 'employee')).toBe(false);
     expect(canVisit('/jobs/:slug/apply', 'recruiter')).toBe(false);
     expect(canVisit('/profile', null)).toBe(false);
     expect(canVisit('/jobs', null)).toBe(true);
-    expect(canVisit('/not-in-policy', 'hr_admin')).toBe(false);
+    expect(canVisit('/not-in-policy', 'hr')).toBe(false);
   });
 
   it('builds the sidebar per role from the policy', () => {

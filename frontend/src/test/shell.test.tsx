@@ -12,9 +12,14 @@ describe('shared sidebar layout', () => {
   });
 
   it.each([...ROLES])('shows the right sidebar for %s', async (role) => {
-    renderApp(`/${{ candidate: 'candidate', recruiter: 'recruiter', hiring_manager: 'manager', employee: 'employee', hr_admin: 'admin' }[role]}`, role);
+    renderApp(
+      `/${{ candidate: 'candidate', recruiter: 'recruiter', manager: 'manager', employee: 'employee', hr: 'hr', admin: 'admin' }[role]}`,
+      role,
+    );
     const nav = await screen.findByRole('navigation', { name: 'Main' });
-    const labels = within(nav).getAllByRole('link').map((a) => a.textContent?.trim());
+    const labels = within(nav)
+      .getAllByRole('link')
+      .map((a) => a.textContent?.trim());
     expect(labels).toEqual(EXPECTED_NAV[role]);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
@@ -23,7 +28,11 @@ describe('shared sidebar layout', () => {
     renderApp('/employee', 'employee');
     await userEvent.click(screen.getByRole('button', { name: /account menu/i }));
     const menu = screen.getByRole('menu', { name: 'Account' });
-    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent?.trim())).toEqual(['Profile', 'Log out']);
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent?.trim()),
+    ).toEqual(['Profile', 'Log out']);
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });

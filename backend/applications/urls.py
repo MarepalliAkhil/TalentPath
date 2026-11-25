@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("applications", views.ApplicationListCreateView.as_view(), name="applications"),
     path("applications/<uuid:pk>", views.ApplicationDetailView.as_view(), name="application-detail"),
+    path("applications/drafts/<slug:slug>", views.ApplicationDraftView.as_view(), name="application-draft"),
     path(
         "applications/<uuid:pk>/withdraw",
         views.ApplicationWithdrawView.as_view(),

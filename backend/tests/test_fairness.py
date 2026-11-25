@@ -56,6 +56,17 @@ PROTECTED = {
     "resume_text",
     "cover_note",
     "headline",
+    # Prompt 1 application form (D-83): never inputs to the score.
+    "ctc",
+    "salary",
+    "compensation",
+    "cgpa",
+    "percentage",
+    "relocate",
+    "notice",
+    "form",
+    "answers",
+    "declarations",
 }
 
 
@@ -194,7 +205,48 @@ def test_services_gate_passes_only_skills_and_years():
     assert attrs <= {"experience_years", "skills"}, attrs
 
 
-def test_hr_admin_fairness_check_page(client_for, application):
-    data = client_for("hr_admin").get("/api/fairness/check").data
+def test_hr_fairness_check_page(client_for, application):
+    data = client_for("hr").get("/api/fairness/check").data
     assert data["applications"] == 1 and data["variants"] == 3 and data["changes"] == 0
     assert data["passed"] is True and data["summary"] == "3 variants tested, 0 score changes."
+
+
+def test_score_ignores_the_application_form(users, make_job, make_user, pdf_bytes):
+    """Prompt 1: CTC, date of birth, college, city and the other form fields never change the
+    fit score. Two candidates with the same resume and very different forms score the same."""
+    import json
+
+    from applications.services import apply_to_job
+    from matching.services import score_application
+
+    from .conftest import application_form
+
+    job = make_job(title="Form Fairness Role")
+    low = json.loads(application_form())
+    high = json.loads(application_form())
+    high["personal"].update(
+        {"date_of_birth": "1978-02-02", "current_city": "Visakhapatnam", "willing_to_relocate": False}
+    )
+    high["education"].update(
+        {"college": "Northfield College of Engineering", "score": "6.1", "tenth_percentage": "60"}
+    )
+    high["compensation"].update({"current_ctc_lpa": "48", "expected_ctc_lpa": "90", "notice_period": "90"})
+    scores = []
+    for form in (low, high):
+        person = make_user("candidate")
+        app = apply_to_job(
+            candidate=person, job=job, filename="cv.pdf", data=pdf_bytes, silent=True, form=form
+        )
+        fit = score_application(app)
+        scores.append((fit.score, fit.band, json.dumps(fit.explanation, sort_keys=True)))
+    assert scores[0] == scores[1]
+
+
+def test_form_module_is_not_imported_by_the_scorer():
+    import ast
+
+    for module in (scoring, services):
+        tree = ast.parse(inspect.getsource(module))
+        imported = {n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
+        imported |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
+        assert not any("form" in name.split(".")[-1] for name in imported), imported

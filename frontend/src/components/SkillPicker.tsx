@@ -89,7 +89,10 @@ export function SkillPicker({
           const skill = byId.get(skillId);
           if (!skill) return null;
           return (
-            <li key={skillId} className="inline-flex items-center gap-1 rounded-full bg-primary-soft py-1 pl-3 pr-1 text-sm font-medium text-primary-strong">
+            <li
+              key={skillId}
+              className="inline-flex items-center gap-1 rounded-full bg-primary-soft py-1 pl-3 pr-1 text-sm font-medium text-primary-strong"
+            >
               {skill.name}
               <button
                 type="button"

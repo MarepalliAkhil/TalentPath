@@ -1,4 +1,4 @@
-"""Offer workflow: draft -> pending approval (hiring manager, then hr_admin) ->
+"""Offer workflow: draft -> pending approval (hiring manager, then HR) ->
 approved -> sent -> accepted / declined / expired. Revoke with a reason at any
 point before the candidate answers. Every step is audited."""
 
@@ -99,11 +99,11 @@ def visible_offers(user):
     qs = Offer.objects.select_related(
         "application", "application__job", "application__candidate", "created_by"
     )
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     if user.role == Role.RECRUITER:
         return qs.filter(application__job__created_by=user)
-    if user.role == Role.HIRING_MANAGER:
+    if user.role == Role.MANAGER:
         return qs.filter(application__job__hiring_manager=user)
     if user.role in (Role.CANDIDATE, Role.EMPLOYEE):
         # Employees see only offers on their own internal applications (week 4A).
@@ -151,13 +151,13 @@ def submit(offer, actor, request=None) -> Offer:
         raise ValidationError({"status": "Only a draft can be sent for approval."})
     job = offer.application.job
     offer.status = OfferStatus.PENDING_APPROVAL
-    offer.approval_step = ApprovalStep.HIRING_MANAGER if job.hiring_manager_id else ApprovalStep.HR_ADMIN
+    offer.approval_step = ApprovalStep.MANAGER if job.hiring_manager_id else ApprovalStep.HR
     offer.hm_approved_by = offer.hr_approved_by = None
     offer.hm_approved_at = offer.hr_approved_at = None
     offer.save()
     audit(request, "offers.submitted", actor=actor, target=offer)
     approver = job.hiring_manager if job.hiring_manager_id else None
-    targets = [approver] if approver else list(User.objects.filter(role=Role.HR_ADMIN, is_active=True))
+    targets = [approver] if approver else list(User.objects.filter(role=Role.HR, is_active=True))
     for person in targets:
         notify(
             person,
@@ -174,14 +174,14 @@ def approve(offer, actor, request=None) -> Offer:
         raise ValidationError({"status": "This offer is not waiting for approval."})
     job = offer.application.job
     now = timezone.now()
-    if offer.approval_step == ApprovalStep.HIRING_MANAGER:
-        if actor.role != Role.HIRING_MANAGER or job.hiring_manager_id != actor.id:
+    if offer.approval_step == ApprovalStep.MANAGER:
+        if actor.role != Role.MANAGER or job.hiring_manager_id != actor.id:
             raise ValidationError({"status": "Waiting for the hiring manager to approve first."})
         offer.hm_approved_by, offer.hm_approved_at = actor, now
-        offer.approval_step = ApprovalStep.HR_ADMIN
+        offer.approval_step = ApprovalStep.HR
         offer.save()
         audit(request, "offers.approved_hm", actor=actor, target=offer)
-        for person in User.objects.filter(role=Role.HR_ADMIN, is_active=True):
+        for person in User.objects.filter(role=Role.HR, is_active=True):
             notify(
                 person,
                 kind="offer_approval",
@@ -190,7 +190,7 @@ def approve(offer, actor, request=None) -> Offer:
                 link=f"/offers/{offer.id}",
             )
         return offer
-    if actor.role != Role.HR_ADMIN:
+    if actor.role != Role.HR:
         raise ValidationError({"status": "Waiting for HR to approve."})
     offer.hr_approved_by, offer.hr_approved_at = actor, now
     offer.status, offer.approval_step = OfferStatus.APPROVED, ApprovalStep.NONE
@@ -211,10 +211,10 @@ def reject(offer, actor, reason: str, request=None) -> Offer:
     if offer.status != OfferStatus.PENDING_APPROVAL:
         raise ValidationError({"status": "This offer is not waiting for approval."})
     job = offer.application.job
-    expected_hm = offer.approval_step == ApprovalStep.HIRING_MANAGER
-    if expected_hm and not (actor.role == Role.HIRING_MANAGER and job.hiring_manager_id == actor.id):
+    expected_hm = offer.approval_step == ApprovalStep.MANAGER
+    if expected_hm and not (actor.role == Role.MANAGER and job.hiring_manager_id == actor.id):
         raise ValidationError({"status": "Waiting for the hiring manager."})
-    if not expected_hm and actor.role != Role.HR_ADMIN:
+    if not expected_hm and actor.role != Role.HR:
         raise ValidationError({"status": "Waiting for HR."})
     if len(reason) < 10:
         raise ValidationError({"reason": "Give a reason of at least 10 characters."})

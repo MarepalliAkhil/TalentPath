@@ -153,7 +153,7 @@ def test_escalation_after_48_hours(staff):
     leave.refresh_from_db()
     assert leave.escalated is True and leave.approver == boss.user
     assert leave in engine.needs_attention()
-    assert engine.can_act(leave, hr.user)  # hr_admin can step in on escalated requests
+    assert engine.can_act(leave, hr.user)  # hr can step in on escalated requests
     # Still waiting 48 hours later: up again; boss reports to nobody, so HR.
     engine.escalate_due(NOW + timedelta(hours=98))
     leave.refresh_from_db()

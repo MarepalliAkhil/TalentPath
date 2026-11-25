@@ -9,9 +9,7 @@ const rgb = (hex: string) => {
 };
 
 const entries = Object.entries(brand.colors);
-const colors = Object.fromEntries(
-  entries.map(([key]) => [kebab(key), `rgb(var(--c-${kebab(key)}) / <alpha-value>)`]),
-);
+const colors = Object.fromEntries(entries.map(([key]) => [kebab(key), `rgb(var(--c-${kebab(key)}) / <alpha-value>)`]));
 const cssVars = Object.fromEntries(entries.map(([key, hex]) => [`--c-${kebab(key)}`, rgb(hex)]));
 
 export default {

@@ -29,7 +29,6 @@ async function dismissHiraBriefing(page: Page) {
   await expect(dialog).toBeHidden();
 }
 
-
 async function expectAccessible(page: Page) {
   await expect(page.locator('h1')).toHaveCount(1);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -58,7 +57,10 @@ test('recruiter sees a ranked list with an explanation drawer', async ({ page })
   await openFirstJob(page, 'Candidates');
   await expect(page.getByRole('heading', { level: 1, name: /^Candidates · / })).toBeVisible();
   await expectAccessible(page);
-  await page.getByRole('button', { name: /^Explain score for / }).first().click();
+  await page
+    .getByRole('button', { name: /^Explain score for / })
+    .first()
+    .click();
   const drawer = page.getByRole('dialog', { name: 'Application details' });
   await expect(drawer.getByRole('heading', { name: /^Why \d+/ })).toBeVisible();
   await expect(drawer.getByRole('list', { name: 'Reasons for this score' })).toBeVisible();
@@ -117,7 +119,10 @@ test('board: keyboard Move to, and identity revealed at Interview', async ({ pag
 
 test('hiring manager adds a note at Screening', async ({ page }) => {
   await signIn(page, 'manager@demo.example');
-  await page.getByRole('link', { name: /^Board for / }).first().click();
+  await page
+    .getByRole('link', { name: /^Board for / })
+    .first()
+    .click();
   const screening = page.getByRole('region', { name: /^Screening/ });
   const details = screening.getByRole('button', { name: /^Details and notes for / }).first();
   test.skip((await details.count()) === 0, 'No candidates in Screening for this manager');
@@ -150,9 +155,9 @@ test('visitor asks HIRA for jobs', async ({ page }) => {
   await expect(panel.getByRole('list', { name: 'Jobs' }).getByRole('link').first()).toBeVisible();
 });
 
-test('hr_admin runs the fairness check', async ({ page }) => {
-  await signIn(page, 'admin@demo.example');
-  await page.goto('/admin/fairness');
+test('hr runs the fairness check', async ({ page }) => {
+  await signIn(page, 'hr@demo.example');
+  await page.goto('/hr/fairness');
   await page.getByRole('button', { name: 'Run the check' }).click();
   await expect(page.getByRole('heading', { level: 2, name: /variants tested, 0 score changes\.$/ })).toBeVisible();
   await expectAccessible(page);

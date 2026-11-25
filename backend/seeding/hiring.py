@@ -306,7 +306,7 @@ def seed_offers(staff: dict) -> dict:
     """Offers in every state, on Offer-stage applications whose rounds all passed (idempotent)."""
     if Offer.objects.filter(application__candidate__email__endswith=D.CANDIDATE_DOMAIN).exists():
         return {"skipped": True}
-    admin = staff["admin"]
+    admin = staff["hr"]
     today = today_ist(timezone.now())
     apps = list(
         Application.objects.filter(status=S.OFFER, candidate__email__endswith=D.CANDIDATE_DOMAIN)

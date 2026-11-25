@@ -25,11 +25,15 @@ frontend/.vite/
 
 # --- Test outputs -------------------------------------------------------------
 frontend/test-results/
+test-results/
 frontend/playwright-report/
 frontend/blob-report/
 frontend/coverage/
 junit*.xml
 *.log
+
+# --- Database backups (docs/DEPLOY.md) -----------------------------------------
+*.dump
 
 # --- OS / editors ---------------------------------------------------------------
 .DS_Store

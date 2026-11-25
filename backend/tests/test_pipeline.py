@@ -62,11 +62,11 @@ def test_only_the_candidate_can_withdraw(client_for, application):
 
 
 def test_role_scoping_on_board_and_moves(client_for, application, make_user, make_job, pdf_bytes):
-    foreign = make_job(owner=make_user("recruiter"), manager=make_user("hiring_manager"), title="Elsewhere")
+    foreign = make_job(owner=make_user("recruiter"), manager=make_user("manager"), title="Elsewhere")
     foreign_app = apply_to_job(
         candidate=make_user("candidate"), job=foreign, filename="c.pdf", data=pdf_bytes
     )
-    recruiter, manager, admin = client_for("recruiter"), client_for("hiring_manager"), client_for("hr_admin")
+    recruiter, manager, admin = client_for("recruiter"), client_for("manager"), client_for("hr")
     assert recruiter.get(f"/api/jobs/{application.job_id}/board").status_code == 200
     assert recruiter.get(f"/api/jobs/{foreign.id}/board").status_code == 404
     assert status(recruiter, foreign_app, "screening").status_code == 404
@@ -92,7 +92,7 @@ def test_board_shape(client_for, application):
     assert targets["hired"] is False and targets["withdrawn"] is False and targets["screening"] is True
     assert board["can_move"] is True and board["transitions"]["applied"] == ["rejected", "screening"]
     assert {r["value"] for r in board["rejection_reasons"]} >= {"skills_gap", "other"}
-    manager_board = client_for("hiring_manager").get(f"/api/jobs/{application.job_id}/board").data
+    manager_board = client_for("manager").get(f"/api/jobs/{application.job_id}/board").data
     assert (
         manager_board["can_move"] is False
         and manager_board["columns"][0]["cards"][0]["allowed_transitions"] == []
@@ -106,8 +106,8 @@ def test_every_move_is_audited_and_pushed_live(client_for, application, users, p
     recipients = {uid for uid, _ in pushes}
     assert {
         str(users["recruiter"].id),
-        str(users["hiring_manager"].id),
-        str(users["hr_admin"].id),
+        str(users["manager"].id),
+        str(users["hr"].id),
     } <= recipients
     assert str(users["candidate"].id) not in recipients
     assert pushes[0][1] == {
@@ -120,12 +120,12 @@ def test_every_move_is_audited_and_pushed_live(client_for, application, users, p
 
 
 def test_hiring_manager_notes_and_votes_only_at_screening_and_interview(client_for, application):
-    manager = client_for("hiring_manager")
+    manager = client_for("manager")
     url = f"/api/applications/{application.id}/notes"
     assert manager.post(url, {"body": "Looks good"}, format="json").status_code == 400  # still Applied
     move_application(application, "screening", application.job.created_by)
     up = manager.post(url, {"body": "Strong projects", "vote": "up"}, format="json")
-    assert up.status_code == 201 and up.data["vote"] == "up" and up.data["author_role"] == "hiring_manager"
+    assert up.status_code == 201 and up.data["vote"] == "up" and up.data["author_role"] == "manager"
     assert manager.post(url, {"vote": "sideways"}, format="json").status_code == 400
     assert manager.post(url, {}, format="json").status_code == 400
     recruiter = client_for("recruiter")
@@ -167,7 +167,7 @@ def test_bulk_rejects_foreign_ids(client_for, open_job, application, make_job, m
     )
     assert resp.status_code == 400
     assert (
-        client_for("hiring_manager")
+        client_for("manager")
         .post(url, {"ids": [str(application.id)], "status": "screening"}, format="json")
         .status_code
         == 403

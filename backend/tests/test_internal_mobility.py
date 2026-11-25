@@ -49,7 +49,7 @@ def mover(team):
 @pytest.fixture
 def internal_job(make_job, users, make_user):
     """An internal-only job owned by the recruiter, with a different hiring manager than `me`'s manager."""
-    other_manager = make_user(Role.HIRING_MANAGER, name="Other Manager")
+    other_manager = make_user(Role.MANAGER, name="Other Manager")
     job = make_job(title="Platform Engineer", manager=other_manager)
     job.audience = Audience.INTERNAL
     job.save()

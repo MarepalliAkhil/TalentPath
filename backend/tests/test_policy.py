@@ -1,6 +1,6 @@
 """Permission matrix driven by shared/policy.json.
 
-For every endpoint and every principal (5 roles + anonymous) the request must be
+For every endpoint and every principal (6 roles + anonymous) the request must be
 allowed exactly when the policy says so: denied anonymous calls answer 401,
 denied signed-in calls answer 403, and cron endpoints refuse anyone without the
 secret header.
@@ -15,12 +15,19 @@ from core.permissions import resolve_action
 from core.policy import INTERNAL, allowed_principals, load_policy
 from core.views import PolicyAPIView
 from notifications.models import Notification
+from org.models import Company
 
 from .conftest import PRINCIPALS
 
 E = namedtuple("E", "action method path")
 
-ORG = [("departments", "department"), ("locations", "location"), ("job-levels", "level"), ("skills", "skill")]
+ORG = [
+    ("departments", "department"),
+    ("locations", "location"),
+    ("job-levels", "level"),
+    ("skills", "skill"),
+    ("companies", "company"),
+]
 
 ENDPOINTS = [
     E("system.ping", "get", "/api/ping"),
@@ -38,8 +45,14 @@ ENDPOINTS = [
     E("auth.password_reset_confirm", "post", "/api/auth/password-reset/confirm"),
     E("profile.read", "get", "/api/profile"),
     E("profile.update", "patch", "/api/profile"),
+    E("profile.password", "post", "/api/profile/password"),
+    E("profile.photo", "get", "/api/profile/photo"),
+    E("profile.photo", "post", "/api/profile/photo"),
+    E("profile.photo", "delete", "/api/profile/photo"),
+    E("profile.notifications", "put", "/api/profile/notifications"),
     E("users.list", "get", "/api/users"),
     E("users.create", "post", "/api/users"),
+    E("users.read", "get", "/api/users/{user}"),
     E("users.update", "patch", "/api/users/{user}"),
     E("users.hiring_managers", "get", "/api/hiring-managers"),
     E("jobs.board", "get", "/api/jobs/{job}/board"),
@@ -159,6 +172,9 @@ ENDPOINTS = [
     E("jobs.status", "post", "/api/jobs/{job}/status"),
     E("jobs.applications", "get", "/api/jobs/{job}/applications"),
     E("applications.create", "post", "/api/applications"),
+    E("applications.draft", "get", "/api/applications/drafts/{slug}"),
+    E("applications.draft", "put", "/api/applications/drafts/{slug}"),
+    E("applications.draft", "delete", "/api/applications/drafts/{slug}"),
     E("applications.list_mine", "get", "/api/applications"),
     E("applications.read", "get", "/api/applications/{app}"),
     E("applications.withdraw", "post", "/api/applications/{app}/withdraw"),
@@ -218,8 +234,13 @@ def world(users, org, skills, application, team):
         employee=team["junior"], leave_type=leave_type, start=date(2030, 3, 4), end=date(2030, 3, 4), days=1
     )
     task = OnboardingTask.objects.create(
-        employee=me, title="Upload ID", category="documents", owner_kind="employee", owner=me.user,
-        kind="upload", due_on=date(2030, 1, 2),
+        employee=me,
+        title="Upload ID",
+        category="documents",
+        owner_kind="employee",
+        owner=me.user,
+        kind="upload",
+        due_on=date(2030, 1, 2),
     )
     reg = Regularisation.objects.create(
         employee=team["junior"],
@@ -246,6 +267,7 @@ def world(users, org, skills, application, team):
         "location": org["location"].id,
         "level": org["level"].id,
         "skill": skills["kubernetes"].id,
+        "company": Company.objects.create(name="Testwell Fictional Pvt. Ltd.").id,
         "slug": job.slug,
         "job": job.id,
         "app": application.id,
@@ -316,49 +338,54 @@ def test_unknown_action_is_denied():
 @pytest.mark.parametrize(
     "action,expected",
     [
-        ("jobs.create", {"recruiter", "hr_admin"}),
-        ("jobs.board", {"recruiter", "hiring_manager", "hr_admin"}),
-        ("applications.bulk_status", {"recruiter", "hr_admin"}),
-        ("applications.notes", {"recruiter", "hiring_manager", "hr_admin"}),
-        ("applications.reveal", {"hr_admin"}),
+        ("jobs.create", {"recruiter", "hr"}),
+        ("jobs.board", {"recruiter", "manager", "hr"}),
+        ("applications.bulk_status", {"recruiter", "hr"}),
+        ("applications.notes", {"recruiter", "manager", "hr"}),
+        ("applications.reveal", {"hr"}),
         ("hira.message", {"candidate"}),
-        ("fairness.check", {"hr_admin"}),
-        ("interviews.plan_update", {"recruiter", "hr_admin"}),
-        ("interviews.schedule_manual", {"recruiter", "hr_admin"}),
-        ("interviewers.update", {"hr_admin"}),
+        ("fairness.check", {"hr"}),
+        ("interviews.plan_update", {"recruiter", "hr"}),
+        ("interviews.schedule_manual", {"recruiter", "hr"}),
+        ("interviewers.update", {"hr"}),
         ("interviews.hold", {"candidate"}),
         ("interviews.confirm", {"candidate"}),
         ("interviews.reschedule", {"candidate"}),
-        ("scorecards.submit", {"recruiter", "hiring_manager", "employee", "hr_admin"}),
-        ("hira.briefing", {"recruiter", "hr_admin"}),
-        ("hira.activity", {"recruiter", "hr_admin"}),
-        ("offers.create", {"recruiter", "hr_admin"}),
-        ("offers.approve", {"hiring_manager", "hr_admin"}),
-        ("offers.reject", {"hiring_manager", "hr_admin"}),
-        ("offers.send", {"recruiter", "hr_admin"}),
+        ("scorecards.submit", {"recruiter", "manager", "employee", "hr"}),
+        ("hira.briefing", {"recruiter", "hr"}),
+        ("hira.activity", {"recruiter", "hr"}),
+        ("offers.create", {"recruiter", "hr"}),
+        ("offers.approve", {"manager", "hr"}),
+        ("offers.reject", {"manager", "hr"}),
+        ("offers.send", {"recruiter", "hr"}),
         ("offers.decline", {"candidate", "employee"}),
         ("offers.mine", {"candidate", "employee"}),
-        ("users.create", {"hr_admin"}),
-        ("users.update", {"hr_admin"}),
-        ("org.manage", {"hr_admin"}),
-        ("audit.list", {"hr_admin"}),
-        ("outbox.list", {"hr_admin"}),
+        ("users.create", {"admin"}),
+        ("users.update", {"admin"}),
+        ("org.manage", {"admin"}),
+        ("audit.list", {"admin"}),
+        ("outbox.list", {"admin"}),
         ("applications.create", {"candidate"}),
+        ("applications.draft", {"candidate"}),
+        ("applications.read", {"candidate", "recruiter", "manager", "hr"}),
+        ("applications.resume", {"candidate", "recruiter", "manager", "hr"}),
+        ("users.read", {"admin"}),
+        ("users.list", {"admin"}),
         ("applications.list_mine", {"candidate"}),
-        ("applications.status", {"recruiter", "hr_admin"}),
+        ("applications.status", {"recruiter", "hr"}),
         ("auth.register", {"anonymous"}),
-        ("onboarding.hire", {"recruiter", "hr_admin"}),
-        ("analytics.read", {"recruiter", "hiring_manager", "hr_admin"}),
+        ("onboarding.hire", {"recruiter", "hr"}),
+        ("analytics.read", {"recruiter", "manager", "hr"}),
         ("internal.apply", {"employee"}),
         ("internal.jobs", {"employee"}),
         ("career.map", {"candidate", "employee"}),
         ("auth.demo_login", {"anonymous"}),
         ("offers.accept", {"candidate", "employee"}),
-        ("leave.adjust", {"hr_admin"}),
-        ("hr.config", {"hr_admin"}),
-        ("hr.attention", {"hr_admin"}),
+        ("leave.adjust", {"hr"}),
+        ("hr.config", {"hr"}),
+        ("hr.attention", {"hr"}),
         *[
-            (action, {"recruiter", "hiring_manager", "employee", "hr_admin"})
+            (action, {"recruiter", "manager", "employee", "hr"})
             for action in (
                 "leave.apply",
                 "leave.approve",
@@ -379,9 +406,10 @@ def test_policy_routes_and_dashboards_are_valid():
     assert policy["dashboards"] == {
         "candidate": "/candidate",
         "recruiter": "/recruiter",
-        "hiring_manager": "/manager",
+        "manager": "/manager",
         "employee": "/employee",
-        "hr_admin": "/admin",
+        "hr": "/hr",
+        "admin": "/admin",
     }
     for role, path in policy["dashboards"].items():
         assert role in policy["routes"][path]

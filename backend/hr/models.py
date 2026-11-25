@@ -1,7 +1,7 @@
 """People operations: employee records, onboarding, leave, holidays, attendance.
 
 Everything a policy decides (leave quotas, notice, sandwich rule, shifts,
-clash thresholds) is data per location that hr_admin edits; the code only
+clash thresholds) is data per location that HR edits; the code only
 applies it. Reasons and uploaded documents are encrypted at rest.
 """
 
@@ -47,6 +47,10 @@ class Employee(models.Model):
         "offers.Offer", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     welcome_seen_at = models.DateTimeField(null=True, blank=True)
+    # Prompt 1: the fictional company the person works for (set on hire, editable by admin).
+    company = models.ForeignKey(
+        "org.Company", null=True, blank=True, on_delete=models.SET_NULL, related_name="employees"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -111,7 +115,7 @@ class OnboardingTask(models.Model):
     description = models.CharField(max_length=300, blank=True, default="")
     category = models.CharField(max_length=12, choices=TaskCategory.choices)
     owner_kind = models.CharField(max_length=10, choices=TaskOwner.choices)
-    # The person responsible; None for HR / IT tasks any hr_admin can complete.
+    # The person responsible; None for HR / IT tasks any HR can complete.
     owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     kind = models.CharField(max_length=12, choices=TaskKind.choices, default=TaskKind.TASK)
     due_on = models.DateField()
@@ -215,7 +219,7 @@ class WorkPolicy(models.Model):
     early_grace_minutes = models.PositiveSmallIntegerField(default=15)
     # ISO weekdays that are off (6 = Saturday, 7 = Sunday).
     weekly_off = models.JSONField(default=list)
-    # Leaves longer than this many days also need hr_admin.
+    # Leaves longer than this many days also need HR.
     hr_approval_over_days = models.DecimalField(max_digits=4, decimal_places=1, default=Decimal("5"))
     # Warn when fewer than this share of a team would be available on a day.
     min_team_available_pct = models.PositiveSmallIntegerField(default=50)
@@ -289,7 +293,7 @@ class LeaveRequest(models.Model):
         max_length=10, choices=LeaveStatus.choices, default=LeaveStatus.PENDING, db_index=True
     )
     stage = models.CharField(max_length=8, choices=ApprovalStage.choices, blank=True, default="")
-    # Who must act now. None at the HR stage means any hr_admin.
+    # Who must act now. None at the HR stage means any HR.
     approver = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     assigned_at = models.DateTimeField(null=True, blank=True)
     delegated = models.BooleanField(default=False)

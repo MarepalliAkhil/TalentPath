@@ -79,7 +79,10 @@ export function CareerPage() {
             {map.data.jobs.map((job) => (
               <li key={job.id} className="glass flex flex-col gap-2 rounded-xl2 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <Link to={`/career/jobs/${job.id}`} className="font-display text-lg font-semibold text-ink underline-offset-2 hover:underline">
+                  <Link
+                    to={`/career/jobs/${job.id}`}
+                    className="font-display text-lg font-semibold text-ink underline-offset-2 hover:underline"
+                  >
                     {job.title}
                   </Link>
                   <BandPill band={job.band} label={job.band_label} score={job.score} />

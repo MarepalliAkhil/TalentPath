@@ -4,3 +4,6 @@ declare module 'virtual:repo-facts' {
   const facts: RepoFacts;
   export default facts;
 }
+
+/** wss:// origin of the Render backend, derived from vercel.json at build time ('' until deployed). */
+declare const __RENDER_WS_ORIGIN__: string;

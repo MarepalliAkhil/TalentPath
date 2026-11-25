@@ -9,7 +9,8 @@ export interface AuthValue {
   /** True right after a deliberate logout: send people to plain /login, without a ?next= link. */
   signedOut: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (fullName: string, email: string, password: string) => Promise<User>;
+  /** Registration sends the form with the resume (multipart): full_name, email, password, accept_terms, resume. */
+  register: (form: FormData) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -41,11 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         client.setQueryData(['me'], user);
         return user;
       },
-      async register(full_name, email, password) {
-        const { user } = await api<{ user: User }>('/auth/register', {
-          method: 'POST',
-          body: { full_name, email, password },
-        });
+      async register(form) {
+        const { user } = await api<{ user: User }>('/auth/register', { method: 'POST', form });
         setSignedOut(false);
         client.setQueryData(['me'], user);
         return user;

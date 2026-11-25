@@ -47,7 +47,11 @@ function DecisionDialog({ decision, onClose }: { decision: Decision; onClose: (m
         />
         {act.isError && <ErrorNote>{errorText(act.error)}</ErrorNote>}
         <div className="flex gap-2">
-          <Button type="submit" variant={decision.approve ? 'primary' : 'danger'} disabled={act.isPending || (needsNote && note.trim().length < 5)}>
+          <Button
+            type="submit"
+            variant={decision.approve ? 'primary' : 'danger'}
+            disabled={act.isPending || (needsNote && note.trim().length < 5)}
+          >
             {decision.approve ? 'Approve' : 'Do not approve'}
           </Button>
           <Button variant="ghost" onClick={() => onClose()}>
@@ -137,7 +141,10 @@ export function ApprovalsPage() {
   const attentionOnly = attention.filter((a) => !leave.some((l) => l.id === a.id));
   return (
     <>
-      <PageHeader title="Approvals" intro="Leave and attendance corrections waiting for you. The reporting line decides who approves; nobody approves their own." />
+      <PageHeader
+        title="Approvals"
+        intro="Leave and attendance corrections waiting for you. The reporting line decides who approves; nobody approves their own."
+      />
       {message && <SuccessNote>{message}</SuccessNote>}
       {attentionOnly.length > 0 && (
         <section className="mb-6" aria-labelledby="attention-heading">

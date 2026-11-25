@@ -17,7 +17,7 @@ def resolve_action(view, method: str) -> str | None:
 
 
 def internal_secret_ok(request) -> bool:
-    supplied = request.headers.get("X-Internal-Secret", "")
+    supplied = request.headers.get("X-Tick-Secret", "")
     expected = settings.INTERNAL_TICK_SECRET
     return bool(supplied) and hmac.compare_digest(supplied.encode(), expected.encode())
 

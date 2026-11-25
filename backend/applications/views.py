@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -20,7 +21,8 @@ from matching.services import ensure_fresh, fit_dict
 from org.taxonomy import resolve_skill
 
 from .blind import is_blind, redacted_text, reveal
-from .models import Application, ApplicationNote, NoteKind, RejectionReason
+from .form import NOTICE_PERIODS, QUALIFICATIONS, TERMS_VERSION, staff_view, validate_form
+from .models import Application, ApplicationDraft, ApplicationForm, ApplicationNote, NoteKind, RejectionReason
 from .models import ApplicationStatus as S
 from .services import (
     CANDIDATE_STATUS_WORDS,
@@ -120,7 +122,7 @@ def _skill_list(app: Application) -> list:
 def staff_application_dict(app: Application, viewer: User, detail: bool = False) -> dict:
     """Staff view. While blind, identity fields are None and resume text is redacted server-side."""
     blind = is_blind(app)
-    can_move = viewer.role in (Role.RECRUITER, Role.HR_ADMIN)
+    can_move = viewer.role in (Role.RECRUITER, Role.HR)
     data = {
         "id": str(app.id),
         "status": app.status,
@@ -155,6 +157,10 @@ def staff_application_dict(app: Application, viewer: User, detail: bool = False)
             else None
         )
         data["reveal_stage"] = app.job.reveal_stage
+        # Application form answers, beside the score and never part of it (D-83).
+        data["candidate_details"] = staff_view(
+            ApplicationForm.objects.filter(application=app).first(), job=app.job, blind=blind
+        )
     return data
 
 
@@ -212,35 +218,144 @@ class ApplicationListCreateView(PolicyAPIView):
                 status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             )
         slug = str(request.data.get("job", "")).strip()
-        upload = request.FILES.get("resume")
-        errors = {}
         if not slug:
-            errors["job"] = ["Choose a job."]
-        if upload is None:
-            errors["resume"] = ["Attach your resume (PDF or DOCX)."]
-        elif upload.size > settings.RESUME_MAX_BYTES:
-            errors["resume"] = ["Resumes must be 5 MB or smaller."]
-        cover_note = str(request.data.get("cover_note", ""))
-        if len(cover_note) > 2000:
-            errors["cover_note"] = ["Keep the note under 2000 characters."]
-        if errors:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"job": ["Choose a job."]}, status=status.HTTP_400_BAD_REQUEST)
         job = get_object_or_404(Job.objects.public(), slug=slug)
+        form = validate_form(request.data.get("form", ""), user=request.user, job=job)
+        upload = request.FILES.get("resume")
+        if upload is not None:
+            if upload.size > settings.RESUME_MAX_BYTES:
+                return Response({"resume": ["Resumes must be 5 MB or smaller."]}, status=400)
+            data, filename = upload.read(settings.RESUME_MAX_BYTES + 1), upload.name
+            check_demo_upload(request.user, len(data))
+        elif form["use_profile_resume"]:
+            from growth.models import CareerProfile
+
+            career = CareerProfile.objects.filter(user=request.user).select_related("resume_file").first()
+            if career is None or career.resume_file is None:
+                return Response({"resume": ["Upload a resume: your profile has none."]}, status=400)
+            data, filename = read_file(career.resume_file), career.resume_filename or "resume.pdf"
+        else:
+            return Response(
+                {"resume": ["Attach your resume (PDF or DOCX) or use the one on your profile."]}, status=400
+            )
         source = str(request.data.get("source") or "career_site")
         if source not in ("career_site", "referral", "job_board"):
             return Response({"source": ["Choose career site, referral or job board."]}, status=400)
-        data = upload.read(settings.RESUME_MAX_BYTES + 1)
-        check_demo_upload(request.user, len(data))
-        application = apply_to_job(
-            candidate=request.user,
-            job=job,
-            filename=upload.name,
-            data=data,
-            cover_note=cover_note,
-            source=source,
-        )
-        audit(request, "applications.create", target=application, job=str(job.id))
+        with transaction.atomic():
+            application = apply_to_job(
+                candidate=request.user,
+                job=job,
+                filename=filename,
+                data=data,
+                cover_note=form["cover_letter"],
+                source=source,
+                form=form,
+            )
+            ApplicationDraft.objects.filter(candidate=request.user, job=job).delete()
+        audit(request, "applications.create", target=application, job=str(job.id), terms=TERMS_VERSION)
         return Response(candidate_application_dict(application, detail=True), status=201)
+
+
+def form_context(user, job, draft) -> dict:
+    """Everything the multi-step form needs: the job's questions, a pre-fill from the
+    candidate's profile, the saved draft and whether a profile resume exists."""
+    from accounts.prefill import loads
+    from growth.models import CareerProfile
+    from jobs.serializers import company_dict
+
+    profile = getattr(user, "profile", None)
+    education = loads(profile.education) if profile else []
+    first = education[0] if education else {}
+    career = CareerProfile.objects.filter(user=user).first()
+    roles = [
+        {
+            "company": r.get("company", ""),
+            "title": r.get("title", ""),
+            "start": "",
+            "end": "",
+            "responsibilities": r.get("responsibilities", ""),
+        }
+        for r in (loads(profile.experience) if profile else [])
+    ]
+    return {
+        "job": {
+            "slug": job.slug,
+            "title": job.title,
+            "company": company_dict(job.company),
+            "screening_questions": job.screening_questions or [],
+        },
+        "already_applied": Application.objects.filter(candidate=user, job=job).exists(),
+        "draft": {
+            "data": json.loads(draft.data or "{}"),
+            "step": draft.step,
+            "saved_at": draft.updated_at.isoformat(),
+        }
+        if draft
+        else None,
+        "prefill": {
+            "personal": {
+                "full_name": user.full_name,
+                "email": user.email,
+                "phone": profile.phone if profile else "",
+                "current_city": profile.location_text if profile else "",
+                "date_of_birth": (profile.date_of_birth or None) if profile else None,
+            },
+            "education": {
+                "college": first.get("college", ""),
+                "branch": first.get("branch", ""),
+                "graduation_year": first.get("year", ""),
+                "score": first.get("score", ""),
+            },
+            "experience": {"status": "experienced" if roles else "fresher", "roles": roles},
+            "links": {
+                "linkedin_url": profile.linkedin_url if profile else "",
+                "github_url": profile.github_url if profile else "",
+                "portfolio_url": profile.portfolio_url if profile else "",
+            },
+        },
+        "locked": {"date_of_birth": bool(profile and profile.date_of_birth)},
+        "profile_resume": {"filename": career.resume_filename} if career and career.resume_file_id else None,
+        "notice_periods": [{"value": k, "label": v} for k, v in NOTICE_PERIODS.items()],
+        "qualifications": QUALIFICATIONS,
+        "terms_version": TERMS_VERSION,
+    }
+
+
+class ApplicationDraftView(PolicyAPIView):
+    """The application form for one job: prefill, the saved draft, save and discard (D-83)."""
+
+    policy_actions = {
+        "GET": "applications.draft",
+        "PUT": "applications.draft",
+        "DELETE": "applications.draft",
+    }
+
+    def _job(self, slug):
+        return get_object_or_404(Job.objects.public().select_related("company"), slug=slug)
+
+    def get(self, request, slug):
+        job = self._job(slug)
+        draft = ApplicationDraft.objects.filter(candidate=request.user, job=job).first()
+        return Response(form_context(request.user, job, draft))
+
+    def put(self, request, slug):
+        job = self._job(slug)
+        raw = request.data.get("data")
+        step = request.data.get("step", 0)
+        if not isinstance(raw, dict) or not isinstance(step, int) or not 0 <= step <= 9:
+            return Response({"detail": "Send the form data and the step you are on."}, status=400)
+        text = json.dumps(raw, default=str)
+        if len(text) > 30000:
+            return Response({"detail": "The draft is too long."}, status=400)
+        draft, _ = ApplicationDraft.objects.update_or_create(
+            candidate=request.user, job=job, defaults={"data": text, "step": step}
+        )
+        return Response({"saved_at": draft.updated_at.isoformat(), "step": draft.step})
+
+    def delete(self, request, slug):
+        ApplicationDraft.objects.filter(candidate=request.user, job=self._job(slug)).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def _staff_app(request, pk):
@@ -311,7 +426,7 @@ class BulkStatusView(PolicyAPIView):
 
 
 class RevealView(PolicyAPIView):
-    """Early identity reveal: hr_admin only (policy), always with a reason, always audited."""
+    """Early identity reveal: HR only (policy), always with a reason, always audited."""
 
     policy_action = "applications.reveal"
 
@@ -441,8 +556,8 @@ class JobBoardView(PolicyAPIView):
                     "blind_screening": job.blind_screening,
                     "reveal_stage": job.reveal_stage,
                 },
-                "can_move": request.user.role in (Role.RECRUITER, Role.HR_ADMIN),
-                "can_note": request.user.role in (Role.RECRUITER, Role.HIRING_MANAGER, Role.HR_ADMIN),
+                "can_move": request.user.role in (Role.RECRUITER, Role.HR),
+                "can_note": request.user.role in (Role.RECRUITER, Role.MANAGER, Role.HR),
                 "transitions": {str(k): sorted(str(v) for v in vs) for k, vs in STAFF_TRANSITIONS.items()},
                 "rejection_reasons": [{"value": v, "label": label} for v, label in RejectionReason.choices],
                 "columns": columns,
@@ -465,12 +580,16 @@ class DashboardSummaryView(PolicyAPIView):
             data["applications_by_status"] = _counts(mine, "status")
             data["applications_total"] = mine.count()
             data["open_jobs"] = Job.objects.open().count()
-        elif user.role in (Role.RECRUITER, Role.HIRING_MANAGER, Role.HR_ADMIN):
+        elif user.role in (Role.RECRUITER, Role.MANAGER, Role.HR):
             jobs = visible_jobs(user, with_counts=False)
             data["jobs_by_status"] = _counts(jobs, "status")
             apps = Application.objects.filter(job__in=jobs.values("pk"))
             data["applications_by_status"] = _counts(apps, "status")
             data["applications_total"] = apps.count()
-            if user.role == Role.HR_ADMIN:
-                data["users_by_role"] = _counts(User.objects.filter(is_active=True), "role")
+        elif user.role == Role.ADMIN:
+            from notifications.delivery import status_counts
+
+            data["users_by_role"] = _counts(User.objects.filter(is_active=True), "role")
+            data["inactive_users"] = User.objects.filter(is_active=False).count()
+            data["emails_by_status"] = status_counts()
         return Response(data)

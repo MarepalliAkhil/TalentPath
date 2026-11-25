@@ -175,6 +175,14 @@ def _candidate_interview(request, pk):
 
 
 # ------------------------------------------------------------------------ plans
+class CatchUpMixin:
+    """Runs `coordinator.catch_up` after the permission check (see docs/DEPLOY.md, "What the jobs do")."""
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        coordinator.catch_up()
+
+
 class InterviewPlanView(PolicyAPIView):
     policy_actions = {"GET": "interviews.plan_read", "PUT": "interviews.plan_update"}
 
@@ -280,7 +288,7 @@ class BlockedTimeDetailView(PolicyAPIView):
 
 
 # --------------------------------------------------------------------- listings
-class MyInterviewsView(PolicyAPIView):
+class MyInterviewsView(CatchUpMixin, PolicyAPIView):
     policy_action = "interviews.mine"
 
     def get(self, request):
@@ -292,7 +300,7 @@ class MyInterviewsView(PolicyAPIView):
         return Response({"results": rows})
 
 
-class AssignedInterviewsView(PolicyAPIView):
+class AssignedInterviewsView(CatchUpMixin, PolicyAPIView):
     policy_action = "interviews.assigned"
 
     def get(self, request):
@@ -308,7 +316,7 @@ class AssignedInterviewsView(PolicyAPIView):
         return Response({"upcoming": upcoming, "needs_feedback": feedback, "past": past[-20:]})
 
 
-class ApplicationInterviewsView(PolicyAPIView):
+class ApplicationInterviewsView(CatchUpMixin, PolicyAPIView):
     policy_action = "interviews.for_application"
 
     def get(self, request, pk):
@@ -335,7 +343,7 @@ class ApplicationInterviewsView(PolicyAPIView):
                 "hira_enabled": plan.hira_enabled,
                 "rounds": rounds,
                 "final_round_passed": coordinator.final_round_passed(application),
-                "can_schedule": request.user.role in (Role.RECRUITER, Role.HR_ADMIN)
+                "can_schedule": request.user.role in (Role.RECRUITER, Role.HR)
                 and application.status == S.INTERVIEW,
                 "offer": offer_brief(offer) if offer else None,
             }
@@ -400,7 +408,7 @@ def _slot_id(request):
     return slot
 
 
-class HoldView(PolicyAPIView):
+class HoldView(CatchUpMixin, PolicyAPIView):
     policy_action = "interviews.hold"
 
     def post(self, request, pk):
@@ -409,7 +417,7 @@ class HoldView(PolicyAPIView):
         return Response({"slot": slot_dict(slot), "held_minutes": rules.HOLD_MINUTES})
 
 
-class ConfirmView(PolicyAPIView):
+class ConfirmView(CatchUpMixin, PolicyAPIView):
     policy_action = "interviews.confirm"
 
     def post(self, request, pk):
@@ -496,7 +504,7 @@ def _link_payload(row) -> dict:
     }
 
 
-class ScheduleLinkView(PolicyAPIView):
+class ScheduleLinkView(CatchUpMixin, PolicyAPIView):
     """Pick a slot from the email link without signing in (single use, expires)."""
 
     policy_actions = {"GET": "schedule.link", "POST": "schedule.link"}
@@ -522,7 +530,7 @@ class ScheduleLinkView(PolicyAPIView):
 
 
 # ------------------------------------------------------------------ scorecards
-class ScorecardView(PolicyAPIView):
+class ScorecardView(CatchUpMixin, PolicyAPIView):
     policy_actions = {"GET": "scorecards.read", "POST": "scorecards.submit"}
 
     def get(self, request, pk):

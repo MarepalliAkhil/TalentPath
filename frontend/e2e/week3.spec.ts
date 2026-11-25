@@ -78,16 +78,21 @@ test('candidate picks a slot HIRA offered after the recruiter moves them to Inte
     // Move one of the candidate's early applications to Interview as the recruiter who owns it.
     const apps = await apiCall(candidateContext, candidate.request, 'GET', '/applications?page_size=50');
     const early = (apps.body?.results ?? []).find(
-      (a: { status: string; job: { title: string } }) => ['applied', 'screening'].includes(a.status) && a.job.title === 'Java Backend Engineer',
+      (a: { status: string; job: { title: string } }) =>
+        ['applied', 'screening'].includes(a.status) && a.job.title === 'Java Backend Engineer',
     );
     test.skip(!early, 'No early-stage application left for the demo candidate');
     const recruiterContext = await browser.newContext();
     const recruiter = await recruiterContext.newPage();
     await signIn(recruiter, 'recruiter@demo.example');
     if (early.status === 'applied') {
-      expect((await apiCall(recruiterContext, recruiter.request, 'POST', `/applications/${early.id}/status`, { status: 'screening' })).status).toBe(200);
+      expect(
+        (await apiCall(recruiterContext, recruiter.request, 'POST', `/applications/${early.id}/status`, { status: 'screening' })).status,
+      ).toBe(200);
     }
-    expect((await apiCall(recruiterContext, recruiter.request, 'POST', `/applications/${early.id}/status`, { status: 'interview' })).status).toBe(200);
+    expect(
+      (await apiCall(recruiterContext, recruiter.request, 'POST', `/applications/${early.id}/status`, { status: 'interview' })).status,
+    ).toBe(200);
     await recruiterContext.close();
     mine = await apiCall(candidateContext, candidate.request, 'GET', '/my/interviews');
   }
@@ -125,7 +130,10 @@ test('an interviewer fills in a scorecard', async ({ page }, testInfo) => {
   const groups = page.getByRole('group').filter({ has: page.getByRole('radio', { name: /4: Strong/ }) });
   const count = await groups.count();
   for (let i = 0; i < count; i += 1) {
-    await groups.nth(i).getByRole('radio', { name: /4: Strong/ }).check({ force: true });
+    await groups
+      .nth(i)
+      .getByRole('radio', { name: /4: Strong/ })
+      .check({ force: true });
   }
   await page.getByRole('radio', { name: 'Yes', exact: true }).check();
   await expectAccessible(page);
@@ -157,14 +165,14 @@ test('offer approval: hiring manager, then HR', async ({ browser }, testInfo) =>
   test.skip((await open.count()) === 0, 'No offers waiting for this hiring manager');
   await open.click();
   await manager.getByRole('button', { name: 'Approve' }).click();
-  await expect(manager.getByText('Waiting for HR admin')).toBeVisible();
+  await expect(manager.getByText('Waiting for HR')).toBeVisible();
   const offerUrl = manager.url();
   await expectAccessible(manager);
   await managerContext.close();
 
   const adminContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const admin = await adminContext.newPage();
-  await signIn(admin, 'admin@demo.example');
+  await signIn(admin, 'hr@demo.example');
   await closeBriefing(admin);
   await admin.goto(offerUrl);
   await admin.getByRole('button', { name: 'Approve' }).click();
@@ -180,7 +188,10 @@ test('recruiter reads the interview plan and the offers list on a phone', async 
   await expect(page.getByRole('heading', { level: 1, name: 'Offers' })).toBeVisible();
   await expectAccessible(page);
   await page.goto('/recruiter/jobs');
-  await page.getByRole('link', { name: /^Board for / }).first().click();
+  await page
+    .getByRole('link', { name: /^Board for / })
+    .first()
+    .click();
   await page.getByRole('link', { name: 'Interview plan' }).click();
   await expect(page.getByRole('heading', { level: 1, name: /^Interview plan/ })).toBeVisible();
   await expect(page.getByText('Let HIRA schedule')).toBeVisible();

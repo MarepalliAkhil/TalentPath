@@ -6,9 +6,9 @@ returned in one shape the frontend draws as a chart, a table and a one-line summ
     {"key", "title", "summary", "chart": {"type", "x", "series": [{"key", "label"}]} | None,
      "columns": [{"key", "label"}], "rows": [{...}], "note": str}
 
-Scope: hr_admin sees every job; recruiters the jobs they created; hiring managers the jobs
+Scope: HR sees every job; recruiters the jobs they created; hiring managers the jobs
 they are assigned to (the same rule as the rest of the product). People analytics are
-for hr_admin only.
+for HR only.
 """
 
 import math
@@ -469,7 +469,7 @@ def hiring_report(user, f: Filters) -> list[dict]:
     ]
 
 
-# ---------------------------------------------------------------- people (hr_admin)
+# ---------------------------------------------------------------- people (HR)
 def _employees(f: Filters):
     from hr.models import Employee
 

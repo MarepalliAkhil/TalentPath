@@ -34,7 +34,10 @@ export function ReasonChips({ chips, limit }: { chips: FitChip[]; limit?: number
   return (
     <ul className="flex flex-wrap gap-1.5" aria-label="Reasons for this score">
       {shown.map((chip) => (
-        <li key={chip.label} className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${CHIP_STYLE[chip.kind]}`}>
+        <li
+          key={chip.label}
+          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${CHIP_STYLE[chip.kind]}`}
+        >
           <span aria-hidden="true">{CHIP_PREFIX[chip.kind]}</span>
           {chip.label}
         </li>

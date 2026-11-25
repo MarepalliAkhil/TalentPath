@@ -1,14 +1,35 @@
 import type { IconName } from '@/lib/nav';
 
 const PATHS: Record<
-  IconName | 'menu' | 'close' | 'pin' | 'clock' | 'arrow' | 'check' | 'logout' | 'user' | 'chat' | 'lock' | 'grip' | 'thumbUp' | 'thumbDown' | 'send' | 'columns' | 'play' | 'volumeOff' | 'volume' | 'download',
+  | IconName
+  | 'menu'
+  | 'close'
+  | 'pin'
+  | 'clock'
+  | 'arrow'
+  | 'check'
+  | 'logout'
+  | 'user'
+  | 'chat'
+  | 'lock'
+  | 'grip'
+  | 'thumbUp'
+  | 'thumbDown'
+  | 'send'
+  | 'columns'
+  | 'play'
+  | 'volumeOff'
+  | 'volume'
+  | 'download',
   string
 > = {
   home: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
-  briefcase: 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-12 3h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 0a2 2 0 0 1 2-3h14a2 2 0 0 1 2 3M3 13h18',
+  briefcase:
+    'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-12 3h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 0a2 2 0 0 1 2-3h14a2 2 0 0 1 2 3M3 13h18',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16-4.2-4.2',
   bell: 'M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zm4 11a2 2 0 0 0 4 0',
-  users: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1m7-9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm13 9v-1a4 4 0 0 0-3-3.9M16 3.1a3.5 3.5 0 0 1 0 6.8',
+  users:
+    'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1m7-9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm13 9v-1a4 4 0 0 0-3-3.9M16 3.1a3.5 3.5 0 0 1 0 6.8',
   building: 'M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16m0-10h2a2 2 0 0 1 2 2v8M2 21h20M8 7h4M8 11h4M8 15h4',
   shield: 'M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6zm-3 9 2 2 4-4',
   mail: 'M3 6h18v12H3zm0 0 9 7 9-7',

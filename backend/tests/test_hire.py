@@ -46,8 +46,8 @@ def accepted(users, make_job, team, pdf_bytes):
         "department": "Engineering",
         "location": "Hyderabad",
         "joining_date": joining.isoformat(),
-        "reporting_manager_id": str(users["hiring_manager"].id),
-        "reporting_manager_name": users["hiring_manager"].full_name,
+        "reporting_manager_id": str(users["manager"].id),
+        "reporting_manager_name": users["manager"].full_name,
         "fixed_pay": 2400000,
     }
     offer.save()
@@ -83,23 +83,28 @@ def test_hire_creates_everything_in_one_go(accepted, users, team):
         if task.owner_kind == "employee":
             assert task.owner == candidate
         if task.owner_kind == "manager":
-            assert task.owner == users["hiring_manager"]
+            assert task.owner == users["manager"]
     assert FirstWeekSession.objects.filter(employee=employee).count() == 7
-    assert LeaveLedger.objects.filter(employee=employee).exists()
+    # Prorated leave for the joining year. A joiner after 15 December earns nothing more this year,
+    # so the check depends on the date the test runs (joining is three weeks out).
+    joins_after_mid_december = employee.joined_on.month == 12 and employee.joined_on.day > 15
+    joins_next_year = employee.joined_on.year > today_ist(timezone.now()).year
+    if not (joins_after_mid_december or joins_next_year):
+        assert LeaveLedger.objects.filter(employee=employee).exists()
 
     body = response.data
     assert body["employee"]["code"] == employee.code
-    assert body["manager"]["name"] == users["hiring_manager"].full_name
+    assert body["manager"]["name"] == users["manager"].full_name
     assert body["progress"]["total"] == len(titles) and body["progress"]["done"] == 0
 
 
 @pytest.mark.django_db
 def test_role_change_is_audited_and_sessions_revoked(accepted, users):
     with mock.patch("hr.onboarding.revoke_sessions") as revoke:
-        assert hire(accepted, users["hr_admin"]).status_code == 201
+        assert hire(accepted, users["hr"]).status_code == 201
     revoke.assert_called_once_with(users["candidate"])
     change = AuditLog.objects.get(action="users.role_changed")
-    assert change.actor == users["hr_admin"]
+    assert change.actor == users["hr"]
     assert change.meta["old"] == Role.CANDIDATE and change.meta["new"] == Role.EMPLOYEE
     hired = AuditLog.objects.get(action="onboarding.hired")
     assert hired.meta["tasks"] > 0 and hired.meta["sessions"] == 7
@@ -137,7 +142,7 @@ def test_only_accepted_offers_can_be_hired_and_only_once(accepted, users):
 def test_recruiters_hire_only_for_their_own_jobs(accepted, users, make_user):
     other = make_user(Role.RECRUITER)
     assert hire(accepted, other).status_code == 404
-    for role in ("hiring_manager", "employee", "candidate"):
+    for role in ("manager", "employee", "candidate"):
         assert hire(accepted, users[role]).status_code == 403
 
 
@@ -233,12 +238,12 @@ def test_hired_employee_gets_a_welcome_page_once(accepted, users):
 def test_manager_and_hr_see_progress_peers_do_not(accepted, users, team):
     hire(accepted, users["recruiter"])
     employee = Employee.objects.get(user=users["candidate"])
-    assert as_user(users["hiring_manager"]).get(f"/api/onboarding/{employee.id}").status_code == 200
-    assert as_user(users["hr_admin"]).get(f"/api/onboarding/{employee.id}").status_code == 200
+    assert as_user(users["manager"]).get(f"/api/onboarding/{employee.id}").status_code == 200
+    assert as_user(users["hr"]).get(f"/api/onboarding/{employee.id}").status_code == 200
     peer = team["peers"][1].user
     if employee.buddy is None or employee.buddy.user_id != peer.id:
         assert as_user(peer).get(f"/api/onboarding/{employee.id}").status_code == 404
-    names = [row["name"] for row in as_user(users["hiring_manager"]).get("/api/onboarding").data["results"]]
+    names = [row["name"] for row in as_user(users["manager"]).get("/api/onboarding").data["results"]]
     assert employee.name in names
 
 
@@ -257,7 +262,7 @@ def test_checklist_tasks_belong_to_their_owner(accepted, users):
     response = joiner.post(f"/api/onboarding/tasks/{mine.id}/complete", {}, format="json")
     assert response.status_code == 200 and response.data["done"] is True
     assert (
-        as_user(users["hr_admin"])
+        as_user(users["hr"])
         .post(f"/api/onboarding/tasks/{hr_task.id}/complete", {}, format="json")
         .status_code
         == 200
@@ -277,7 +282,7 @@ def test_onboarding_finishes_when_every_task_is_done(accepted, users):
     if last.kind == "upload":
         last.kind = "task"
         last.save(update_fields=["kind"])
-    onboarding.complete(last, users["hr_admin"])
+    onboarding.complete(last, users["hr"])
     employee.refresh_from_db()
     assert employee.status == EmployeeStatus.ACTIVE
 
@@ -288,7 +293,7 @@ def test_offer_accepted_tells_hr_the_hire_is_ready(accepted, users):
     from offers.events import offer_accepted
 
     offer_accepted.send(sender=Offer, offer=accepted)
-    assert Notification.objects.filter(user=users["hr_admin"], kind="ready_to_hire").exists()
+    assert Notification.objects.filter(user=users["hr"], kind="ready_to_hire").exists()
 
 
 @pytest.mark.django_db
@@ -296,7 +301,7 @@ def test_offer_page_offers_hire_once(accepted, users):
     client = as_user(users["recruiter"])
     data = client.get(f"/api/offers/{accepted.id}").data
     assert data["actions"]["hire"] is True and data["hired"] is None
-    assert as_user(users["hiring_manager"]).get(f"/api/offers/{accepted.id}").data["actions"]["hire"] is False
+    assert as_user(users["manager"]).get(f"/api/offers/{accepted.id}").data["actions"]["hire"] is False
     hire(accepted, users["recruiter"])
     data = client.get(f"/api/offers/{accepted.id}").data
     assert data["actions"]["hire"] is False and data["hired"]["code"].startswith("LW")

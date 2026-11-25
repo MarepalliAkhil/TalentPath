@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/auth/AuthContext';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
-import type { NoteItem, StaffApplication } from '@/lib/types';
+import type { CandidateDetails, NoteItem, StaffApplication } from '@/lib/types';
 import { Dialog } from './Dialog';
 import { CandidateName, FitBadge, FitBreakdown, ReasonChips } from './fit';
 import { Icon } from './Icon';
@@ -18,6 +18,88 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-soft">{title}</h3>
       {children}
     </section>
+  );
+}
+
+/** Application form answers (D-83), shown beside the score and never part of it. */
+function CandidateDetailsSection({ details }: { details: CandidateDetails }) {
+  const c = details.compensation;
+  const lpa = (v: string | null) => (v === null || v === undefined || v === '' ? '—' : `${v} LPA`);
+  return (
+    <Section title="Candidate details (not part of the score)">
+      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <dt className="text-muted">Current CTC</dt>
+          <dd className="font-medium text-ink">{lpa(c.current_ctc_lpa)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">Expected CTC</dt>
+          <dd className="font-medium text-ink">{lpa(c.expected_ctc_lpa)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">Notice period</dt>
+          <dd className="font-medium text-ink">{c.notice_period ?? '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">Earliest joining</dt>
+          <dd className="font-medium text-ink">{c.earliest_joining ? formatDate(c.earliest_joining) : '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">Experience</dt>
+          <dd className="font-medium text-ink">
+            {details.experience.status === 'fresher' ? 'Fresher' : `${details.experience.total_years ?? '?'} years`}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted">Willing to relocate</dt>
+          <dd className="font-medium text-ink">
+            {details.willing_to_relocate === null ? '—' : details.willing_to_relocate ? 'Yes' : 'No'}
+          </dd>
+        </div>
+        {details.personal && (
+          <>
+            <div>
+              <dt className="text-muted">Phone</dt>
+              <dd className="font-medium text-ink">{details.personal.phone ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Current city</dt>
+              <dd className="font-medium text-ink">{details.personal.current_city ?? '—'}</dd>
+            </div>
+          </>
+        )}
+        {details.education && (
+          <div className="sm:col-span-2">
+            <dt className="text-muted">Education</dt>
+            <dd className="font-medium text-ink">
+              {[
+                details.education.highest_qualification,
+                details.education.branch,
+                details.education.college,
+                details.education.graduation_year,
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </dd>
+          </div>
+        )}
+      </dl>
+      {details.answers.length > 0 && (
+        <div className="mt-3">
+          <p className="text-sm font-semibold text-ink">Screening answers</p>
+          <ul className="mt-1 space-y-1 text-sm">
+            {details.answers.map((a) => (
+              <li key={a.question}>
+                <span className="text-muted">{a.question}</span> <span className="font-medium text-ink">{a.answer}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {details.blind && (
+        <p className="mt-3 text-xs text-muted">Personal details, college and links stay hidden until identity is revealed.</p>
+      )}
+    </Section>
   );
 }
 
@@ -47,10 +129,13 @@ function Notes({ app, canVote }: { app: StaffApplication; canVote: boolean }) {
             <li key={n.id} className="rounded-xl bg-canvas p-3 text-sm">
               <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span className="font-semibold text-ink">{n.author}</span>
-                {n.kind === 'candidate_message' && <span className="rounded-full bg-accent-soft px-2 text-accent">Message from candidate</span>}
+                {n.kind === 'candidate_message' && (
+                  <span className="rounded-full bg-accent-soft px-2 text-accent">Message from candidate</span>
+                )}
                 {n.vote && (
                   <span className={n.vote === 'up' ? 'text-success' : 'text-danger'}>
-                    <Icon name={n.vote === 'up' ? 'thumbUp' : 'thumbDown'} className="inline h-4 w-4" /> {n.vote === 'up' ? 'Thumbs up' : 'Thumbs down'}
+                    <Icon name={n.vote === 'up' ? 'thumbUp' : 'thumbDown'} className="inline h-4 w-4" />{' '}
+                    {n.vote === 'up' ? 'Thumbs up' : 'Thumbs down'}
                   </span>
                 )}
                 <span>
@@ -108,9 +193,18 @@ function Reveal({ app }: { app: StaffApplication }) {
       }}
       className="flex flex-col gap-2"
     >
-      <p className="text-sm text-muted">Identity is revealed automatically at the {app.reveal_stage === 'offer' ? 'Offer' : 'Interview'} stage. An early reveal is recorded in the audit log.</p>
+      <p className="text-sm text-muted">
+        Identity is revealed automatically at the {app.reveal_stage === 'offer' ? 'Offer' : 'Interview'} stage. An early reveal is recorded
+        in the audit log.
+      </p>
       {error && <ErrorNote>{error}</ErrorNote>}
-      <TextAreaField label="Reason for revealing early" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} hint="At least 10 characters." />
+      <TextAreaField
+        label="Reason for revealing early"
+        rows={2}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        hint="At least 10 characters."
+      />
       <Button type="submit" variant="secondary" className="self-start" disabled={reveal.isPending}>
         Reveal identity
       </Button>
@@ -124,7 +218,7 @@ export function ApplicationDrawer({ id, jobId, onClose }: { id: string; jobId: s
   const move = useMoveMutation(jobId);
   const [rejecting, setRejecting] = useState(false);
   const app = detail.data;
-  const isManager = user?.role === 'hiring_manager';
+  const isManager = user?.role === 'manager';
   const canVote = isManager && !!app && ['screening', 'interview'].includes(app.status);
 
   return (
@@ -183,19 +277,20 @@ export function ApplicationDrawer({ id, jobId, onClose }: { id: string; jobId: s
                 <FitBreakdown fit={app.fit} />
               </div>
               <p className="mt-3 text-xs text-muted">
-                The score reads only skills, where they appear and years of experience. It never uses name, gender, age,
-                photo, address, city or college. Scorer v{app.fit.version}.
+                The score reads only skills, where they appear and years of experience. It never uses name, gender, age, photo, address,
+                city or college. Scorer v{app.fit.version}.
               </p>
             </Section>
           )}
+
+          {app.candidate_details && <CandidateDetailsSection details={app.candidate_details} />}
 
           {app.evidence && app.evidence.length > 0 && (
             <Section title="Skill evidence">
               <ul className="space-y-1.5 text-sm">
                 {app.evidence.map((e) => (
                   <li key={e.slug}>
-                    <span className="font-semibold text-ink">{e.name}</span>{' '}
-                    <span className="text-muted">({e.section})</span>
+                    <span className="font-semibold text-ink">{e.name}</span> <span className="text-muted">({e.section})</span>
                     <span className="block text-ink-soft">“{e.snippet}”</span>
                   </li>
                 ))}
@@ -204,11 +299,18 @@ export function ApplicationDrawer({ id, jobId, onClose }: { id: string; jobId: s
           )}
 
           <Section title={app.blind ? 'Resume (redacted)' : 'Resume'}>
-            <pre tabIndex={0} className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-canvas p-3 font-sans text-sm text-ink-soft">
+            <pre
+              tabIndex={0}
+              className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-canvas p-3 font-sans text-sm text-ink-soft"
+            >
               {app.resume_text || 'No readable text in this file.'}
             </pre>
             {!app.blind && app.resume_filename && (
-              <a href={`/api/applications/${app.id}/resume`} download className="mt-2 inline-flex text-sm font-semibold text-primary-strong underline">
+              <a
+                href={`/api/applications/${app.id}/resume`}
+                download
+                className="mt-2 inline-flex text-sm font-semibold text-primary-strong underline"
+              >
                 Download original ({app.resume_filename})
               </a>
             )}
@@ -217,10 +319,12 @@ export function ApplicationDrawer({ id, jobId, onClose }: { id: string; jobId: s
 
           <Section title="Notes">
             <Notes app={app} canVote={canVote} />
-            {isManager && !canVote && <p className="mt-2 text-xs text-muted">Hiring managers add notes and votes at Screening and Interview.</p>}
+            {isManager && !canVote && (
+              <p className="mt-2 text-xs text-muted">Hiring managers add notes and votes at Screening and Interview.</p>
+            )}
           </Section>
 
-          {user?.role === 'hr_admin' && app.blind && (
+          {user?.role === 'hr' && app.blind && (
             <Section title="Reveal identity">
               <Reveal app={app} />
             </Section>

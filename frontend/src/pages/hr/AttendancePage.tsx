@@ -2,7 +2,18 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/auth/AuthContext';
 import { LeaveStatus } from '@/components/hr';
-import { Button, EmptyState, ErrorNote, PageHeader, PageLoader, SelectField, StatTile, SuccessNote, TextAreaField, TextField } from '@/components/ui';
+import {
+  Button,
+  EmptyState,
+  ErrorNote,
+  PageHeader,
+  PageLoader,
+  SelectField,
+  StatTile,
+  SuccessNote,
+  TextAreaField,
+  TextField,
+} from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useDocumentTitle } from '@/lib/hooks';
 import { day, monthLabel, shiftMonth, thisMonth, todayIso, type AttendanceDay, type AttendanceMe, type AttendanceTeam } from '@/lib/hr';
@@ -32,14 +43,16 @@ function TodayCard({ data }: { data: AttendanceMe }) {
         Today
       </h2>
       <p className="text-sm text-muted">
-        General shift {data.shift.start} to {data.shift.end} ({data.shift.location}), {data.shift.late_grace_minutes} minutes grace. No location is recorded.
+        General shift {data.shift.start} to {data.shift.end} ({data.shift.location}), {data.shift.late_grace_minutes} minutes grace. No
+        location is recorded.
       </p>
       {today?.check_in ? (
         <p className="mt-3 text-sm text-ink">
           Checked in {today.check_in} ({today.mode}){today.late && <strong className="text-warning"> · late</strong>}
           {today.check_out ? (
             <>
-              {' '}· checked out {today.check_out}
+              {' '}
+              · checked out {today.check_out}
               {today.early && <strong className="text-warning"> · early</strong>}
             </>
           ) : null}
@@ -97,16 +110,46 @@ function RegulariseForm() {
   };
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3" aria-label="Request an attendance correction">
-      <TextField label="Date" type="date" max={todayIso()} value={date} onChange={(e) => setDate(e.target.value)} error={fields.date} required />
+      <TextField
+        label="Date"
+        type="date"
+        max={todayIso()}
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        error={fields.date}
+        required
+      />
       <div className="grid grid-cols-2 gap-3">
-        <TextField label="Check-in" type="time" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} error={fields.check_in} required />
-        <TextField label="Check-out" type="time" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} error={fields.check_out} required />
+        <TextField
+          label="Check-in"
+          type="time"
+          value={checkIn}
+          onChange={(e) => setCheckIn(e.target.value)}
+          error={fields.check_in}
+          required
+        />
+        <TextField
+          label="Check-out"
+          type="time"
+          value={checkOut}
+          onChange={(e) => setCheckOut(e.target.value)}
+          error={fields.check_out}
+          required
+        />
       </div>
       <SelectField label="Work mode" value={mode} onChange={(e) => setMode(e.target.value)}>
         <option value="office">Office</option>
         <option value="remote">Remote</option>
       </SelectField>
-      <TextAreaField label="What happened?" rows={2} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} error={fields.reason} required />
+      <TextAreaField
+        label="What happened?"
+        rows={2}
+        maxLength={500}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        error={fields.reason}
+        required
+      />
       {send.isError && !Object.keys(fields).length && <ErrorNote>{errorText(send.error)}</ErrorNote>}
       {send.isSuccess && <SuccessNote>Sent to your reporting manager.</SuccessNote>}
       <div>
@@ -131,14 +174,30 @@ function TeamSummary({ month }: { month: string }) {
           <caption className="sr-only">Monthly attendance summary</caption>
           <thead>
             <tr className="text-left text-xs text-muted">
-              <th scope="col" className="py-1 pr-3">Person</th>
-              <th scope="col" className="px-2 text-right">Present</th>
-              <th scope="col" className="px-2 text-right">Remote</th>
-              <th scope="col" className="px-2 text-right">Late</th>
-              <th scope="col" className="px-2 text-right">Early</th>
-              <th scope="col" className="px-2 text-right">No check-out</th>
-              <th scope="col" className="px-2 text-right">Leave</th>
-              <th scope="col" className="px-2 text-right">No record</th>
+              <th scope="col" className="py-1 pr-3">
+                Person
+              </th>
+              <th scope="col" className="px-2 text-right">
+                Present
+              </th>
+              <th scope="col" className="px-2 text-right">
+                Remote
+              </th>
+              <th scope="col" className="px-2 text-right">
+                Late
+              </th>
+              <th scope="col" className="px-2 text-right">
+                Early
+              </th>
+              <th scope="col" className="px-2 text-right">
+                No check-out
+              </th>
+              <th scope="col" className="px-2 text-right">
+                Leave
+              </th>
+              <th scope="col" className="px-2 text-right">
+                No record
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -179,16 +238,22 @@ export function AttendancePage() {
       <>
         <PageHeader title="Attendance" />
         {missing ? <EmptyState title="No employee record yet" /> : <ErrorNote>We could not load attendance.</ErrorNote>}
-        {user?.role === 'hr_admin' && <TeamSummary month={month} />}
+        {user?.role === 'hr' && <TeamSummary month={month} />}
       </>
     );
   }
   const data = query.data;
   const c = data.summary.counts;
-  const flagged = data.summary.days.filter((d) => d.status !== 'weekly_off').slice().reverse();
+  const flagged = data.summary.days
+    .filter((d) => d.status !== 'weekly_off')
+    .slice()
+    .reverse();
   return (
     <>
-      <PageHeader title="Attendance" intro="Web check-in and check-out. Missed a check-out? Request a correction for your manager to approve." />
+      <PageHeader
+        title="Attendance"
+        intro="Web check-in and check-out. Missed a check-out? Request a correction for your manager to approve."
+      />
       <div className="grid gap-6 lg:grid-cols-2">
         <TodayCard data={data} />
         <section className="glass rounded-xl2 p-5" aria-labelledby="reg-heading">
@@ -228,15 +293,28 @@ export function AttendancePage() {
         <StatTile label="No check-out" value={c.missing_checkout} />
         <StatTile label="On leave" value={c.on_leave} />
       </div>
-      <div className="glass mt-4 overflow-x-auto rounded-xl2 p-4" tabIndex={0} role="region" aria-label="Daily attendance (scrolls sideways)">
+      <div
+        className="glass mt-4 overflow-x-auto rounded-xl2 p-4"
+        tabIndex={0}
+        role="region"
+        aria-label="Daily attendance (scrolls sideways)"
+      >
         <table className="w-full text-sm">
           <caption className="sr-only">Daily attendance for {monthLabel(data.summary.month)}</caption>
           <thead>
             <tr className="text-left text-xs text-muted">
-              <th scope="col" className="py-1 pr-3">Day</th>
-              <th scope="col" className="pr-3">Status</th>
-              <th scope="col" className="pr-3">In</th>
-              <th scope="col" className="pr-3">Out</th>
+              <th scope="col" className="py-1 pr-3">
+                Day
+              </th>
+              <th scope="col" className="pr-3">
+                Status
+              </th>
+              <th scope="col" className="pr-3">
+                In
+              </th>
+              <th scope="col" className="pr-3">
+                Out
+              </th>
               <th scope="col">Flags</th>
             </tr>
           </thead>
@@ -246,11 +324,16 @@ export function AttendancePage() {
                 <th scope="row" className="py-1.5 pr-3 text-left font-medium text-ink">
                   {day(d.date, false)}
                 </th>
-                <td className="pr-3">{d.holiday || STATUS_LABEL[d.status]}{d.mode ? ` (${d.mode})` : ''}</td>
+                <td className="pr-3">
+                  {d.holiday || STATUS_LABEL[d.status]}
+                  {d.mode ? ` (${d.mode})` : ''}
+                </td>
                 <td className="pr-3">{d.check_in ?? '–'}</td>
                 <td className="pr-3">{d.check_out ?? '–'}</td>
                 <td className="text-xs">
-                  {[d.late && 'Late', d.early && 'Early', d.missing_checkout && 'No check-out', d.regularised && 'Corrected'].filter(Boolean).join(', ')}
+                  {[d.late && 'Late', d.early && 'Early', d.missing_checkout && 'No check-out', d.regularised && 'Corrected']
+                    .filter(Boolean)
+                    .join(', ')}
                 </td>
               </tr>
             ))}

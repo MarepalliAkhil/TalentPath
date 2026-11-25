@@ -1,0 +1,47 @@
+# Render Blueprint: one free web service for the TalentPath API (Django + Channels on Daphne).
+# Render reads this file when you create a "Blueprint" from the repository (docs/DEPLOY.md, step 3).
+# Secrets are `sync: false`: Render asks for them once and never stores them in git.
+services:
+  - type: web
+    name: talentpath-api
+    runtime: docker
+    plan: free
+    region: singapore
+    # Build from the repository root so shared/ (policy.json, brand.json, skill data) is included.
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    # The Dockerfile runs `migrate` and then ONE Daphne process on $PORT.
+    healthCheckPath: /api/ping
+    autoDeploy: true
+    envVars:
+      - key: PRODUCTION
+        value: "true"
+      - key: DEBUG
+        value: "false"
+      - key: DEMO_MODE
+        value: "true"
+      # Behind Vercel's rewrite and Render's proxy: the client IP is the second address from the right.
+      - key: NUM_PROXIES
+        value: "2"
+      - key: LOG_LEVEL
+        value: INFO
+      # Your Vercel domain without https://, for example talentpath.vercel.app
+      - key: FRONTEND_DOMAIN
+        sync: false
+      # Neon connection string (postgres://...). sslmode=require is added if missing.
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: BLIND_INDEX_KEY
+        sync: false
+      - key: INTERNAL_TICK_SECRET
+        sync: false
+      # Optional: a shared demo password (defaults to the one in docs/START_HERE.md).
+      - key: DEMO_PASSWORD
+        sync: false
+      # Leave empty on the free plan: in-memory channel layer and cache (one instance).
+      - key: REDIS_URL
+        sync: false

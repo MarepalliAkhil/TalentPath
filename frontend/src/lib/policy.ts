@@ -1,6 +1,6 @@
 import policyJson from '@shared/policy.json';
 
-export const ROLES = ['candidate', 'recruiter', 'hiring_manager', 'employee', 'hr_admin'] as const;
+export const ROLES = ['candidate', 'recruiter', 'manager', 'employee', 'hr', 'admin'] as const;
 export type Role = (typeof ROLES)[number];
 export type Principal = Role | 'anonymous';
 

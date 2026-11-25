@@ -19,7 +19,9 @@ import { Button, ErrorNote, SelectField, SuccessNote, TextAreaField, TextField }
 
 export function LeaveStatus({ status, label }: { status: string; label: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEAVE_STATUS_STYLE[status] ?? 'bg-canvas-deep text-ink'}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEAVE_STATUS_STYLE[status] ?? 'bg-canvas-deep text-ink'}`}
+    >
       {label}
     </span>
   );
@@ -72,16 +74,23 @@ function DayBreakdown({ check }: { check: LeaveCheck }) {
       </p>
       {skipped.length > 0 && (
         <p className="mt-1 text-ink-soft">
-          Not counted: {skipped.map((r) => `${day(r.date, false)}${r.label ? ` (${r.label})` : r.kind === 'weekly_off' ? ' (weekly off)' : ''}`).join(', ')}.
+          Not counted:{' '}
+          {skipped
+            .map((r) => `${day(r.date, false)}${r.label ? ` (${r.label})` : r.kind === 'weekly_off' ? ' (weekly off)' : ''}`)
+            .join(', ')}
+          .
         </p>
       )}
       {sandwich.length > 0 && (
         <p className="mt-1 text-ink-soft">
-          Sandwich rule: {sandwich.map((r) => day(r.date, false)).join(', ')} {sandwich.length === 1 ? 'is' : 'are'} counted because leave sits on both sides.
+          Sandwich rule: {sandwich.map((r) => day(r.date, false)).join(', ')} {sandwich.length === 1 ? 'is' : 'are'} counted because leave
+          sits on both sides.
         </p>
       )}
       {check.available !== null && <p className="mt-1 text-ink-soft">Available for these dates: {check.available} days.</p>}
-      {check.needs_hr_approval && <p className="mt-1 text-ink-soft">Longer than the HR threshold: your manager, then HR, will approve it.</p>}
+      {check.needs_hr_approval && (
+        <p className="mt-1 text-ink-soft">Longer than the HR threshold: your manager, then HR, will approve it.</p>
+      )}
     </div>
   );
 }
@@ -174,7 +183,15 @@ export function LeaveForm({ balances, onDone }: { balances: Balances; onDone?: (
       </SelectField>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="From" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={errors.start} required />
-        <TextField label="To" type="date" value={end} min={start || undefined} onChange={(e) => setEnd(e.target.value)} error={errors.end} hint="Leave empty for a single day." />
+        <TextField
+          label="To"
+          type="date"
+          value={end}
+          min={start || undefined}
+          onChange={(e) => setEnd(e.target.value)}
+          error={errors.end}
+          hint="Leave empty for a single day."
+        />
       </div>
       {halfAllowed && (
         <SelectField label="Duration" value={half} onChange={(e) => setHalf(e.target.value)} error={errors.half}>
@@ -204,7 +221,14 @@ export function LeaveForm({ balances, onDone }: { balances: Balances; onDone?: (
           {errors.document && <p className="text-sm font-medium text-danger">{errors.document}</p>}
         </div>
       )}
-      <TextAreaField label="Reason (optional)" rows={2} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} hint="Only you, your approvers and HR can read it." />
+      <TextAreaField
+        label="Reason (optional)"
+        rows={2}
+        maxLength={1000}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        hint="Only you, your approvers and HR can read it."
+      />
 
       {check && check.days > 0 && <DayBreakdown check={check} />}
       {check && <ClashWarnings warnings={check.warnings} />}
@@ -268,7 +292,13 @@ function TaskRow({ task, onChanged }: { task: OnboardingTask; onChanged: () => v
               <label htmlFor={fileId} className="sr-only">
                 Document for {task.title}
               </label>
-              <input id={fileId} type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="max-w-56 text-xs" />
+              <input
+                id={fileId}
+                type="file"
+                accept="application/pdf,image/png,image/jpeg"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="max-w-56 text-xs"
+              />
             </>
           )}
           <Button
@@ -413,8 +443,12 @@ export function HrCardView({ card, onSent }: { card: HrCard; onSent: (text: stri
           <caption className="sr-only">Your leave balances</caption>
           <thead>
             <tr className="text-left text-xs text-muted">
-              <th scope="col" className="px-2 py-1">Type</th>
-              <th scope="col" className="px-2 py-1 text-right">Available</th>
+              <th scope="col" className="px-2 py-1">
+                Type
+              </th>
+              <th scope="col" className="px-2 py-1 text-right">
+                Available
+              </th>
             </tr>
           </thead>
           <tbody>

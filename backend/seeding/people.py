@@ -50,10 +50,10 @@ ORG = {
     "hm_product": ("Product", "Bengaluru", "Head of Product", None, 1800),
     "hm_gtm": ("Sales", "Hyderabad", "Head of Sales & Marketing", None, 1900),
     "hm_people": ("People & HR", "Hyderabad", "Head of People", None, 2100),
-    "admin": ("People & HR", "Hyderabad", "HR Manager", "hm_people", 1500),
-    "recruiter": ("People & HR", "Hyderabad", "Senior Recruiter", "admin", 1100),
-    "recruiter2": ("People & HR", "Bengaluru", "Recruiter", "admin", 700),
-    "recruiter3": ("People & HR", "Hyderabad", "Recruiter", "admin", 420),
+    "hr": ("People & HR", "Hyderabad", "HR Manager", "hm_people", 1500),
+    "recruiter": ("People & HR", "Hyderabad", "Senior Recruiter", "hr", 1100),
+    "recruiter2": ("People & HR", "Bengaluru", "Recruiter", "hr", 700),
+    "recruiter3": ("People & HR", "Hyderabad", "Recruiter", "hr", 420),
     "employee": ("Engineering", "Hyderabad", "Engineering Lead", "manager", 1300),
     "employee2": ("Data & AI", "Bengaluru", "Senior Data Engineer", "hm_data", 900),
     "employee3": ("Design", "Bengaluru", "Product Designer", "hm_product", 800),
@@ -74,7 +74,7 @@ ORG = {
     "deepa": ("Sales", "Hyderabad", "Account Executive", "int_imran", 540),
     "harish": ("Customer Success", "Bengaluru", "Customer Success Manager", "hm_gtm", 820),
     "anjali": ("Marketing", "Hyderabad", "Marketing Specialist", "hm_gtm", 260),
-    "tanvi": ("People & HR", "Hyderabad", "HR Operations Associate", "admin", -6),
+    "tanvi": ("People & HR", "Hyderabad", "HR Operations Associate", "hr", -6),
     "sameer": ("Finance", "Hyderabad", "Finance Analyst", "hm_people", 980),
 }
 NEW_PEOPLE = {
@@ -225,7 +225,7 @@ def seed_onboarding(employees: dict, today: date) -> int:
         for n, task in enumerate(emp.tasks.order_by("due_on", "order")):
             if task.due_on < today and not (key == "aditya" and n == 3):  # one overdue item stays open
                 task.done_at = timezone.now() - timedelta(days=max(1, (today - task.due_on).days))
-                task.done_by = task.owner or employees["admin"].user
+                task.done_by = task.owner or employees["hr"].user
                 task.save(update_fields=["done_at", "done_by"])
     return count
 
@@ -299,7 +299,7 @@ def seed_leave(employees: dict, today: date) -> dict:
     for emp in e.values():
         engine.credit_entitlements(emp, today)
     hyd = e["manager"].location
-    admin = e["admin"].user
+    admin = e["hr"].user
     # Comp-off for working on a holiday.
     for key in ("rahul", "int_imran", "karthik"):
         lt = LeaveType.objects.get(location=e[key].location, code="comp_off")
@@ -439,7 +439,7 @@ def seed_leave(employees: dict, today: date) -> dict:
         decided_by=e["hm_data"].user,
     )
     _make_leave(
-        e["admin"],
+        e["hr"],
         "casual",
         _working_after(hyd, today, 9),
         status=LeaveStatus.PENDING,
@@ -599,7 +599,7 @@ def seed_hire_demo(employees: dict, password_hash: str, today: date) -> dict:
     offers.submit(offer, recruiter)
     if manager:
         offers.approve(offer, manager)
-    offers.approve(offer, employees["admin"].user)
+    offers.approve(offer, employees["hr"].user)
     offers.send(offer, recruiter)
     offers.accept(offer, candidate, candidate.full_name)
     Application.objects.filter(pk=application.pk).update(updated_at=timezone.now())

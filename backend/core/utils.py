@@ -8,8 +8,10 @@ class StandardPagination(PageNumberPagination):
     max_page_size = 50
 
 
-def paginate(view, request, queryset, serialize):
+def paginate(view, request, queryset, serialize, max_page_size: int | None = None):
     paginator = StandardPagination()
+    if max_page_size:
+        paginator.max_page_size = max_page_size
     page = paginator.paginate_queryset(queryset, request, view=view)
     return paginator.get_paginated_response([serialize(obj) for obj in page])
 

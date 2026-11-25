@@ -4,6 +4,9 @@ from . import views
 
 urlpatterns = [
     path("profile", views.ProfileView.as_view(), name="profile"),
+    path("profile/password", views.PasswordChangeView.as_view(), name="profile-password"),
+    path("profile/photo", views.ProfilePhotoView.as_view(), name="profile-photo"),
+    path("profile/notifications", views.NotificationPrefsView.as_view(), name="profile-notifications"),
     path("demo/config", views.DemoConfigView.as_view(), name="demo-config"),
     path("users", views.UserListCreateView.as_view(), name="users"),
     path("hiring-managers", views.HiringManagerListView.as_view(), name="hiring-managers"),

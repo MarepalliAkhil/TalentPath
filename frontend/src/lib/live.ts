@@ -8,8 +8,8 @@ export type LiveEvent =
 
 /**
  * One WebSocket per signed-in session. Gets a single-use ticket first (Vercel
- * cannot proxy sockets, so production connects straight to the API host given
- * in VITE_WS_URL). Reconnects quietly; pages also poll, so nothing breaks
+ * cannot proxy sockets, so production connects straight to the Render host from
+ * vercel.json, or VITE_WS_URL when set). Reconnects quietly; pages also poll, so nothing breaks
  * when sockets are unavailable.
  */
 export function useLiveEvents(onEvent: (event: LiveEvent) => void, enabled = true): void {
@@ -26,6 +26,7 @@ export function useLiveEvents(onEvent: (event: LiveEvent) => void, enabled = tru
         if (stopped) return;
         const base =
           (import.meta.env.VITE_WS_URL as string | undefined) ||
+          (import.meta.env.PROD ? __RENDER_WS_ORIGIN__ : '') ||
           `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
         socket = new WebSocket(`${base}/ws/notifications?ticket=${encodeURIComponent(ticket)}`);
         socket.onmessage = (message) => {

@@ -18,6 +18,16 @@ export const job: PublicJob = {
   ],
   nice_to_have_skills: [{ id: '3', name: 'Redis', slug: 'redis' }],
   excerpt: 'Own the services behind job search.',
+  company: {
+    id: 'c1',
+    name: 'Lumina Works Pvt. Ltd.',
+    slug: 'lumina-works',
+    industry: 'HR technology',
+    headquarters: 'Hyderabad, Telangana',
+    logo_initials: 'LW',
+    logo_color: '#0B6E78',
+  },
+  ctc: { min_lpa: 20, max_lpa: 30, label: '₹20–30 LPA' },
   description: 'About the role\nOwn the services behind job search.\n\nWhat you will do\n- Build APIs\n- Review code',
   seo: {
     title: 'Backend Engineer · Engineering, Hyderabad | TalentPath',
@@ -27,7 +37,7 @@ export const job: PublicJob = {
   },
 };
 
-export const page = <T,>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
+export const page = <T>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
 
 export const publicApi = {
   '/api/public/jobs/backend-engineer-hyderabad': job,
@@ -41,17 +51,63 @@ export const signedInApi = {
   ...publicApi,
   '/api/notifications': { ...page([]), unread_count: 2 },
   '/api/applications': page([]),
-  '/api/dashboard/summary': { role: 'recruiter', applications_total: 3, applications_by_status: { applied: 2 }, jobs_by_status: { open: 1 } },
+  '/api/dashboard/summary': {
+    role: 'recruiter',
+    applications_total: 3,
+    applications_by_status: { applied: 2 },
+    jobs_by_status: { open: 1 },
+  },
   '/api/jobs': page([]),
   '/api/profile': {},
 };
 
 export const EXPECTED_NAV = {
-  candidate: ['My applications', 'Browse jobs', 'Career map', 'Notifications'],
-  recruiter: ['Overview', 'My jobs', 'Offers', 'HIRA activity', 'Analytics', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
-  hiring_manager: ['Overview', 'Offers', 'Analytics', 'My interviews', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
-  employee: ['Overview', 'Career map', 'My interviews', 'Internal jobs', 'Leave', 'Approvals', 'Team calendar', 'Attendance', 'Onboarding', 'Policies and holidays', 'Notifications'],
-  hr_admin: [
+  candidate: ['My applications', 'Browse jobs', 'Career map', 'Notifications', 'Profile'],
+  recruiter: [
+    'Overview',
+    'My jobs',
+    'Offers',
+    'HIRA activity',
+    'Analytics',
+    'My interviews',
+    'Leave',
+    'Approvals',
+    'Team calendar',
+    'Attendance',
+    'Onboarding',
+    'Policies and holidays',
+    'Notifications',
+    'Profile',
+  ],
+  manager: [
+    'Overview',
+    'Offers',
+    'Analytics',
+    'My interviews',
+    'Leave',
+    'Approvals',
+    'Team calendar',
+    'Attendance',
+    'Onboarding',
+    'Policies and holidays',
+    'Notifications',
+    'Profile',
+  ],
+  employee: [
+    'Overview',
+    'Career map',
+    'My interviews',
+    'Internal jobs',
+    'Leave',
+    'Approvals',
+    'Team calendar',
+    'Attendance',
+    'Onboarding',
+    'Policies and holidays',
+    'Notifications',
+    'Profile',
+  ],
+  hr: [
     'Overview',
     'All jobs',
     'Offers',
@@ -64,12 +120,10 @@ export const EXPECTED_NAV = {
     'Attendance',
     'Onboarding',
     'Policies and holidays',
-    'People',
-    'Organisation',
-    'Audit log',
-    'Simulated emails',
     'Fairness check',
     'HR settings',
     'Notifications',
+    'Profile',
   ],
+  admin: ['Overview', 'People', 'Organisation', 'Audit log', 'Email log', 'Notifications', 'Profile'],
 } as const;

@@ -44,7 +44,11 @@ function ActionsByDay({ summary }: { summary: HiraSummary }) {
       </div>
       {view === 'chart' ? (
         <figure>
-          <div className="h-72 w-full" role="img" aria-label="Stacked bar chart of HIRA actions per day. Switch to the table for the exact numbers.">
+          <div
+            className="h-72 w-full"
+            role="img"
+            aria-label="Stacked bar chart of HIRA actions per day. Switch to the table for the exact numbers."
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 8, left: -16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={brand.colors.canvasDeep} />
@@ -58,7 +62,9 @@ function ActionsByDay({ summary }: { summary: HiraSummary }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <figcaption className="mt-2 text-xs text-muted">Each bar is one IST calendar day. Counts come from HIRA's activity log.</figcaption>
+          <figcaption className="mt-2 text-xs text-muted">
+            Each bar is one IST calendar day. Counts come from HIRA's activity log.
+          </figcaption>
         </figure>
       ) : (
         <div className="overflow-x-auto" role="region" aria-label="Actions by day table" tabIndex={0}>
@@ -66,7 +72,9 @@ function ActionsByDay({ summary }: { summary: HiraSummary }) {
             <caption className="sr-only">HIRA actions per day</caption>
             <thead>
               <tr className="border-b border-ink/10 text-muted">
-                <th scope="col" className="py-2 pr-3 font-semibold">Day</th>
+                <th scope="col" className="py-2 pr-3 font-semibold">
+                  Day
+                </th>
                 {SERIES.map((s) => (
                   <th key={s.key} scope="col" className="py-2 pr-3 font-semibold">
                     {s.label}
@@ -112,7 +120,11 @@ function NeedsYou({ items }: { items: HiraItem[] }) {
               </p>
               {item.link && (
                 <Link to={item.link} className="font-semibold text-primary-strong underline">
-                  Open<span className="sr-only"> {item.label} for {item.candidate}</span>
+                  Open
+                  <span className="sr-only">
+                    {' '}
+                    {item.label} for {item.candidate}
+                  </span>
                 </Link>
               )}
             </li>
@@ -168,7 +180,11 @@ export function HiraActivityPage() {
         <h2 id="log-heading" className="mb-3 font-display text-xl font-semibold text-ink">
           Activity log
         </h2>
-        <form aria-label="Activity filters" className="glass mb-4 grid gap-3 rounded-xl2 p-4 sm:grid-cols-4" onSubmit={(e) => e.preventDefault()}>
+        <form
+          aria-label="Activity filters"
+          className="glass mb-4 grid gap-3 rounded-xl2 p-4 sm:grid-cols-4"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <SelectField label="Action" value={filters.action} onChange={(e) => set('action', e.target.value)}>
             <option value="">All actions</option>
             {summary.data?.actions.map((a) => (
@@ -191,11 +207,21 @@ export function HiraActivityPage() {
               <caption className="sr-only">HIRA activity log, newest first</caption>
               <thead>
                 <tr className="border-b border-ink/10 text-muted">
-                  <th scope="col" className="px-4 py-2 font-semibold">When (IST)</th>
-                  <th scope="col" className="px-4 py-2 font-semibold">Action</th>
-                  <th scope="col" className="px-4 py-2 font-semibold">Job</th>
-                  <th scope="col" className="px-4 py-2 font-semibold">Candidate</th>
-                  <th scope="col" className="px-4 py-2 font-semibold">Reason</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    When (IST)
+                  </th>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    Action
+                  </th>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    Job
+                  </th>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    Candidate
+                  </th>
+                  <th scope="col" className="px-4 py-2 font-semibold">
+                    Reason
+                  </th>
                 </tr>
               </thead>
               <tbody>

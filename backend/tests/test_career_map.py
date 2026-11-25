@@ -167,13 +167,22 @@ def test_profile_resume_is_parsed_encrypted_and_deletable(users):
 
 
 @pytest.mark.django_db
-def test_replacing_the_resume_removes_the_old_file(users):
+def test_replacing_the_resume_keeps_the_old_version_in_history(users):
+    """Prompt 1 (D-82): a new resume replaces the current one; the old version is kept until
+    the person deletes their resume, which removes every version."""
+    from growth.models import ResumeVersion
+
     client = as_user(users["candidate"])
     upload(client)
     first = CareerProfile.objects.get(user=users["candidate"]).resume_file_id
     upload(client, RESUME + ["PROJECTS", "React dashboard."])
-    assert not StoredFile.objects.filter(pk=first).exists()
-    assert StoredFile.objects.filter(owner=users["candidate"]).count() == 1
+    current = CareerProfile.objects.get(user=users["candidate"]).resume_file_id
+    assert current != first and StoredFile.objects.filter(pk=first).exists()
+    versions = ResumeVersion.objects.filter(user=users["candidate"])
+    assert versions.count() == 2 and versions.get(is_current=True).file_id == current
+    assert client.delete("/api/career/profile").status_code == 204
+    assert not ResumeVersion.objects.filter(user=users["candidate"]).exists()
+    assert not StoredFile.objects.filter(owner=users["candidate"]).exists()
 
 
 @pytest.mark.django_db

@@ -64,6 +64,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Lint
         run: npm run lint
+      - name: Prettier
+        run: npm run format:check
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests (vitest)

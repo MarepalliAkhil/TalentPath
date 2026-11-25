@@ -50,7 +50,11 @@ export function WelcomePage() {
         <PersonCard role="Your buddy" person={data.buddy} />
       </div>
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-        {data.tasks.length ? <Checklist data={data} queryKey={['onboarding-me']} /> : <EmptyState title="No checklist">Nothing to do here.</EmptyState>}
+        {data.tasks.length ? (
+          <Checklist data={data} queryKey={['onboarding-me']} />
+        ) : (
+          <EmptyState title="No checklist">Nothing to do here.</EmptyState>
+        )}
         <div className="flex flex-col gap-6">
           {data.first_week.length > 0 && <FirstWeek plan={data.first_week} />}
           <section className="glass rounded-xl2 p-5" aria-labelledby="next-heading">

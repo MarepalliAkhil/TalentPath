@@ -18,10 +18,18 @@ export function AuditPage() {
           <caption className="sr-only">Audit events, newest first</caption>
           <thead className="text-muted">
             <tr>
-              <th scope="col" className="px-4 py-3 font-medium">When</th>
-              <th scope="col" className="px-4 py-3 font-medium">Action</th>
-              <th scope="col" className="px-4 py-3 font-medium">Actor</th>
-              <th scope="col" className="px-4 py-3 font-medium">Target</th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                When
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                Action
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                Actor
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                Target
+              </th>
             </tr>
           </thead>
           <tbody>

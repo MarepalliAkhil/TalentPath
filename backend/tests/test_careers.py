@@ -127,3 +127,7 @@ def test_robots_txt(client_for, db):
     body = client_for("anonymous").get("/robots.txt", HTTP_ACCEPT="text/plain").content.decode()
     assert "Sitemap: https://careers.test/sitemap.xml" in body
     assert "Disallow: /api/" in body and "Disallow: /admin" in body
+    # Every signed-in area from shared/policy.json, but never the public job pages.
+    for prefix in ("/leave", "/onboarding", "/offers", "/interviews", "/career", "/jobs/*/apply"):
+        assert f"Disallow: {prefix}\n" in body
+    assert "Disallow: /jobs\n" not in body and "Disallow: /for-recruiters" not in body

@@ -81,6 +81,21 @@ class Job(models.Model):
         on_delete=models.SET_NULL,
         related_name="jobs_managed",
     )
+    # Prompt 1 (D-84, D-85): the hiring company and the long job page. None of these fields
+    # reach the fit scorer; it still reads only the description and the skills.
+    company = models.ForeignKey(
+        "org.Company", null=True, blank=True, on_delete=models.PROTECT, related_name="jobs"
+    )
+    about_team = models.TextField(blank=True, default="")
+    responsibilities = models.JSONField(default=list, blank=True)
+    required_qualifications = models.JSONField(default=list, blank=True)
+    preferred_qualifications = models.JSONField(default=list, blank=True)
+    benefits = models.JSONField(default=list, blank=True)
+    # Compensation range in lakhs per annum (INR), shown on the job page.
+    ctc_min_lpa = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    ctc_max_lpa = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    # [{"id": "q1", "text": "...", "kind": "yes_no" | "number" | "text", "required": true}]
+    screening_questions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     published_at = models.DateTimeField(null=True, blank=True)

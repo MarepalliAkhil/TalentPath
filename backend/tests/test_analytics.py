@@ -48,7 +48,7 @@ def make_app(job, candidate, source, steps, base):
 def hiring(users, make_job, make_user, org):
     base = timezone.now() - timedelta(days=30)
     other_recruiter = make_user(Role.RECRUITER)
-    other_hm = make_user(Role.HIRING_MANAGER)
+    other_hm = make_user(Role.MANAGER)
     mine = make_job(title="Backend Engineer")
     theirs = make_job(
         title="Sales Lead", owner=other_recruiter, manager=other_hm, department=org["department2"]
@@ -121,13 +121,13 @@ def test_source_effectiveness(hiring, users):
 def test_recruiters_see_only_their_own_jobs(hiring, users):
     mine = sections(as_user(users["recruiter"]))["funnel"]["rows"][0]["reached"]
     theirs = sections(as_user(hiring["other_recruiter"]))["funnel"]["rows"][0]["reached"]
-    everyone = sections(as_user(users["hr_admin"]))["funnel"]["rows"][0]["reached"]
+    everyone = sections(as_user(users["hr"]))["funnel"]["rows"][0]["reached"]
     assert (mine, theirs, everyone) == (5, 3, 8)
 
 
 @pytest.mark.django_db
 def test_hiring_managers_see_only_assigned_jobs(hiring, users):
-    assert sections(as_user(users["hiring_manager"]))["funnel"]["rows"][0]["reached"] == 5
+    assert sections(as_user(users["manager"]))["funnel"]["rows"][0]["reached"] == 5
     assert sections(as_user(hiring["other_hm"]))["funnel"]["rows"][0]["reached"] == 3
 
 
@@ -141,14 +141,14 @@ def test_employees_and_candidates_see_nothing(hiring, users):
 @pytest.mark.django_db
 def test_people_analytics_are_hr_only(users):
     assert as_user(users["recruiter"]).get("/api/analytics/people").status_code == 403
-    assert as_user(users["hiring_manager"]).get("/api/analytics/people").status_code == 403
-    assert as_user(users["hr_admin"]).get("/api/analytics/people").status_code == 200
-    assert as_user(users["hr_admin"]).get("/api/analytics/unknown").status_code == 404
+    assert as_user(users["manager"]).get("/api/analytics/people").status_code == 403
+    assert as_user(users["hr"]).get("/api/analytics/people").status_code == 200
+    assert as_user(users["hr"]).get("/api/analytics/unknown").status_code == 404
 
 
 @pytest.mark.django_db
 def test_department_and_date_filters(hiring, users, org):
-    admin = as_user(users["hr_admin"])
+    admin = as_user(users["hr"])
     eng = sections(admin, department=str(org["department"].id))["funnel"]["rows"][0]["reached"]
     sales = sections(admin, department=str(org["department2"].id))["funnel"]["rows"][0]["reached"]
     assert (eng, sales) == (5, 3)
@@ -201,7 +201,7 @@ def test_leave_utilisation(make_employee, users):
     LeaveRequest.objects.create(
         employee=emp, leave_type=casual, start=date(year, 1, 12), end=date(year, 1, 12), days=1
     )
-    rows = {r["type"]: r for r in sections(as_user(users["hr_admin"]), "people")["leave_utilisation"]["rows"]}
+    rows = {r["type"]: r for r in sections(as_user(users["hr"]), "people")["leave_utilisation"]["rows"]}
     assert rows["Casual leave"] == {
         "type": "Casual leave",
         "credited": 12.0,
@@ -233,7 +233,7 @@ def test_onboarding_and_mobility_counts(make_employee, users):
         to_designation="Engineer",
         moved_on=date.today() - timedelta(days=3),
     )
-    data = sections(as_user(users["hr_admin"]), "people")
+    data = sections(as_user(users["hr"]), "people")
     onboarding = {r["measure"]: r["value"] for r in data["onboarding"]["rows"]}
     assert onboarding["Joiners with a checklist"] == 2 and onboarding["Checklists complete"] == 1
     assert onboarding["Completion rate (%)"] == 50.0 and onboarding["Tasks overdue"] == 1
@@ -243,7 +243,7 @@ def test_onboarding_and_mobility_counts(make_employee, users):
 @pytest.mark.django_db
 def test_every_section_has_a_summary_and_a_table(hiring, users):
     for report in ("hiring", "people"):
-        for sec in sections(as_user(users["hr_admin"]), report).values():
+        for sec in sections(as_user(users["hr"]), report).values():
             assert sec["summary"] and sec["columns"]
             if sec["chart"]:
                 keys = {c["key"] for c in sec["columns"]}
@@ -314,7 +314,7 @@ def test_hira_automation_counts_only_jobs_in_scope(hiring, users):
         and mine["Feedback chased"] == 1
         and mine["Needs-you items raised"] == 1
     )
-    everyone = {r["action"]: r["count"] for r in sections(as_user(users["hr_admin"]))["hira"]["rows"]}
+    everyone = {r["action"]: r["count"] for r in sections(as_user(users["hr"]))["hira"]["rows"]}
     assert everyone["Interviews scheduled"] == 4
 
 
@@ -348,7 +348,7 @@ def test_absenteeism_and_late_trend(make_employee, users):
         status=LeaveStatus.APPROVED,
     )
     data = sections(
-        as_user(users["hr_admin"]),
+        as_user(users["hr"]),
         "people",
         **{"from": monday.isoformat(), "to": (monday + timedelta(days=4)).isoformat()},
     )

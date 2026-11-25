@@ -44,7 +44,10 @@ function MyRequests() {
       {cancel.isError && <ErrorNote>{errorText(cancel.error)}</ErrorNote>}
       <ul className="space-y-2">
         {rows.map((r) => (
-          <li key={r.id} className="flex flex-col gap-2 rounded-xl border border-ink/10 bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <li
+            key={r.id}
+            className="flex flex-col gap-2 rounded-xl border border-ink/10 bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+          >
             <div>
               <p className="font-semibold text-ink">
                 {r.leave_type_name}: {dateRange(r.start, r.end, r.half)}
@@ -61,7 +64,11 @@ function MyRequests() {
               <LeaveStatus status={r.status} label={r.status_label} />
               {r.can_cancel && (
                 <Button variant="ghost" onClick={() => cancel.mutate(r.id)} disabled={cancel.isPending}>
-                  Cancel<span className="sr-only"> {r.leave_type_name} from {r.start}</span>
+                  Cancel
+                  <span className="sr-only">
+                    {' '}
+                    {r.leave_type_name} from {r.start}
+                  </span>
                 </Button>
               )}
             </div>

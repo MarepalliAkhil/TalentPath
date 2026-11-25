@@ -18,12 +18,14 @@ export function JobCard({ job, headingLevel = 'h2' }: { job: PublicJob; headingL
           {job.title}
         </Link>
       </Heading>
+      {job.company && <p className="mt-1 text-sm font-medium text-ink-soft">{job.company.name}</p>}
       <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
         <span className="inline-flex items-center gap-1">
           <Icon name="pin" className="h-4 w-4" />
           {job.location.name}
         </span>
         <span>{job.work_mode_label}</span>
+        {job.ctc && <span>{job.ctc.label}</span>}
         {job.published_at && (
           <span className="inline-flex items-center gap-1">
             <Icon name="clock" className="h-4 w-4" />

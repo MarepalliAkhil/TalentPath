@@ -2,7 +2,7 @@
 
 Independence: an interviewer cannot read other scorecards for an interview until
 they have submitted their own (reduces anchoring). The recruiter who owns the
-job, its hiring manager and hr_admin read every submitted scorecard, except for
+job, its hiring manager and HR read every submitted scorecard, except for
 an interview where they are themselves an interviewer who has not submitted yet.
 """
 
@@ -44,7 +44,7 @@ def can_read_others(interview, user) -> bool:
     if _is_interviewer(interview, user) and not has_submitted(interview, user):
         return False
     job = interview.application.job
-    if user.role == Role.HR_ADMIN or job.created_by_id == user.id or job.hiring_manager_id == user.id:
+    if user.role == Role.HR or job.created_by_id == user.id or job.hiring_manager_id == user.id:
         return True
     return _is_interviewer(interview, user)
 

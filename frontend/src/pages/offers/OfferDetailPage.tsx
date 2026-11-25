@@ -15,7 +15,21 @@ import { ist } from '@/lib/interviews';
 import { errorText } from '@/lib/pipeline';
 import type { StaffOffer } from '@/lib/types';
 
-function ReasonDialog({ title, action, busy, error, onConfirm, onClose }: { title: string; action: string; busy: boolean; error: unknown; onConfirm: (reason: string) => void; onClose: () => void }) {
+function ReasonDialog({
+  title,
+  action,
+  busy,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  title: string;
+  action: string;
+  busy: boolean;
+  error: unknown;
+  onConfirm: (reason: string) => void;
+  onClose: () => void;
+}) {
   const [reason, setReason] = useState('');
   return (
     <Dialog title={title} onClose={onClose}>
@@ -26,7 +40,15 @@ function ReasonDialog({ title, action, busy, error, onConfirm, onClose }: { titl
         }}
         className="flex flex-col gap-3"
       >
-        <TextAreaField label="Reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} hint="At least 10 characters. Recorded in the audit log." required />
+        <TextAreaField
+          label="Reason"
+          rows={3}
+          maxLength={500}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          hint="At least 10 characters. Recorded in the audit log."
+          required
+        />
         {error != null && <ErrorNote>{errorText(error)}</ErrorNote>}
         <div className="flex gap-2">
           <Button type="submit" variant="danger" disabled={busy || reason.trim().length < 10}>
@@ -84,8 +106,13 @@ export function OfferDetailPage() {
   const who = o.candidate.full_name ?? o.candidate.code;
   const steps = [
     { label: 'Drafted', who: o.created_by, at: o.created_at, done: true },
-    { label: 'Hiring manager approval', who: o.approvals.hiring_manager.name, at: o.approvals.hiring_manager.at, done: !!o.approvals.hiring_manager.at },
-    { label: 'HR approval', who: o.approvals.hr_admin.name, at: o.approvals.hr_admin.at, done: !!o.approvals.hr_admin.at },
+    {
+      label: 'Hiring manager approval',
+      who: o.approvals.manager.name,
+      at: o.approvals.manager.at,
+      done: !!o.approvals.manager.at,
+    },
+    { label: 'HR approval', who: o.approvals.hr.name, at: o.approvals.hr.at, done: !!o.approvals.hr.at },
     { label: 'Sent to the candidate', who: null, at: o.sent_at, done: !!o.sent_at },
     { label: o.status === 'declined' ? 'Declined' : 'Accepted', who: null, at: o.responded_at, done: !!o.responded_at },
   ];
@@ -103,7 +130,12 @@ export function OfferDetailPage() {
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <OfferBadge offer={o} />
-        <a href={`/api/offers/${id}/letter`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-strong underline">
+        <a
+          href={`/api/offers/${id}/letter`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-strong underline"
+        >
           <Icon name="document" className="h-4 w-4" /> {o.has_letter ? 'Offer letter (PDF)' : 'Preview the letter (PDF)'}
         </a>
       </div>
@@ -150,7 +182,10 @@ export function OfferDetailPage() {
           <ol className="space-y-2 text-sm">
             {steps.map((s) => (
               <li key={s.label} className="flex items-start gap-2">
-                <span aria-hidden="true" className={`mt-1 h-3 w-3 shrink-0 rounded-full ${s.done ? 'bg-success' : 'border border-ink/30'}`} />
+                <span
+                  aria-hidden="true"
+                  className={`mt-1 h-3 w-3 shrink-0 rounded-full ${s.done ? 'bg-success' : 'border border-ink/30'}`}
+                />
                 <span>
                   <span className="font-semibold text-ink">{s.label}</span>
                   <span className="sr-only">{s.done ? ' (done)' : ' (not yet)'}</span>

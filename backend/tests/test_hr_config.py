@@ -1,4 +1,4 @@
-"""HR settings (hr_admin): leave types, holidays and work policy are data;
+"""HR settings (hr): leave types, holidays and work policy are data;
 documents are checked by content; the needs-attention list."""
 
 from datetime import date, timedelta
@@ -21,8 +21,8 @@ def as_user(user):
 
 
 @pytest.mark.django_db
-def test_hr_admin_edits_leave_rules_as_data(team, users):
-    admin = as_user(users["hr_admin"])
+def test_hr_edits_leave_rules_as_data(team, users):
+    admin = as_user(users["hr"])
     casual = LeaveType.objects.get(location=team["me"].location, code="casual")
     response = admin.patch(
         f"/api/hr/config/leave-types/{casual.id}",
@@ -41,7 +41,7 @@ def test_hr_admin_edits_leave_rules_as_data(team, users):
 
 @pytest.mark.django_db
 def test_holiday_calendar_per_location(team, users, org):
-    admin = as_user(users["hr_admin"])
+    admin = as_user(users["hr"])
     loc = org["location"]
     created = admin.post(
         "/api/hr/config/holidays",
@@ -61,7 +61,7 @@ def test_holiday_calendar_per_location(team, users, org):
 
 @pytest.mark.django_db
 def test_work_policy_validation(team, users, org):
-    admin = as_user(users["hr_admin"])
+    admin = as_user(users["hr"])
     url = f"/api/hr/config/work-policy/{org['location'].id}"
     ok = admin.patch(
         url, {"shift_start": "10:00", "shift_end": "19:00", "min_team_available_pct": 60}, format="json"
@@ -128,14 +128,14 @@ def test_needs_attention_lists_escalations_and_overdue_tasks(team, users):
         kind="task",
         due_on=date(2020, 1, 1),
     )
-    data = as_user(users["hr_admin"]).get("/api/hr/attention").data
+    data = as_user(users["hr"]).get("/api/hr/attention").data
     assert data["overdue_tasks"][0]["title"] == "Verify documents"
     assert "leave" in data and "no_buddy" in data
 
 
 @pytest.mark.django_db
 def test_hr_adjusts_comp_off(team, users):
-    admin = as_user(users["hr_admin"])
+    admin = as_user(users["hr"])
     response = admin.post(
         "/api/leave/adjust",
         {
@@ -161,7 +161,7 @@ def test_hr_adjusts_comp_off(team, users):
 
 @pytest.mark.django_db
 def test_internal_manager_notice_rule_is_configurable(team, users, org):
-    admin = as_user(users["hr_admin"])
+    admin = as_user(users["hr"])
     url = f"/api/hr/config/work-policy/{org['location'].id}"
     changed = admin.patch(url, {"internal_manager_notice": "offer"}, format="json")
     assert changed.data["internal_manager_notice"] == "offer"

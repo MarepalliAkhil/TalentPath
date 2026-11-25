@@ -18,6 +18,11 @@ EMPLOYMENT_LD = {
 }
 
 
+def employer(job: Job) -> str:
+    """The hiring company's name (D-84), else the brand's employer name."""
+    return job.company.name if job.company_id else get_brand()["employerName"]
+
+
 def page_title(job: Job) -> str:
     return f"{job.title} · {job.department.name}, {job.location.name} | {get_brand()['name']}"
 
@@ -25,7 +30,7 @@ def page_title(job: Job) -> str:
 def meta_description(job: Job) -> str:
     skills = ", ".join(s.name for s in list(job.required_skills.all())[:4])
     text = (
-        f"{job.title} ({job.level.name}) in {job.department.name} at {get_brand()['employerName']}, "
+        f"{job.title} ({job.level.name}) in {job.department.name} at {employer(job)}, "
         f"{job.location.name} · {job.get_work_mode_display()}. Key skills: {skills}. "
         f"Apply in minutes."
     )
@@ -38,20 +43,19 @@ def description_html(text: str) -> str:
 
 
 def job_posting_ld(job: Job) -> dict:
-    brand = get_brand()
     posted = job.published_at or job.created_at
     data = {
         "@context": "https://schema.org",
         "@type": "JobPosting",
         "title": job.title,
         "description": description_html(job.description),
-        "identifier": {"@type": "PropertyValue", "name": brand["employerName"], "value": job.slug},
+        "identifier": {"@type": "PropertyValue", "name": employer(job), "value": job.slug},
         "datePosted": posted.date().isoformat(),
         "validThrough": (posted + timedelta(days=90)).isoformat(),
         "employmentType": EMPLOYMENT_LD.get(job.employment_type, "OTHER"),
         "hiringOrganization": {
             "@type": "Organization",
-            "name": brand["employerName"],
+            "name": employer(job),
             "sameAs": settings.SITE_URL,
         },
         "jobLocation": {
@@ -68,6 +72,18 @@ def job_posting_ld(job: Job) -> dict:
         "url": f"{settings.SITE_URL}/jobs/{job.slug}",
         "totalJobOpenings": job.openings,
     }
+    if job.ctc_min_lpa is not None and job.ctc_max_lpa is not None:
+        lakh = 100000
+        data["baseSalary"] = {
+            "@type": "MonetaryAmount",
+            "currency": "INR",
+            "value": {
+                "@type": "QuantitativeValue",
+                "minValue": int(job.ctc_min_lpa * lakh),
+                "maxValue": int(job.ctc_max_lpa * lakh),
+                "unitText": "YEAR",
+            },
+        }
     if job.work_mode == WorkMode.REMOTE:
         data["jobLocationType"] = "TELECOMMUTE"
         data["applicantLocationRequirements"] = {"@type": "Country", "name": job.location.country}

@@ -23,7 +23,7 @@ from matching.weights import EXTRACTOR_VERSION
 from org.models import JobLevel, Skill
 
 from . import graph
-from .models import CareerProfile
+from .models import CareerProfile, ResumeVersion
 
 MAP_LIMIT = 12
 
@@ -68,10 +68,12 @@ def save_profile_resume(user, filename: str, data: bytes, request=None) -> Caree
     parsed = parse_text(text, get_matcher())
     with transaction.atomic():
         profile, _ = CareerProfile.objects.select_for_update().get_or_create(user=user)
-        old_file = profile.resume_file
         profile.resume_file = save_file(
             owner=user, original_name=name, content_type=CONTENT_TYPES[kind], raw=data
         )
+        # D-82: the new resume replaces the current one; earlier versions stay in the history.
+        ResumeVersion.objects.filter(user=user, is_current=True).update(is_current=False)
+        ResumeVersion.objects.create(user=user, file=profile.resume_file, filename=name, is_current=True)
         profile.resume_filename = name
         profile.resume_text = text
         profile.skills = parsed["skills"]
@@ -80,20 +82,23 @@ def save_profile_resume(user, filename: str, data: bytes, request=None) -> Caree
         profile.experience_years = None if years is None else Decimal(str(years))
         profile.extractor_version = EXTRACTOR_VERSION
         profile.save()
-        if old_file is not None:
-            old_file.delete()
     audit(request, "career.resume_uploaded", actor=user, target=profile, skills=len(parsed["skills"]))
     return profile
 
 
 def delete_profile_resume(user, request=None) -> bool:
+    """Deleting removes the current resume and every earlier version (the person's right to delete)."""
     profile = CareerProfile.objects.filter(user=user).first()
     if profile is None:
         return False
-    stored = profile.resume_file
+    files = {v.file_id for v in ResumeVersion.objects.filter(user=user) if v.file_id}
+    if profile.resume_file_id:
+        files.add(profile.resume_file_id)
     profile.delete()
-    if stored is not None:
-        stored.delete()
+    ResumeVersion.objects.filter(user=user).delete()
+    from files.models import StoredFile
+
+    StoredFile.objects.filter(pk__in=files).delete()
     audit(request, "career.resume_deleted", actor=user, target=user)
     return True
 

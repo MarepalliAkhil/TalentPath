@@ -51,7 +51,8 @@ class NightlyView(InternalView):
     policy_action = "system.nightly"
 
     def post(self, request):
-        return Response(run_nightly())
+        # The demo reset runs in a background thread so cron-job.org (30-second limit) gets an answer.
+        return Response(run_nightly(demo_reset="background"))
 
 
 class SitemapView(PolicyAPIView):
@@ -76,16 +77,16 @@ class SitemapView(PolicyAPIView):
         return HttpResponse(body, content_type="application/xml; charset=utf-8")
 
 
-PRIVATE_PREFIXES = (
-    "/api/",
-    "/candidate",
-    "/recruiter",
-    "/manager",
-    "/employee",
-    "/admin",
-    "/profile",
-    "/notifications",
-)
+def private_prefixes() -> list[str]:
+    """Paths crawlers should skip: the API, every signed-in area in shared/policy.json, one-time links."""
+    from .policy import ANONYMOUS, load_policy
+
+    prefixes = {"/api/", "/demo-inbox", "/reset-password", "/schedule/", "/jobs/*/apply"}
+    for route, principals in load_policy()["routes"].items():
+        if ANONYMOUS in principals or route.startswith("/jobs/"):
+            continue
+        prefixes.add("/" + route.strip("/").split("/")[0])
+    return sorted(prefixes)
 
 
 class RobotsView(PolicyAPIView):
@@ -95,7 +96,7 @@ class RobotsView(PolicyAPIView):
 
     def get(self, request):
         lines = ["User-agent: *", "Allow: /"]
-        lines += [f"Disallow: {prefix}" for prefix in PRIVATE_PREFIXES]
+        lines += [f"Disallow: {prefix}" for prefix in private_prefixes()]
         lines.append(f"Sitemap: {settings.SITE_URL}/sitemap.xml")
         return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
 

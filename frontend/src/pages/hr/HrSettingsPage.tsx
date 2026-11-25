@@ -75,18 +75,61 @@ function LeaveTypeEditor({ lt }: { lt: LeaveTypeConfig }) {
         <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-3" aria-label={`Edit ${lt.name}`}>
           {!lt.unpaid && (
             <>
-              <TextField label="Yearly quota (days)" type="number" step="0.5" min="0" value={form.yearly_quota} onChange={(e) => set('yearly_quota', e.target.value)} error={fields.yearly_quota} />
-              <TextField label="Carry-forward cap" type="number" step="0.5" min="0" value={form.carry_forward_cap} onChange={(e) => set('carry_forward_cap', e.target.value)} error={fields.carry_forward_cap} />
+              <TextField
+                label="Yearly quota (days)"
+                type="number"
+                step="0.5"
+                min="0"
+                value={form.yearly_quota}
+                onChange={(e) => set('yearly_quota', e.target.value)}
+                error={fields.yearly_quota}
+              />
+              <TextField
+                label="Carry-forward cap"
+                type="number"
+                step="0.5"
+                min="0"
+                value={form.carry_forward_cap}
+                onChange={(e) => set('carry_forward_cap', e.target.value)}
+                error={fields.carry_forward_cap}
+              />
             </>
           )}
-          <TextField label="Minimum notice (days)" type="number" min="0" value={form.min_notice_days} onChange={(e) => set('min_notice_days', e.target.value)} error={fields.min_notice_days} />
-          <TextField label="Maximum in one request" type="number" min="0" value={form.max_consecutive_days} onChange={(e) => set('max_consecutive_days', e.target.value)} hint="Empty: no limit" error={fields.max_consecutive_days} />
-          <TextField label="Document required after (days)" type="number" min="0" value={form.document_after_days} onChange={(e) => set('document_after_days', e.target.value)} hint="Empty: never" error={fields.document_after_days} />
+          <TextField
+            label="Minimum notice (days)"
+            type="number"
+            min="0"
+            value={form.min_notice_days}
+            onChange={(e) => set('min_notice_days', e.target.value)}
+            error={fields.min_notice_days}
+          />
+          <TextField
+            label="Maximum in one request"
+            type="number"
+            min="0"
+            value={form.max_consecutive_days}
+            onChange={(e) => set('max_consecutive_days', e.target.value)}
+            hint="Empty: no limit"
+            error={fields.max_consecutive_days}
+          />
+          <TextField
+            label="Document required after (days)"
+            type="number"
+            min="0"
+            value={form.document_after_days}
+            onChange={(e) => set('document_after_days', e.target.value)}
+            hint="Empty: never"
+            error={fields.document_after_days}
+          />
           <div className="flex flex-col sm:col-span-3 sm:flex-row sm:flex-wrap sm:gap-x-6">
             {!lt.unpaid && <Check label="Credited monthly" checked={form.monthly_accrual} onChange={(v) => set('monthly_accrual', v)} />}
             {!lt.unpaid && <Check label="Prorate for joiners" checked={form.prorate_joiners} onChange={(v) => set('prorate_joiners', v)} />}
             <Check label="Half days allowed" checked={form.half_day_allowed} onChange={(v) => set('half_day_allowed', v)} />
-            <Check label="Sandwich rule (count weekends and holidays between leave days)" checked={form.sandwich_rule} onChange={(v) => set('sandwich_rule', v)} />
+            <Check
+              label="Sandwich rule (count weekends and holidays between leave days)"
+              checked={form.sandwich_rule}
+              onChange={(v) => set('sandwich_rule', v)}
+            />
             <Check label="Active" checked={form.active} onChange={(v) => set('active', v)} />
           </div>
           {save.isError && !Object.keys(fields).length && <ErrorNote>{errorText(save.error)}</ErrorNote>}
@@ -142,12 +185,54 @@ function WorkPolicyForm({ wp }: { wp: WorkPolicy }) {
       className="grid gap-3 sm:grid-cols-3"
       aria-label={`Work policy for ${wp.location_name}`}
     >
-      <TextField label="Shift starts" type="time" value={form.shift_start} onChange={(e) => set('shift_start', e.target.value)} error={fields.shift_start} />
-      <TextField label="Shift ends" type="time" value={form.shift_end} onChange={(e) => set('shift_end', e.target.value)} error={fields.shift_end} />
-      <TextField label="Grace (minutes)" type="number" min="0" value={form.late_grace_minutes} onChange={(e) => set('late_grace_minutes', e.target.value)} error={fields.late_grace_minutes} />
-      <TextField label="HR approval above (days)" type="number" step="0.5" min="0" value={form.hr_approval_over_days} onChange={(e) => set('hr_approval_over_days', e.target.value)} error={fields.hr_approval_over_days} />
-      <TextField label="Warn below team availability (%)" type="number" min="0" max="100" value={form.min_team_available_pct} onChange={(e) => set('min_team_available_pct', e.target.value)} error={fields.min_team_available_pct} />
-      <TextField label="Escalate after (hours)" type="number" min="1" value={form.escalate_after_hours} onChange={(e) => set('escalate_after_hours', e.target.value)} error={fields.escalate_after_hours} />
+      <TextField
+        label="Shift starts"
+        type="time"
+        value={form.shift_start}
+        onChange={(e) => set('shift_start', e.target.value)}
+        error={fields.shift_start}
+      />
+      <TextField
+        label="Shift ends"
+        type="time"
+        value={form.shift_end}
+        onChange={(e) => set('shift_end', e.target.value)}
+        error={fields.shift_end}
+      />
+      <TextField
+        label="Grace (minutes)"
+        type="number"
+        min="0"
+        value={form.late_grace_minutes}
+        onChange={(e) => set('late_grace_minutes', e.target.value)}
+        error={fields.late_grace_minutes}
+      />
+      <TextField
+        label="HR approval above (days)"
+        type="number"
+        step="0.5"
+        min="0"
+        value={form.hr_approval_over_days}
+        onChange={(e) => set('hr_approval_over_days', e.target.value)}
+        error={fields.hr_approval_over_days}
+      />
+      <TextField
+        label="Warn below team availability (%)"
+        type="number"
+        min="0"
+        max="100"
+        value={form.min_team_available_pct}
+        onChange={(e) => set('min_team_available_pct', e.target.value)}
+        error={fields.min_team_available_pct}
+      />
+      <TextField
+        label="Escalate after (hours)"
+        type="number"
+        min="1"
+        value={form.escalate_after_hours}
+        onChange={(e) => set('escalate_after_hours', e.target.value)}
+        error={fields.escalate_after_hours}
+      />
       <SelectField
         label="Tell the manager about an internal application at"
         value={form.internal_manager_notice}
@@ -222,7 +307,14 @@ function Holidays({ config, location }: { config: HrConfig; location: string }) 
         aria-label="Add a holiday"
       >
         <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={fields.date} required />
-        <TextField label="Holiday name" value={name} maxLength={120} onChange={(e) => setName(e.target.value)} error={fields.name} required />
+        <TextField
+          label="Holiday name"
+          value={name}
+          maxLength={120}
+          onChange={(e) => setName(e.target.value)}
+          error={fields.name}
+          required
+        />
         <Button type="submit" disabled={add.isPending || !date || name.trim().length < 2}>
           Add holiday
         </Button>
@@ -241,12 +333,16 @@ export function HrSettingsPage() {
   if (query.isPending) return <PageLoader />;
   if (query.isError) return <ErrorNote>We could not load HR settings.</ErrorNote>;
   const config = query.data;
-  const location = picked || config.locations.find((l) => config.leave_types.some((t) => t.location === l.id))?.id || config.locations[0]?.id || '';
+  const location =
+    picked || config.locations.find((l) => config.leave_types.some((t) => t.location === l.id))?.id || config.locations[0]?.id || '';
   const types = config.leave_types.filter((t) => t.location === location);
   const wp = config.work_policies.find((p) => p.location === location);
   return (
     <>
-      <PageHeader title="HR settings" intro="Leave types, holiday calendars and the work policy for each location. Changes apply to new requests at once and are audited." />
+      <PageHeader
+        title="HR settings"
+        intro="Leave types, holiday calendars and the work policy for each location. Changes apply to new requests at once and are audited."
+      />
       <div className="mb-6 max-w-sm">
         <SelectField label="Location" value={location} onChange={(e) => setPicked(e.target.value)}>
           {config.locations.map((l) => (

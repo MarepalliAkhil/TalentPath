@@ -162,10 +162,7 @@ export function PipelineBoardPage() {
       setRejecting([app.id]);
       return;
     }
-    move.mutate(
-      { id: app.id, status },
-      { onSuccess: () => setAnnouncement(`${label(app)} moved to ${STAGE_LABELS[status]}.`) },
-    );
+    move.mutate({ id: app.id, status }, { onSuccess: () => setAnnouncement(`${label(app)} moved to ${STAGE_LABELS[status]}.`) });
   };
 
   const onDragEnd = (event: DragEndEvent) => {
@@ -198,7 +195,11 @@ export function PipelineBoardPage() {
       {move.isError && <ErrorNote>{errorText(move.error)}</ErrorNote>}
       {bulk.isError && <ErrorNote>{errorText(bulk.error)}</ErrorNote>}
       {data.can_move && selectedIds.length > 0 && (
-        <div className="glass sticky top-16 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-xl2 p-3" role="region" aria-label="Bulk actions">
+        <div
+          className="glass sticky top-16 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-xl2 p-3"
+          role="region"
+          aria-label="Bulk actions"
+        >
           <span className="text-sm font-semibold text-ink">{selectedIds.length} selected</span>
           <Button disabled={!allScreening} onClick={() => setConfirmBulk(true)}>
             Move to Screening
@@ -211,8 +212,22 @@ export function PipelineBoardPage() {
           </Button>
         </div>
       )}
-      <DndContext sensors={sensors} onDragEnd={onDragEnd} accessibility={{ screenReaderInstructions: { draggable: 'Press space to pick up the card, arrow keys to move it, space to drop, escape to cancel. You can also use the Move to menu on each card.' } }}>
-        <div role="region" className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6" tabIndex={0} aria-label="Pipeline columns, scroll sideways for more">
+      <DndContext
+        sensors={sensors}
+        onDragEnd={onDragEnd}
+        accessibility={{
+          screenReaderInstructions: {
+            draggable:
+              'Press space to pick up the card, arrow keys to move it, space to drop, escape to cancel. You can also use the Move to menu on each card.',
+          },
+        }}
+      >
+        <div
+          role="region"
+          className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6"
+          tabIndex={0}
+          aria-label="Pipeline columns, scroll sideways for more"
+        >
           <div className="flex gap-3">
             {data.columns.map((column) => (
               <Column key={column.status} column={column}>

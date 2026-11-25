@@ -97,7 +97,6 @@ export interface AnalyticsReport {
 
 export interface DemoConfig {
   demo_mode: boolean;
-  banner: string;
   accounts: { role: string; label: string }[];
   upload_limit_bytes: number | null;
 }

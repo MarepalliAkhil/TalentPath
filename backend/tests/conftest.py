@@ -27,6 +27,44 @@ RESUME_LINES = [
 _DEFAULT = object()
 
 
+def application_form(answers=None, **sections):
+    """A valid application form (D-83) for API tests; override any section."""
+    import json
+    from datetime import date, timedelta
+
+    form = {
+        "personal": {
+            "phone": "+91 90000 12345",
+            "current_city": "Hyderabad",
+            "willing_to_relocate": True,
+            "date_of_birth": "1999-04-12",
+        },
+        "education": {
+            "highest_qualification": "Bachelor's degree",
+            "college": "Lakeview University",
+            "branch": "Computer Science",
+            "graduation_year": 2021,
+            "score_type": "cgpa",
+            "score": "8.4",
+            "tenth_percentage": "91",
+            "twelfth_percentage": "88.5",
+        },
+        "experience": {"status": "fresher", "roles": [], "total_years": "0"},
+        "compensation": {
+            "current_ctc_lpa": "0",
+            "expected_ctc_lpa": "6.5",
+            "notice_period": "immediate",
+            "earliest_joining": (date.today() + timedelta(days=20)).isoformat(),
+        },
+        "links": {"github_url": "github.com/test-candidate"},
+        "answers": answers or {},
+        "cover_letter": "",
+        "declarations": {"info_true": True, "accept_terms": True},
+    }
+    form.update(sections)
+    return json.dumps(form)
+
+
 @pytest.fixture(autouse=True)
 def _clear_cache():
     cache.clear()
@@ -109,7 +147,7 @@ def make_job(org, skills, users):
             openings=2,
             status=status,
             created_by=owner or users["recruiter"],
-            hiring_manager=users["hiring_manager"] if manager is _DEFAULT else manager,
+            hiring_manager=users["manager"] if manager is _DEFAULT else manager,
             published_at=None if status == JobStatus.DRAFT else timezone.now(),
         )
         job.required_skills.set([skills[s] for s in required])
@@ -258,8 +296,17 @@ def make_employee(hr_locations, make_user):
     from hr.models import Employee
     from hr.onboarding import next_code
 
-    def _make(user=None, *, manager=None, joined=date(2024, 1, 15), department=None, location=None,
-              designation="Engineer", role=Role.EMPLOYEE, name=None):
+    def _make(
+        user=None,
+        *,
+        manager=None,
+        joined=date(2024, 1, 15),
+        department=None,
+        location=None,
+        designation="Engineer",
+        role=Role.EMPLOYEE,
+        name=None,
+    ):
         user = user or make_user(role, name=name)
         return Employee.objects.create(
             user=user,
@@ -276,16 +323,16 @@ def make_employee(hr_locations, make_user):
 
 @pytest.fixture
 def team(users, make_employee):
-    """Hiring manager -> four reports (the employee user is one of them); hr_admin reports to nobody.
+    """Hiring manager -> four reports (the employee user is one of them); hr reports to nobody.
 
     The reporting line, not the role, decides approvals: `lead` is an employee-role user who manages `junior`.
     """
-    boss = make_employee(users["hiring_manager"], designation="Head of Engineering")
+    boss = make_employee(users["manager"], designation="Head of Engineering")
     me = make_employee(users["employee"], manager=boss)
     peers = [make_employee(manager=boss, name=f"Peer {n}") for n in range(3)]
     lead = peers[0]
     junior = make_employee(manager=lead, name="Junior")
-    hr = make_employee(users["hr_admin"], designation="HR Manager")
+    hr = make_employee(users["hr"], designation="HR Manager")
     recruiter = make_employee(users["recruiter"], manager=hr, designation="Recruiter")
     return {
         "boss": boss,

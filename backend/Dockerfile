@@ -17,4 +17,5 @@ RUN useradd --create-home --uid 10001 app && chown -R app /app
 USER app
 
 EXPOSE 8000
-CMD ["sh", "-c", "python manage.py migrate --noinput && daphne -b 0.0.0.0 -p ${PORT} config.asgi:application"]
+# Start: apply migrations, then exactly ONE Daphne process (exec, so it receives Render's stop signal).
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec daphne -b 0.0.0.0 -p ${PORT} config.asgi:application"]

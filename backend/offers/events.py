@@ -2,7 +2,7 @@
 
 `offer_accepted` is sent after a candidate accepts. Week 3B's onboarding listens
 to it (hr.signals) and tells the recruiter the hire is ready; the hire itself
-is one click by the recruiter or hr_admin (POST /api/offers/<id>/hire).
+is one click by the recruiter or HR (POST /api/offers/<id>/hire).
 """
 
 from django.dispatch import Signal

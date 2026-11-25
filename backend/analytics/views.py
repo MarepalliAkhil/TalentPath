@@ -19,8 +19,8 @@ def _report(request, name: str) -> list[dict]:
     if name == "hiring":
         return metrics.hiring_report(request.user, f)
     if name == "people":
-        if request.user.role != Role.HR_ADMIN:
-            raise PermissionDenied("People analytics are for HR admins.")
+        if request.user.role != Role.HR:
+            raise PermissionDenied("People analytics are for HR.")
         return metrics.people_report(f)
     raise NotFound()
 
@@ -39,7 +39,7 @@ class AnalyticsView(PolicyAPIView):
                 "from": f.start.isoformat(),
                 "to": f.end.isoformat(),
                 "department": f.department,
-                "scope": "all" if request.user.role == Role.HR_ADMIN else "own",
+                "scope": "all" if request.user.role == Role.HR else "own",
                 "departments": [{"id": str(d.id), "name": d.name} for d in Department.objects.all()],
                 "sections": sections,
             }

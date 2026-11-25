@@ -27,10 +27,26 @@ export function OffersPage() {
     <>
       <PageHeader title="Offers" intro="Drafted by recruiters, approved by the hiring manager and then HR, and sent with a PDF letter." />
       <div role="group" aria-label="Which offers" className="mb-4 flex flex-wrap gap-2">
-        <button type="button" className={tabClass(tab === 'me')} aria-pressed={tab === 'me'} onClick={() => { setTab('me'); setPage(1); }}>
+        <button
+          type="button"
+          className={tabClass(tab === 'me')}
+          aria-pressed={tab === 'me'}
+          onClick={() => {
+            setTab('me');
+            setPage(1);
+          }}
+        >
           {meLabel}
         </button>
-        <button type="button" className={tabClass(tab === 'all')} aria-pressed={tab === 'all'} onClick={() => { setTab('all'); setPage(1); }}>
+        <button
+          type="button"
+          className={tabClass(tab === 'all')}
+          aria-pressed={tab === 'all'}
+          onClick={() => {
+            setTab('all');
+            setPage(1);
+          }}
+        >
           All offers
         </button>
       </div>

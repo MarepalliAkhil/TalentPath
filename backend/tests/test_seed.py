@@ -9,9 +9,10 @@ from jobs.models import Job
 DEMO_LOGINS = {
     "candidate@demo.example": Role.CANDIDATE,
     "recruiter@demo.example": Role.RECRUITER,
-    "manager@demo.example": Role.HIRING_MANAGER,
+    "manager@demo.example": Role.MANAGER,
     "employee@demo.example": Role.EMPLOYEE,
-    "admin@demo.example": Role.HR_ADMIN,
+    "hr@demo.example": Role.HR,
+    "admin@demo.example": Role.ADMIN,
 }
 
 
@@ -148,6 +149,7 @@ def test_seed_week3b_people_leave_attendance_and_hire_demo():
     assert all("verify" in h.note for h in Holiday.objects.all())
     demo = Offer.objects.get(application__candidate__email="joiner@demo.example")
     assert demo.status == OfferStatus.ACCEPTED and demo.application.status == "offer"
+
     # Idempotent: a second run adds no people, leave or attendance.
     def counts():
         return (Employee.objects.count(), LeaveRequest.objects.count(), AttendanceRecord.objects.count())
@@ -175,5 +177,5 @@ def test_seed_week4a_audiences_sources_profiles_and_mobility():
     assert CareerProfile.objects.filter(user__email="employee@demo.example").exists()
     assert InternalMove.objects.count() == 1
     # The timeline is spread out, so stage times are not all zero.
-    stage = metrics.hiring_report(User.objects.get(email="admin@demo.example"), metrics.parse_filters({}))[1]
+    stage = metrics.hiring_report(User.objects.get(email="hr@demo.example"), metrics.parse_filters({}))[1]
     assert any(row["median"] for row in stage["rows"])

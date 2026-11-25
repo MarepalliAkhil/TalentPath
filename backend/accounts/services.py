@@ -44,6 +44,21 @@ def send_password_reset(user: User) -> None:
     )
 
 
+def send_registration_email(user: User) -> None:
+    product = get_brand()["name"]
+    queue_email(
+        to_email=user.email,
+        user=user,
+        kind="registration",
+        subject=f"Welcome to {product}",
+        body=(
+            f"Hi {user.full_name},\n\nYour account is ready. We read your resume and filled in "
+            "your profile: please check your phone, links, skills, education and experience "
+            f"before you apply.\n\n{settings.SITE_URL}/profile"
+        ),
+    )
+
+
 def send_staff_invite(user: User, invited_by: User) -> None:
     product = get_brand()["name"]
     queue_email(

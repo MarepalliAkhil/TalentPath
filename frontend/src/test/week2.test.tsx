@@ -155,7 +155,7 @@ describe('pipeline board', () => {
   it('hiring managers read the board without move controls and it is axe clean at 390 px', async () => {
     setViewport(390);
     mockApi({ ...staffApi, '/api/jobs/j1/board': board(false) });
-    renderApp('/recruiter/jobs/j1/board', 'hiring_manager');
+    renderApp('/recruiter/jobs/j1/board', 'manager');
     expect(await screen.findByText('Candidate #7F3A')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Drag/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/^Move .* to$/)).not.toBeInTheDocument();
@@ -229,7 +229,7 @@ describe('fairness check page', () => {
       changed_fields: ['name', 'gender words and pronouns', 'college or university', 'city'],
     };
     mockApi({ ...signedInApi, '/api/fairness/check': result });
-    renderApp('/admin/fairness', 'hr_admin');
+    renderApp('/hr/fairness', 'hr');
     await userEvent.click(await screen.findByRole('button', { name: 'Run the check' }));
     expect(await screen.findByRole('heading', { level: 2, name: '120 variants tested, 0 score changes.' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);

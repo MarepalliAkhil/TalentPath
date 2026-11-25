@@ -29,3 +29,22 @@ class CareerProfile(models.Model):
 
     def __str__(self) -> str:
         return f"Career profile of {self.user_id}"
+
+
+class ResumeVersion(models.Model):
+    """Every profile resume a person uploaded (D-82): a new upload replaces the current one and
+    the old version stays in this history until the person deletes their resume."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="resume_versions"
+    )
+    file = models.ForeignKey(
+        "files.StoredFile", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    filename = models.CharField(max_length=120)
+    is_current = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]

@@ -30,9 +30,10 @@ def demo_users(make_user):
         for role, email in (
             ("candidate", "candidate"),
             ("recruiter", "recruiter"),
-            ("hiring_manager", "manager"),
+            ("manager", "manager"),
             ("employee", "employee"),
-            ("hr_admin", "admin"),
+            ("hr", "hr"),
+            ("admin", "admin"),
         )
     }
 
@@ -50,7 +51,7 @@ def test_demo_mode_is_off_by_default():
 @off
 def test_config_and_login_when_off(demo_users):
     data = APIClient().get("/api/demo/config").data
-    assert data == {"demo_mode": False, "banner": "", "accounts": [], "upload_limit_bytes": None}
+    assert data == {"demo_mode": False, "accounts": [], "upload_limit_bytes": None}
     assert APIClient().post("/api/auth/demo-login", {"role": "candidate"}, format="json").status_code == 404
 
 
@@ -58,17 +59,18 @@ def test_config_and_login_when_off(demo_users):
 @on
 def test_try_as_buttons_sign_in_to_the_seeded_accounts(demo_users):
     data = APIClient().get("/api/demo/config").data
-    assert data["demo_mode"] is True and data["banner"] == "Demo data, resets nightly"
+    assert data["demo_mode"] is True and "banner" not in data  # D-87: no banner
     assert [a["role"] for a in data["accounts"]] == [
         "candidate",
         "recruiter",
-        "hiring_manager",
+        "manager",
         "employee",
-        "hr_admin",
+        "hr",
+        "admin",
     ]
     client = APIClient()
-    response = client.post("/api/auth/demo-login", {"role": "hr_admin"}, format="json")
-    assert response.status_code == 200 and response.data["user"]["email"] == "admin@demo.example"
+    response = client.post("/api/auth/demo-login", {"role": "hr"}, format="json")
+    assert response.status_code == 200 and response.data["user"]["email"] == "hr@demo.example"
     assert "tp_access" in response.cookies
     assert AuditLog.objects.filter(action="auth.demo_login").exists()
     assert APIClient().post("/api/auth/demo-login", {"role": "superuser"}, format="json").status_code == 400
@@ -77,7 +79,7 @@ def test_try_as_buttons_sign_in_to_the_seeded_accounts(demo_users):
 @pytest.mark.django_db
 @on
 def test_demo_accounts_cannot_invite_or_change_staff(demo_users, users):
-    admin = as_user(demo_users["hr_admin"])
+    admin = as_user(demo_users["admin"])
     invite = admin.post(
         "/api/users", {"email": "x@corp.test", "full_name": "New Person", "role": "recruiter"}, format="json"
     )
@@ -87,7 +89,7 @@ def test_demo_accounts_cannot_invite_or_change_staff(demo_users, users):
         == 403
     )
     # A real admin (not a demo address) is not restricted.
-    real = as_user(users["hr_admin"])
+    real = as_user(users["admin"])
     assert (
         real.post(
             "/api/users",
@@ -112,7 +114,7 @@ def test_demo_accounts_cannot_bulk_move_or_delete(demo_users, make_job, org):
         == 403
     )
     assert recruiter.delete(f"/api/jobs/{job.id}").status_code == 403
-    admin = as_user(demo_users["hr_admin"])
+    admin = as_user(demo_users["admin"])
     assert admin.delete(f"/api/departments/{org['department2'].id}").status_code == 403
 
 
@@ -146,7 +148,7 @@ def test_demo_accounts_cannot_change_their_password(demo_users):
 @pytest.mark.django_db
 @off
 def test_restrictions_do_not_apply_when_demo_mode_is_off(demo_users, users):
-    admin = as_user(demo_users["hr_admin"])
+    admin = as_user(demo_users["admin"])
     response = admin.post(
         "/api/users", {"email": "z@corp.test", "full_name": "Off Mode", "role": "recruiter"}, format="json"
     )
@@ -212,3 +214,45 @@ def test_nightly_reset_is_idempotent_and_keeps_real_accounts():
     assert User.objects.filter(pk=real.pk).exists()
     assert AuditLog.objects.filter(action="demo.reset").count() == 2
     assert User.objects.filter(email="candidate@demo.example", role=Role.CANDIDATE).exists()
+
+
+@pytest.mark.django_db
+@on
+def test_nightly_hook_answers_at_once_and_resets_in_the_background():
+    from unittest import mock
+
+    from rest_framework.test import APIClient
+
+    from core import demo
+
+    started = []
+
+    class InlineThread:
+        def __init__(self, target, **kwargs):
+            self.target = target
+
+        def start(self):
+            started.append(True)
+            self.target()
+
+    with (
+        mock.patch.object(demo, "reset_demo_data", return_value={"skipped": False}) as reset,
+        mock.patch("threading.Thread", InlineThread),
+    ):
+        response = APIClient().post(
+            "/api/internal/nightly", HTTP_X_TICK_SECRET="test-internal-secret-0123456789"
+        )
+    assert response.status_code == 200 and response.data["tasks"]["demo_reset"] == "started"
+    assert started == [True] and reset.call_count == 1
+
+
+@pytest.mark.django_db
+@on
+def test_a_second_reset_never_overlaps_a_running_one():
+    from core import demo
+
+    assert demo._reset_lock.acquire(blocking=False)
+    try:
+        assert demo.start_demo_reset_in_background() == "running"
+    finally:
+        demo._reset_lock.release()

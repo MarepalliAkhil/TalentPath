@@ -17,7 +17,7 @@ from .services import change_status, editable_jobs, unique_job_slug, visible_job
 def _public_qs():
     return (
         Job.objects.public()
-        .select_related("department", "location", "level")
+        .select_related("department", "location", "level", "company")
         .prefetch_related("required_skills", "nice_to_have_skills")
         .order_by("-published_at", "-created_at")
     )
@@ -36,6 +36,8 @@ class CareerJobListView(PolicyAPIView):
             qs = qs.filter(department__slug=p["department"])
         if p.get("location"):
             qs = qs.filter(location__slug=p["location"])
+        if p.get("company"):
+            qs = qs.filter(company__slug=p["company"])
         if p.get("work_mode"):
             if p["work_mode"] not in WorkMode.values:
                 return Response({"work_mode": "Unknown work mode."}, status=400)

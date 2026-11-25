@@ -7,17 +7,19 @@ from files.storage import read_file
 from jobs.models import JobStatus
 from notifications.models import EmailOutbox, Notification
 
+from .conftest import application_form
+
 
 def apply(client, job, upload, data, name="resume.pdf", **extra):
     return client.post(
         "/api/applications",
-        {"job": job.slug, "resume": upload(data, name=name), **extra},
+        {"job": job.slug, "resume": upload(data, name=name), "form": application_form(), **extra},
         format="multipart",
     )
 
 
 def test_candidate_applies_with_pdf(client_for, open_job, upload, pdf_bytes, users):
-    resp = apply(client_for("candidate"), open_job, upload, pdf_bytes, cover_note="Keen to join.")
+    resp = apply(client_for("candidate"), open_job, upload, pdf_bytes)
     assert resp.status_code == 201, resp.data
     assert resp.data["status"] == "applied"
     app = Application.objects.get(pk=resp.data["id"])
@@ -131,7 +133,7 @@ def test_staff_detail_and_resume_download_are_audited(client_for, application, p
     # Blind screening hides the original file; this test covers a job with blind mode off.
     application.job.blind_screening = False
     application.job.save()
-    client = client_for("hiring_manager")
+    client = client_for("manager")
     detail = client.get(f"/api/applications/{application.id}")
     assert detail.status_code == 200 and "Django" in detail.data["resume_text"]
     download = client.get(f"/api/applications/{application.id}/resume")
@@ -152,7 +154,7 @@ def test_status_change_rules_and_notification(client_for, application, users):
     assert moved.status_code == 200 and moved.data["status"] == "screening"
     note = Notification.objects.filter(user=users["candidate"], kind="application_status").get()
     assert "Under review" in note.title  # customer-safe stage words since week 2
-    assert client_for("hiring_manager").post(url, {"status": "interview"}, format="json").status_code == 403
+    assert client_for("manager").post(url, {"status": "interview"}, format="json").status_code == 403
 
 
 def test_withdraw(client_for, application):

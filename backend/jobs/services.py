@@ -25,21 +25,23 @@ def unique_job_slug(title: str, location_name: str) -> str:
 
 def visible_jobs(user, with_counts: bool = True):
     """Staff scoping: recruiters see jobs they created, hiring managers the
-    published jobs they are assigned to, hr_admin sees everything."""
-    qs = Job.objects.select_related("department", "location", "level", "created_by", "hiring_manager")
+    published jobs they are assigned to, HR sees everything."""
+    qs = Job.objects.select_related(
+        "department", "location", "level", "created_by", "hiring_manager", "company"
+    )
     if with_counts:
         qs = qs.annotate(application_count=Count("applications", distinct=True))
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return qs
     if user.role == Role.RECRUITER:
         return qs.filter(created_by=user)
-    if user.role == Role.HIRING_MANAGER:
+    if user.role == Role.MANAGER:
         return qs.filter(hiring_manager=user).exclude(status=JobStatus.DRAFT)
     return qs.none()
 
 
 def editable_jobs(user):
-    if user.role == Role.HR_ADMIN:
+    if user.role == Role.HR:
         return Job.objects.all()
     if user.role == Role.RECRUITER:
         return Job.objects.filter(created_by=user)

@@ -101,7 +101,11 @@ export function CandidateDashboard() {
           </Link>
         }
       />
-      {flash && <div className="mb-4"><SuccessNote>{flash}</SuccessNote></div>}
+      {flash && (
+        <div className="mb-4">
+          <SuccessNote>{flash}</SuccessNote>
+        </div>
+      )}
       <MyOffers />
       <MyInterviews />
       {apps.isPending && <PageLoader />}
